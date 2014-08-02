@@ -43,17 +43,26 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Xml.Schema.Linq">
+      <HintPath>..\Xml.Schema.Linq.dll</HintPath>
+    </Reference>
     <Reference Include="zlib.net">
       <HintPath>..\zlib.net.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Arrangement.cs" />
+    <Compile Include="musicxml.cs">
+      <DependentUpon>musicxml.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="MusicXmlExporter.cs" />
     <Compile Include="PsarcBrowser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="musicxml.xsd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

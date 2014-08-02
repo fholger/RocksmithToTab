@@ -19,7 +19,13 @@ namespace RSTabConverter
                     var browser = new PsarcBrowser(options.PsarcFile);
 
                     if (options.ListSongs)
+                    {
                         ListSongs(browser);
+                        return;
+                    }
+
+                    var exporter = new MusicXmlExporter("Nonsensical", "Artist");
+                    exporter.SaveToFile("nonsensical.xml");
                 }
                 catch (System.IO.FileNotFoundException e)
                 {

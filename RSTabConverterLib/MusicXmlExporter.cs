@@ -5,15 +5,26 @@ using System.Text;
 using System.Threading.Tasks;
 using RocksmithToolkitLib.Xml;
 
+
 namespace RSTabConverterLib
 {
     public class MusicXmlExporter
     {
-        private Song2014 song;
+        private scorepartwise score;
 
-        public MusicXmlExporter(Song2014 song)
+        public MusicXmlExporter(string title, string artist)
         {
-            this.song = song;
+            // write basic information
+            score = new scorepartwise();
+            score.version = "3.0";
+            score.work = new work() { worktitle = title };
+            score.identification = new identification();
+            score.identification.creator.Add(new typedtext() { type = "composer", TypedValue = artist });              
+        }
+
+        public void SaveToFile(string fileName)
+        {
+            score.Save(fileName);
         }
     }
 }
