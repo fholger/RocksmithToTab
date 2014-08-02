@@ -33,6 +33,13 @@ namespace RSTabConverterLib
             }
         }
 
+
+        /// <summary>
+        /// Retrieve a list of all tracks contained in the archive.
+        /// Returned info includes song title, artist, album and year,
+        /// as well as the available arrangements.
+        /// </summary>
+        /// <returns>List of included tracks.</returns>
         public IList<TrackInfo> GetTrackList()
         {
             // Each song has a corresponding .json file within the archive containing
@@ -41,28 +48,50 @@ namespace RSTabConverterLib
                 && x.Name.EndsWith(".json")).OrderBy(x => x.Name);
 
             var trackList = new List<TrackInfo>();
+            TrackInfo currentTrack = null;
 
             foreach (var entry in infoFiles)
             {
-                Console.WriteLine("Entry found: {0}", entry.Name);
-                using (var reader = new StreamReader(entry.Data))
-                {
-                    JObject o = JObject.Parse(reader.ReadToEnd());
-                    var attributes = o["Entries"].First.Last["Attributes"];
-                    var title = attributes["SongName"].ToString();
-                    var artist = attributes["ArtistName"].ToString();
-                    var album = attributes["AlbumName"].ToString();
-                    var year = attributes["SongYear"].ToString();
+                // the entry's filename is identifier_arrangement.json
+                var fileName = Path.GetFileNameWithoutExtension(entry.Name);
+                var splitPoint = fileName.LastIndexOf('_');
+                var identifier = fileName.Substring(0, splitPoint);
+                var arrangement = fileName.Substring(splitPoint + 1);
 
-                    var info = new TrackInfo()
+                if (currentTrack == null || currentTrack.Identifier != identifier)
+                {
+                    // extract track info from the .json file
+                    using (var reader = new StreamReader(entry.Data))
                     {
-                        Title = attributes["SongName"].ToString(),
-                        Artist = attributes["ArtistName"].ToString(),
-                        Album = attributes["AlbumName"].ToString(),
-                        Year = attributes["SongYear"].ToString()
-                    };
-                    trackList.Add(info);
-                }                
+                        try
+                        {
+                            JObject o = JObject.Parse(reader.ReadToEnd());
+                            var attributes = o["Entries"].First.Last["Attributes"];
+                            var title = attributes["SongName"].ToString();
+                            var artist = attributes["ArtistName"].ToString();
+                            var album = attributes["AlbumName"].ToString();
+                            var year = attributes["SongYear"].ToString();
+
+                            currentTrack = new TrackInfo()
+                            {
+                                Title = attributes["SongName"].ToString(),
+                                Artist = attributes["ArtistName"].ToString(),
+                                Album = attributes["AlbumName"].ToString(),
+                                Year = attributes["SongYear"].ToString(),
+                                Identifier = identifier,
+                                Arrangements = new List<string>()
+                            };
+                            trackList.Add(currentTrack);
+                        }
+                        catch (NullReferenceException)
+                        {
+                            // It appears the vocal arrangements don't contain all the track
+                            // information. Just ignore this.
+                        }
+                    }
+                }
+
+                currentTrack.Arrangements.Add(arrangement);
             }
 
             return trackList;
@@ -70,12 +99,16 @@ namespace RSTabConverterLib
     }
 
 
+    /// <summary>
+    /// Struct containing info about a single track.
+    /// </summary>
     public class TrackInfo
     {
         public string Title { get; set; }
         public string Artist { get; set; }
         public string Album { get; set; }
         public string Year { get; set; }
-        public string Key { get; set; }
+        public string Identifier { get; set; }
+        public IList<string> Arrangements { get; set; }
     }
 }

@@ -17,17 +17,28 @@ namespace RSTabConverter
                 try
                 {
                     var browser = new PsarcBrowser(options.PsarcFile);
-                    var trackList = browser.GetTrackList();
-                    foreach (var track in trackList)
-                    {
-                        Console.WriteLine("{0} - {1}  [{2}, {3}]", track.Artist, track.Title, track.Album, track.Year);
-                    }
+
+                    if (options.ListSongs)
+                        ListSongs(browser);
                 }
                 catch (System.IO.FileNotFoundException e)
                 {
-                    Console.WriteLine("The specified psarc file does not exist: {0}", e.FileName);
+                    Console.WriteLine("File does not exist: {0}", e.FileName);
                 }
             }
         }
+
+
+        static void ListSongs(PsarcBrowser browser)
+        {
+            var trackList = browser.GetTrackList();
+            foreach (var track in trackList)
+            {
+                Console.WriteLine("[{0}] {1} - {2}  ({3}, {4})   {{{5}}}", track.Identifier,
+                    track.Artist, track.Title, track.Album, track.Year,
+                    string.Join(", ", track.Arrangements));
+            }
+        }
+
     }
 }
