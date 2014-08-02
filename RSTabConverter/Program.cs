@@ -3,6 +3,7 @@ using CommandLine;
 using CommandLine.Text;
 using RSTabConverterLib;
 
+
 namespace RSTabConverter
 {
     class Program
@@ -14,7 +15,7 @@ namespace RSTabConverter
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
                 Console.WriteLine("Opening archive {0} ...", options.PsarcFile);
-                try
+                //try
                 {
                     var browser = new PsarcBrowser(options.PsarcFile);
 
@@ -25,12 +26,20 @@ namespace RSTabConverter
                     }
 
                     var exporter = new MusicXmlExporter("Nonsensical", "Artist");
+                    foreach (var track in options.Tracks)
+                    {
+                        foreach (var arr in options.Arrangements)
+                        {
+                            var converter = browser.GetArrangement(track, arr);
+                            exporter.AddArrangement(converter);
+                        }
+                    }
                     exporter.SaveToFile("nonsensical.xml");
                 }
-                catch (System.IO.FileNotFoundException e)
-                {
-                    Console.WriteLine("File does not exist: {0}", e.FileName);
-                }
+                //catch (System.IO.FileNotFoundException e)
+                //{
+                //    Console.WriteLine("File does not exist: {0}", e.FileName);
+                //}
             }
         }
 
