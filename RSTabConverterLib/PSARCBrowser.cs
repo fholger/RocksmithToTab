@@ -41,20 +41,20 @@ namespace RSTabConverterLib
 
 
         /// <summary>
-        /// Retrieve a list of all tracks contained in the archive.
+        /// Retrieve a list of all song contained in the archive.
         /// Returned info includes song title, artist, album and year,
         /// as well as the available arrangements.
         /// </summary>
-        /// <returns>List of included tracks.</returns>
-        public IList<TrackInfo> GetTrackList()
+        /// <returns>List of included songs.</returns>
+        public IList<SongInfo> GetSongList()
         {
             // Each song has a corresponding .json file within the archive containing
             // information about it.
             var infoFiles = archive.Entries.Where(x => x.Name.StartsWith("manifests/songs")
                 && x.Name.EndsWith(".json")).OrderBy(x => x.Name);
 
-            var trackList = new List<TrackInfo>();
-            TrackInfo currentTrack = null;
+            var songList = new List<SongInfo>();
+            SongInfo currentSong = null;
 
             foreach (var entry in infoFiles)
             {
@@ -64,9 +64,9 @@ namespace RSTabConverterLib
                 var identifier = fileName.Substring(0, splitPoint);
                 var arrangement = fileName.Substring(splitPoint + 1);
 
-                if (currentTrack == null || currentTrack.Identifier != identifier)
+                if (currentSong == null || currentSong.Identifier != identifier)
                 {
-                    // extract track info from the .json file
+                    // extract song info from the .json file
                     using (var reader = new StreamReader(entry.Data, new UTF8Encoding(), false, 1024, true))
                     {
                         try
@@ -78,7 +78,7 @@ namespace RSTabConverterLib
                             var album = attributes["AlbumName"].ToString();
                             var year = attributes["SongYear"].ToString();
 
-                            currentTrack = new TrackInfo()
+                            currentSong = new SongInfo()
                             {
                                 Title = attributes["SongName"].ToString(),
                                 Artist = attributes["ArtistName"].ToString(),
@@ -87,7 +87,7 @@ namespace RSTabConverterLib
                                 Identifier = identifier,
                                 Arrangements = new List<string>()
                             };
-                            trackList.Add(currentTrack);
+                            songList.Add(currentSong);
                         }
                         catch (NullReferenceException)
                         {
@@ -97,21 +97,21 @@ namespace RSTabConverterLib
                     }
                 }
 
-                currentTrack.Arrangements.Add(arrangement);
+                currentSong.Arrangements.Add(arrangement);
             }
 
-            return trackList;
+            return songList;
         }
 
 
         /// <summary>
-        /// Extract a particular arrangement of a track from the archive
-        /// and return a converter to MusicXML for it.
+        /// Extract a particular arrangement of a song from the archive
+        /// and return the corresponding Song2014 object.
         /// </summary>
-        /// <param name="identifier">Identifier of the track to load.</param>
+        /// <param name="identifier">Identifier of the song to load.</param>
         /// <param name="arrangement">The arrangement to use.</param>
-        /// <returns>A converter object containing the arrangement.</returns>
-        public RocksmithSongConverter GetArrangement(string identifier, string arrangement)
+        /// <returns>A Song2014 object containing the arrangement.</returns>
+        public Song2014 GetArrangement(string identifier, string arrangement)
         {
             // In order to instantiate a Rocksmith Song2014 object, we need both
             // the binary .sng file and the attributes contained in the corresponding
@@ -142,7 +142,7 @@ namespace RSTabConverterLib
             // get contents of .sng file
             Sng2014File sng = Sng2014File.ReadSng(sngFile.Data, platform);
 
-            return new RocksmithSongConverter(new Song2014(sng, attr));
+            return new Song2014(sng, attr);
         }
     }
 
@@ -150,7 +150,7 @@ namespace RSTabConverterLib
     /// <summary>
     /// Struct containing info about a single track.
     /// </summary>
-    public class TrackInfo
+    public class SongInfo
     {
         public string Title { get; set; }
         public string Artist { get; set; }

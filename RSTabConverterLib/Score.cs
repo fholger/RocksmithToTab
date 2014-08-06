@@ -76,6 +76,35 @@ namespace RSTabConverterLib
         // start and end times in Rocksmith
         public Single Start { get; set; }
         public Single End { get; set; }
+
+        /// <summary>
+        /// Requires that Start, End and TimeNominator have been set. Will try to figure out a
+        /// fitting TimeDenominator and BPM.
+        /// </summary>
+        /// <param name="averageBPM">Average BPM in the track.</param>
+        public void GuessTimeAndBPM(Single averageBPM)
+        {
+            var length = End - Start;
+            var avgTimePerBeat = length / TimeNominator;
+            if (Math.Abs(averageBPM - 60.0 / avgTimePerBeat)
+                < Math.Abs(averageBPM - 30.0 / avgTimePerBeat))
+            {
+                // we are closer to the score's average BPM if we assume each
+                // beat in this measure is a quarter note long.
+                TimeDenominator = 4;
+            }
+            else
+            {
+                // in this case, eighth notes are a better match.
+                TimeDenominator = 8;
+            }
+            // these are all the possibilities we consider. anything else is just too
+            // weird, I think.
+
+            BeatsPerMinute = (int)Math.Round(4.0/TimeDenominator * 60.0 / avgTimePerBeat);
+
+            Console.WriteLine("Found measure with {0}/{1} time and {2} BPM.", TimeNominator, TimeDenominator, BeatsPerMinute);
+        }
     }
 
 

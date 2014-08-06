@@ -15,7 +15,7 @@ namespace RSTabConverter
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
                 Console.WriteLine("Opening archive {0} ...", options.PsarcFile);
-                //try
+                try
                 {
                     var browser = new PsarcBrowser(options.PsarcFile);
 
@@ -25,33 +25,32 @@ namespace RSTabConverter
                         return;
                     }
 
-                    var exporter = new MusicXmlExporter("Nonsensical", "Artist");
-                    foreach (var track in options.Tracks)
+                    foreach (var song in options.Tracks)
                     {
                         foreach (var arr in options.Arrangements)
                         {
-                            var converter = browser.GetArrangement(track, arr);
-                            exporter.AddArrangement(converter);
+                            var arrangement = browser.GetArrangement(song, arr);
+                            var track = Converter.ConvertArrangement(arrangement);
                         }
                     }
-                    exporter.SaveToFile("nonsensical.xml");
+                    //exporter.SaveToFile("nonsensical.xml");
                 }
-                //catch (System.IO.FileNotFoundException e)
-                //{
-                //    Console.WriteLine("File does not exist: {0}", e.FileName);
-                //}
+                catch (System.IO.FileNotFoundException e)
+                {
+                    Console.WriteLine("File does not exist: {0}", e.FileName);
+                }
             }
         }
 
 
         static void ListSongs(PsarcBrowser browser)
         {
-            var trackList = browser.GetTrackList();
-            foreach (var track in trackList)
+            var songList = browser.GetSongList();
+            foreach (var song in songList)
             {
-                Console.WriteLine("[{0}] {1} - {2}  ({3}, {4})   {{{5}}}", track.Identifier,
-                    track.Artist, track.Title, track.Album, track.Year,
-                    string.Join(", ", track.Arrangements));
+                Console.WriteLine("[{0}] {1} - {2}  ({3}, {4})   {{{5}}}", song.Identifier,
+                    song.Artist, song.Title, song.Album, song.Year,
+                    string.Join(", ", song.Arrangements));
             }
         }
 

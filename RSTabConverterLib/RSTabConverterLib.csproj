@@ -57,6 +57,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Converter.cs" />
     <Compile Include="musicxml.cs">
       <DependentUpon>musicxml.xsd</DependentUpon>
     </Compile>
