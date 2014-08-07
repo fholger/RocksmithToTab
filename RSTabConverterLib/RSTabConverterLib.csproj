@@ -58,19 +58,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Converter.cs" />
-    <Compile Include="musicxml.cs">
-      <DependentUpon>musicxml.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="MusicXmlExporter.cs" />
+    <Compile Include="Gpif.cs" />
     <Compile Include="PsarcBrowser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Score.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="musicxml.xsd">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

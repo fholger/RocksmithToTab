@@ -8,8 +8,22 @@ namespace RSTabConverter
 {
     class Program
     {
+        static void testXml()
+        {
+            var gpif = new Gpif.GPIF();
+            gpif.Score.Title = "Test Title";
+            gpif.Score.Artist = "Iron Maiden";
+            gpif.Score.Album = "Whatever";
+            gpif.MasterTrack.Tracks.Add(0);
+            gpif.MasterTrack.Tracks.Add(1);
+
+            gpif.Save("test.xml");
+        }
+
         static void Main(string[] args)
         {
+            testXml();
+
             // parse command line arguments
             var options = new CmdOptions();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
