@@ -40,6 +40,7 @@ namespace RSTabConverterLib
         public Track()
         {
             Bars = new List<Bar>();
+            ChordTemplates = new Dictionary<int, ChordTemplate>();
         }
 
         public enum InstrumentType
@@ -52,8 +53,22 @@ namespace RSTabConverterLib
         public string Name { get; set; }
         public InstrumentType Instrument { get; set; }
         public List<Bar> Bars { get; set; }
+        public Dictionary<int, ChordTemplate> ChordTemplates { get; set; }
 
         public Single AverageBeatsPerMinute { get; set; }
+    }
+
+
+    /// <summary>
+    /// A chord template. Used to generate chord diagrams and also to determine
+    /// the actual notes in a chord referencing this template.
+    /// </summary>
+    public class ChordTemplate
+    {
+        public string Name { get; set; }
+        public int[] Frets { get; set; }
+        public int[] Fingers { get; set; }
+        public int ChordId { get; set; }
     }
 
 
@@ -81,6 +96,23 @@ namespace RSTabConverterLib
         public bool ContainsTime(Single time)
         {
             return Start <= time && time < End;
+        }
+
+        /// <summary>
+        /// Approximates the given absolute time length in terms of a note value.
+        /// The note duration is represented as an int in multiples of
+        /// 1/48 of a quarter note.
+        /// </summary>
+        public int GetDuration(Single start, Single length)
+        {
+            Single quarterNoteLength = (End - Start) / TimeNominator * TimeDenominator / 4;
+            return (int) Math.Round(length / quarterNoteLength * 48);
+        }
+
+        public Single GetDurationLength(Single start, int duration)
+        {
+            Single quarterNoteLength = (End - Start) / TimeNominator * TimeDenominator / 4;
+            return duration / 48.0f * quarterNoteLength;
         }
 
         /// <summary>
@@ -119,25 +151,12 @@ namespace RSTabConverterLib
         public Chord()
         {
             Notes = new Dictionary<int, Note>();
+            ChordId = -1;
         }
 
-        public Chord(SongNote2014 note)
-        {
-            Notes = new Dictionary<int, Note>();
-            Start = note.Time;
-            Notes.Add(note.String, new Note(note));
-        }
-
-        public Chord(SongChord2014 chord)
-        {
-            Notes = new Dictionary<int, Note>();
-            Start = chord.Time;
-            foreach (var note in chord.ChordNotes)
-            {
-                Notes.Add(note.String, new Note(note));
-            }
-        }
-
+        public int ChordId { get; set; }
+        // Duration is set as a multiple of 1/48th of a quarter note,
+        // i.e., 48 = quarter, 24 = eighth, 16 = eighth triplet etc.
         public int Duration { get; set; }
         // index a note by its string
         public Dictionary<int, Note> Notes { get; set; }
@@ -149,12 +168,6 @@ namespace RSTabConverterLib
 
     public class Note
     {
-        public Note(SongNote2014 note)
-        {
-            String = note.String;
-            Fret = note.Fret;
-        }
-
         public int String { get; set; }
         public int Fret { get; set; }
     }
