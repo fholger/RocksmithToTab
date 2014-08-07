@@ -25,7 +25,7 @@ namespace RSTabConverterLib
             track.Bars = GetBars(arrangement);
 
             // gather notes 
-            //var allNotes = GetNotesForDifficulty(arrangement, difficultyLevel);
+            GetNotesForDifficulty(arrangement, track.Bars, difficultyLevel);
 
             return track;
         }
@@ -79,16 +79,42 @@ namespace RSTabConverterLib
         }
 
 
-        //static List<Chord> GetNotesForDifficulty(Song2014 arrangement, int difficultyLevel)
-        //{
+        static void GetNotesForDifficulty(Song2014 arrangement, List<Bar> bars, int difficultyLevel)
+        {
             // Rocksmith keeps its notes separated by the difficulty levels. Higher difficulty
             // levels only contain notes for phrases where the notes differ from lower levels.
-            // This makes collection a little awkward, as we have to go phrase by phrase, then
-            // through each phrase iteration, to extract all the right notes.
-            //foreach (int phraseId = 0; phraseId < arrangement.Phrases.Length; ++phraseId)
-            //{
-            //    phrase.
-            //}
-        //}
+            // This makes collection a little awkward, as we have to go phrase by phrase, 
+            // to extract all the right notes.
+            int currentBar = 0;
+            for (int pit = 0; pit < arrangement.PhraseIterations.Length; ++pit)
+            {
+                var phraseIteration = arrangement.PhraseIterations[pit];
+                var phrase = arrangement.Phrases[phraseIteration.PhraseId];
+                int difficulty = Math.Min(difficultyLevel, phrase.MaxDifficulty);
+                var level = arrangement.Levels.FirstOrDefault(x => x.Difficulty == difficulty);
+                
+                while (currentBar < bars.Count && 
+                    (pit == arrangement.PhraseIterations.Length-1 ||
+                    bars[currentBar].Start < arrangement.PhraseIterations[pit+1].Time))
+                {
+                    var bar = bars[currentBar];
+                    // gather notes and chords for the selected difficulty level that lie within this bar
+                    var notes = from n in level.Notes where bar.ContainsTime(n.Time) select new Chord(n);
+                    var chords = from c in level.Chords where bar.ContainsTime(c.Time) select new Chord(c);
+                    bar.Chords = notes.Union(chords).OrderBy(x => x.Start).ToList();
+                    Console.WriteLine("Bar {0}: Added {1} chords.", currentBar, bar.Chords.Count);
+
+                    // in case that the bar is empty or the first note does not coincide with the start
+                    // of the bar, we add an empty chord to the beginning indicating silence.
+                    if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
+                    {
+                        bar.Chords.Insert(0, new Chord() { Start = bar.Start });
+                        Console.WriteLine("Bar {0}: Added silence at the beginning.", currentBar);
+                    }
+
+                    ++currentBar;
+                }
+            }            
+        }
     }
 }

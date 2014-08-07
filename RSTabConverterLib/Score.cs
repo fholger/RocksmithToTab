@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RocksmithToolkitLib.Xml;
 
 namespace RSTabConverterLib
 {
@@ -77,6 +78,11 @@ namespace RSTabConverterLib
         public Single Start { get; set; }
         public Single End { get; set; }
 
+        public bool ContainsTime(Single time)
+        {
+            return Start <= time && time < End;
+        }
+
         /// <summary>
         /// Requires that Start, End and TimeNominator have been set. Will try to figure out a
         /// fitting TimeDenominator and BPM.
@@ -115,6 +121,23 @@ namespace RSTabConverterLib
             Notes = new Dictionary<int, Note>();
         }
 
+        public Chord(SongNote2014 note)
+        {
+            Notes = new Dictionary<int, Note>();
+            Start = note.Time;
+            Notes.Add(note.String, new Note(note));
+        }
+
+        public Chord(SongChord2014 chord)
+        {
+            Notes = new Dictionary<int, Note>();
+            Start = chord.Time;
+            foreach (var note in chord.ChordNotes)
+            {
+                Notes.Add(note.String, new Note(note));
+            }
+        }
+
         public int Duration { get; set; }
         // index a note by its string
         public Dictionary<int, Note> Notes { get; set; }
@@ -126,6 +149,12 @@ namespace RSTabConverterLib
 
     public class Note
     {
+        public Note(SongNote2014 note)
+        {
+            String = note.String;
+            Fret = note.Fret;
+        }
+
         public int String { get; set; }
         public int Fret { get; set; }
     }
