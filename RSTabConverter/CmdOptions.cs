@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using CommandLine;
 using CommandLine.Text;
 
-namespace RSTabConverter
+namespace RocksmithToTab
 {
     class CmdOptions
     {

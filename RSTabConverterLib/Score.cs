@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using RocksmithToolkitLib.Xml;
 
-namespace RSTabConverterLib
+namespace RocksmithToTabLib
 {
     /// <summary>
     /// An intermediary representation of a score. The score keeps information about

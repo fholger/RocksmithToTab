@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using RocksmithToolkitLib.Xml;
 
-namespace RSTabConverterLib
+namespace RocksmithToTabLib
 {
     public class Converter
     {

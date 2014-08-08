@@ -1,10 +1,10 @@
 ﻿using System;
 using CommandLine;
 using CommandLine.Text;
-using RSTabConverterLib;
+using RocksmithToTabLib;
 
 
-namespace RSTabConverter
+namespace RocksmithToTab
 {
     class Program
     {
@@ -17,7 +17,7 @@ namespace RSTabConverter
             gpif.MasterTrack.Tracks.Add(0);
             gpif.MasterTrack.Tracks.Add(1);
 
-            gpif.Save("test.xml");
+            //gpif.Save("test.xml");
         }
 
         static void Main(string[] args)

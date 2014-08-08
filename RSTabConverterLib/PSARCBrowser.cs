@@ -14,7 +14,7 @@ using RocksmithToolkitLib.DLCPackage;
 using RocksmithToolkitLib.Sng2014HSL;
 
 
-namespace RSTabConverterLib
+namespace RocksmithToTabLib
 {
     /// <summary>
     /// Reads in a Rocksmith PSARC archive and collects information on the 
