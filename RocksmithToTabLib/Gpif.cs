@@ -15,6 +15,9 @@ namespace Gpif
         public Score @Score = new Score();
         public MasterTrack @MasterTrack = new MasterTrack();
         public List<Track> Tracks = new List<Track>();
+        public List<MasterBar> MasterBars = new List<MasterBar>();
+        public List<Note> Notes = new List<Note>();
+        public List<Rhythm> Rhythms = new List<Rhythm>();
 
         public void Save(string fileName)
         {
@@ -126,4 +129,169 @@ namespace Gpif
         public int SecondaryChannel;
         public bool ForeOneChannelPerString = false;
     }
+
+    public class MasterBar
+    {
+        public class KeyType
+        {
+            public int AccidentalCount;
+            public string Mode; // "Major" or "Minor"
+        }
+
+        public KeyType Key = new KeyType();
+        public string Time; // written as "4/4" etc.
+
+        [XmlIgnore]
+        public List<int> Bars = new List<int>();
+
+        [XmlElement("Bars")]
+        public string BarsString
+        {
+            get
+            {
+                return string.Join(" ", Bars);
+            }
+            set
+            {
+                Bars = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToList();
+            }
+        }
+    }
+
+    public class Bar
+    {
+        [XmlAttribute("id")]
+        public int Id;
+        public string Clef;  // "G2", "F4", ...
+
+        [XmlIgnore]
+        public List<int> Voices = new List<int>();
+
+        [XmlElement("Voices")]
+        public string VoicesString
+        {
+            get
+            {
+                return string.Join(" ", Voices);
+            }
+            set
+            {
+                Voices = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToList();
+            }
+        }
+    }
+
+    public class Voice
+    {
+        [XmlAttribute("id")]
+        public int Id;
+
+        [XmlIgnore]
+        public List<int> Beats = new List<int>();
+
+        [XmlElement("Beats")]
+        public string BeatsString
+        {
+            get
+            {
+                return string.Join(" ", Beats);
+            }
+            set
+            {
+                Beats = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToList();
+            }
+        }
+    }
+
+
+    public class Beat
+    {
+        [XmlAttribute("id")]
+        public int Id;
+        public string Bank = null;  // e.g. "Strat-Guitar"
+        public string Dynamic = "MF";
+
+        public class RhythmType
+        {
+            [XmlAttribute("ref")]
+            public int Ref;
+        }
+
+        public RhythmType Rhythm = new RhythmType();
+
+        [XmlIgnore]
+        public List<int> Notes = new List<int>();
+
+        [XmlElement("Notes")]
+        public string NotesString
+        {
+            get
+            {
+                return string.Join(" ", Notes);
+            }
+            set
+            {
+                Notes = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToList();
+            }
+        }
+
+        public class Property
+        {
+            [XmlAttribute("name")]
+            public string Name;  // "Brush"
+            public string Direction = null;  // "Up" or "Down"
+        }
+        public List<Property> Properties;
+    }
+
+
+    public class Note
+    {
+        [XmlAttribute("id")]
+        public int Id;
+        public string Vibrato; // "Slight" or "Wide"
+
+        public class TieType
+        {
+            [XmlAttribute("origin")]
+            public bool Origin;
+            [XmlAttribute("destination")]
+            public bool Destination;
+        }
+
+        public TieType Tie;
+
+        public class Property
+        {
+            [XmlAttribute("name")]
+            public string Name;  // "String", "Fret", "Slide", "HopoOrigin", "HopoDestination"
+            public int? String;
+            public int? Fret;
+            public int? Flags;  // used in slides
+
+            public class EnableType
+            { }
+
+            public EnableType @Enable;  // initialize this for HopoOrigin or HopoDestination
+        }
+
+        public List<Property> Properties = new List<Property>();
+    }
+
+    public class Rhythm
+    {
+        [XmlAttribute("id")]
+        public int Id;
+        public string NoteValue;  // "Whole", "Half", "Quarther", "Eighth", "16th", "32nd", "64th"
+
+        public class Tuplet
+        {
+            [XmlAttribute("num")]
+            public int Num;  // e.g. for triplets, set to 3
+            [XmlAttribute("den")]
+            public int Den;  // e.g. for triplets, set to 2
+        }
+        public Tuplet PrimaryTuplet;
+    }
+
 }
