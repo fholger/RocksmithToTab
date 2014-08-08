@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocksmithToTab", "RSTabConverter\RocksmithToTab.csproj", "{62A79A13-92D8-4DCE-A723-783244F5323B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocksmithToTab", "RocksmithToTab\RocksmithToTab.csproj", "{62A79A13-92D8-4DCE-A723-783244F5323B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocksmithToTabLib", "RSTabConverterLib\RocksmithToTabLib.csproj", "{A391030A-8289-4B6A-8117-1C7995808AD5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocksmithToTabLib", "RocksmithToTabLib\RocksmithToTabLib.csproj", "{A391030A-8289-4B6A-8117-1C7995808AD5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
