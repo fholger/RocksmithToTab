@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RocksmithToolkitLib.Xml;
+using RocksmithToolkitLib.Sng2014HSL;
 
 namespace RocksmithToTabLib
 {
@@ -21,6 +22,10 @@ namespace RocksmithToTabLib
                 track.Instrument = Track.InstrumentType.Guitar;
             // todo: vocals
 
+            // get tuning
+            track.Tuning = GetTuning(arrangement);
+            track.Capo = arrangement.Capo;
+
             // get chord templates
             track.ChordTemplates = GetChordTemplates(arrangement);
 
@@ -34,6 +39,16 @@ namespace RocksmithToTabLib
             CalculateNoteDurations(track.Bars);
 
             return track;
+        }
+
+
+        static int[] GetTuning(Song2014 arrangement)
+        {
+            bool isBass = arrangement.Title.ToLower() == "bass";
+            int[] tuning = new int[isBass ? 4 : 6];
+            for (byte s = 0; s < tuning.Length; ++s)
+                tuning[s] = Sng2014FileWriter.GetMidiNote(arrangement.Tuning.ToShortArray(), s, 0, isBass, 0);
+            return tuning;
         }
 
 

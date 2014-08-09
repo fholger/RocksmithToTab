@@ -52,6 +52,9 @@ namespace RocksmithToTabLib
 
         public string Name { get; set; }
         public InstrumentType Instrument { get; set; }
+        // Tuning stored as midi notes for each open string
+        public int[] Tuning { get; set; }
+        public int Capo { get; set; }
         public List<Bar> Bars { get; set; }
         public Dictionary<int, ChordTemplate> ChordTemplates { get; set; }
 
