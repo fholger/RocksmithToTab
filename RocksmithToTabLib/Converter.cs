@@ -33,7 +33,7 @@ namespace RocksmithToTabLib
             track.Bars = GetBars(arrangement);
 
             // gather notes
-            difficultyLevel = CollectNotesForDifficulty(arrangement, track.Bars, track.ChordTemplates, difficultyLevel);
+            track.DifficultyLevel = CollectNotesForDifficulty(arrangement, track.Bars, track.ChordTemplates, difficultyLevel);
 
             // figure out note durations and clean up potentially overlapping notes
             CalculateNoteDurations(track.Bars);

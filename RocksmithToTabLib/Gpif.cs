@@ -39,7 +39,7 @@ namespace Gpif
     public class MasterTrack
     {
         [XmlIgnore]
-        public List<uint> Tracks = new List<uint>();
+        public List<int> Tracks = new List<int>();
 
         public List<Automation> Automations;
 
@@ -52,7 +52,7 @@ namespace Gpif
             }
             set
             {
-                Tracks = value.Split(new Char[]{' '}).Select(n => uint.Parse(n)).ToList();
+                Tracks = value.Split(new Char[]{' '}).Select(n => int.Parse(n)).ToList();
             }
         }
     }
@@ -84,6 +84,8 @@ namespace Gpif
 
     public class Track
     {
+        [XmlAttribute("id")]
+        public int Id;
         public string Name;
         public string ShortName;
         public Instrument @Instrument;
@@ -134,8 +136,8 @@ namespace Gpif
     {
         public class KeyType
         {
-            public int AccidentalCount;
-            public string Mode; // "Major" or "Minor"
+            public int AccidentalCount = 0;
+            public string Mode = "Major"; // "Major" or "Minor"
         }
 
         public KeyType Key = new KeyType();

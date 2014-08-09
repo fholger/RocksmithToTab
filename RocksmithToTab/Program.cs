@@ -8,22 +8,8 @@ namespace RocksmithToTab
 {
     class Program
     {
-        static void testXml()
-        {
-            var gpif = new Gpif.GPIF();
-            gpif.Score.Title = "Test Title";
-            gpif.Score.Artist = "Iron Maiden";
-            gpif.Score.Album = "Whatever";
-            gpif.MasterTrack.Tracks.Add(0);
-            gpif.MasterTrack.Tracks.Add(1);
-
-            //gpif.Save("test.xml");
-        }
-
         static void Main(string[] args)
         {
-            testXml();
-
             // parse command line arguments
             var options = new CmdOptions();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
@@ -41,11 +27,24 @@ namespace RocksmithToTab
 
                     foreach (var song in options.Tracks)
                     {
+                        var score = new Score();
+                        bool titleSet = false;
                         foreach (var arr in options.Arrangements)
                         {
                             var arrangement = browser.GetArrangement(song, arr);
                             var track = Converter.ConvertArrangement(arrangement);
+                            score.Tracks.Add(track);
+                            if (!titleSet)
+                            {
+                                score.Title = arrangement.Title;
+                                score.Artist = arrangement.ArtistName;
+                                score.Album = arrangement.AlbumName;
+                                score.Year = arrangement.AlbumYear;
+                            }
                         }
+
+                        var exporter = new GpxExporter();
+                        exporter.ExportGpif(score, song + ".gpif");
                     }
                     //exporter.SaveToFile("nonsensical.xml");
                 }

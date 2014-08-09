@@ -51,6 +51,7 @@ namespace RocksmithToTabLib
         }
 
         public string Name { get; set; }
+        public int DifficultyLevel { get; set; }
         public InstrumentType Instrument { get; set; }
         // Tuning stored as midi notes for each open string
         public int[] Tuning { get; set; }
