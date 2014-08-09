@@ -16,6 +16,9 @@ namespace Gpif
         public MasterTrack @MasterTrack = new MasterTrack();
         public List<Track> Tracks = new List<Track>();
         public List<MasterBar> MasterBars = new List<MasterBar>();
+        public List<Bar> Bars = new List<Bar>();
+        public List<Voice> Voices = new List<Voice>();
+        public List<Beat> Beats = new List<Beat>();
         public List<Note> Notes = new List<Note>();
         public List<Rhythm> Rhythms = new List<Rhythm>();
 
@@ -29,6 +32,7 @@ namespace Gpif
         }
     }
 
+    [XmlType]
     public class Score
     {
         public string Title;
@@ -36,12 +40,13 @@ namespace Gpif
         public string Album;
     }
 
+    [XmlType]
     public class MasterTrack
     {
         [XmlIgnore]
         public List<int> Tracks = new List<int>();
 
-        public List<Automation> Automations;
+        public List<Automation> Automations = new List<Automation>();
 
         [XmlElement("Tracks")]
         public string TracksString
@@ -57,6 +62,7 @@ namespace Gpif
         }
     }
 
+    [XmlType]
     public class Automation
     {
         public string Type = "Tempo";
@@ -82,6 +88,60 @@ namespace Gpif
         }
     }
 
+    public class Property
+    {
+        [XmlAttribute("name")]
+        public string Name;  // for notes: "String", "Fret", "Slide", "HopoOrigin", "HopoDestination"
+        public int? String;  // for notes
+        public int? Fret;  // for notes
+        public int? Flags;  // used in slides
+        public string Direction = null;  // "Up" or "Down", used in "Brush"
+
+        [XmlIgnore]
+        public List<int> Pitches;
+
+        [XmlElement("Pitches")]
+        public string PitchesString
+        {
+            get
+            {
+                if (Pitches == null)
+                    return null;
+                else
+                    return string.Join(" ", Pitches);
+            }
+            set
+            {
+                Pitches = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToList();
+            }
+        }
+        
+        public class EnableType
+        { }
+
+        public EnableType @Enable;  // initialize this for HopoOrigin or HopoDestination
+
+        // hints to the XML serializer to keep output clean
+        public bool ShouldSerializeString() { return String.HasValue; }
+        public bool ShouldSerializeFret() { return Fret.HasValue; }
+        public bool ShouldSerializeFlags() { return Flags.HasValue; }
+        public bool ShouldSerializeDirection() { return Direction != null; }
+        public bool ShouldSerializePitchesString() { return PitchesString != null; }
+
+        public bool Equals(Property other)
+        {
+            if (other == null)
+                return false;
+            bool result = (Name == other.Name) && (String == other.String) && (Fret == other.Fret)
+                && (Flags == other.Flags) && (Direction == other.Direction);
+            if (Pitches != null && other.Pitches != null)
+                result = result && Enumerable.SequenceEqual(Pitches, other.Pitches);
+            else
+                result = result && Pitches == other.Pitches;
+            return result;
+        }
+    }
+
     public class Track
     {
         [XmlAttribute("id")]
@@ -90,28 +150,6 @@ namespace Gpif
         public string ShortName;
         public Instrument @Instrument;
         public GeneralMidi @GeneralMidi = new GeneralMidi();
-
-        public class Property
-        {
-            [XmlAttribute("name")]
-            public string Name = "Tuning";
-            [XmlIgnore]
-            public List<int> Pitches = new List<int>();
-
-            [XmlElement("Pitches")]
-            public string PitchesString
-            {
-                get
-                {
-                    return string.Join(" ", Pitches);
-                }
-                set
-                {
-                    Pitches = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToList();
-                }
-            }
-        }
-
         public List<Property> Properties = new List<Property>();
     }
 
@@ -167,7 +205,7 @@ namespace Gpif
         public string Clef;  // "G2", "F4", ...
 
         [XmlIgnore]
-        public List<int> Voices = new List<int>();
+        public int[] Voices = new int[] { -1, -1, -1, -1 };
 
         [XmlElement("Voices")]
         public string VoicesString
@@ -178,8 +216,13 @@ namespace Gpif
             }
             set
             {
-                Voices = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToList();
+                Voices = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToArray();
             }
+        }
+
+        public bool Equals(Bar other)
+        {
+            return other != null && Clef == other.Clef && Enumerable.SequenceEqual(Voices, other.Voices);
         }
     }
 
@@ -203,8 +246,12 @@ namespace Gpif
                 Beats = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToList();
             }
         }
-    }
 
+        public bool Equals(Voice other)
+        {
+            return other != null && Enumerable.SequenceEqual(Beats, other.Beats);
+        }
+    }
 
     public class Beat
     {
@@ -237,15 +284,23 @@ namespace Gpif
             }
         }
 
-        public class Property
-        {
-            [XmlAttribute("name")]
-            public string Name;  // "Brush"
-            public string Direction = null;  // "Up" or "Down"
-        }
         public List<Property> Properties;
-    }
 
+        public bool Equals(Beat other)
+        {
+            if (other == null)
+                return false;
+            bool result = (Bank == other.Bank) && (Dynamic == other.Dynamic) 
+                && (Rhythm.Ref == other.Rhythm.Ref) && Enumerable.SequenceEqual(Notes, other.Notes);
+            if (Properties != null && other.Properties != null)
+                result = result && Enumerable.SequenceEqual(Properties, other.Properties);
+            else
+                result = result && Properties == other.Properties;
+            return result;
+        }
+
+        public bool ShouldSerializeBank() { return Bank != null; }
+    }
 
     public class Note
     {
@@ -259,25 +314,22 @@ namespace Gpif
             public bool Origin;
             [XmlAttribute("destination")]
             public bool Destination;
+
+            public bool Equals(TieType other)
+            {
+                return (other != null) && (Origin == other.Origin) && (Destination == other.Destination);
+            }
         }
 
         public TieType Tie;
 
-        public class Property
-        {
-            [XmlAttribute("name")]
-            public string Name;  // "String", "Fret", "Slide", "HopoOrigin", "HopoDestination"
-            public int? String;
-            public int? Fret;
-            public int? Flags;  // used in slides
-
-            public class EnableType
-            { }
-
-            public EnableType @Enable;  // initialize this for HopoOrigin or HopoDestination
-        }
-
         public List<Property> Properties = new List<Property>();
+
+        public bool Equals(Note other)
+        {
+            return (other != null) && (Vibrato == other.Vibrato) && (Tie == other.Tie) 
+                && Enumerable.SequenceEqual(Properties, other.Properties);
+        }
     }
 
     public class Rhythm
@@ -292,8 +344,31 @@ namespace Gpif
             public int Num;  // e.g. for triplets, set to 3
             [XmlAttribute("den")]
             public int Den;  // e.g. for triplets, set to 2
+
+            public bool Equals(Tuplet other)
+            {
+                return other != null && Num == other.Num && Den == other.Den;
+            }
         }
         public Tuplet PrimaryTuplet;
+
+        public class Dot
+        {
+            [XmlAttribute("count")]
+            public int Count;
+
+            public bool Equals(Dot other)
+            {
+                return other != null && Count == other.Count;
+            }
+        }
+        public Dot AugmentationDot;
+
+        public bool Equals(Rhythm other)
+        {
+            return (other != null) && (NoteValue == other.NoteValue) 
+                && (PrimaryTuplet == other.PrimaryTuplet) && (AugmentationDot == other.AugmentationDot);
+        }
     }
 
 }

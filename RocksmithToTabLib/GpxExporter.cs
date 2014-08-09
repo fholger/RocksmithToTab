@@ -27,9 +27,9 @@ namespace RocksmithToTabLib
         {
             gpif = new GPIF();
             // set basic properties
-            gpif.Score.Title = "<![CDATA[" + score.Title + "]]>";
-            gpif.Score.Artist = "<![CDATA[" + score.Artist + "]]>";
-            gpif.Score.Album = "<![CDATA[" + score.Album + "]]>";
+            gpif.Score.Title = score.Title;
+            gpif.Score.Artist = score.Artist;
+            gpif.Score.Album = score.Album;
 
             foreach (var track in score.Tracks)
             {
@@ -41,11 +41,12 @@ namespace RocksmithToTabLib
         {
             var gpTrack = new Gpif.Track();
             gpTrack.Id = gpif.Tracks.Count;
-            gpTrack.Name = "<![CDATA[" + track.Name + " Level " + track.DifficultyLevel.ToString() + "]]>";
-            gpTrack.ShortName = "<![CDATA[" + track.Name + "]]>";
+            gpTrack.Name = track.Name + " Level " + track.DifficultyLevel.ToString();
+            gpTrack.ShortName = track.Name;
 
             // export tuning
-            var tuningProp = new Gpif.Track.Property();
+            var tuningProp = new Gpif.Property();
+            tuningProp.Name = "Tuning";
             tuningProp.Pitches = track.Tuning.ToList();
             gpTrack.Properties.Add(tuningProp);
 
@@ -75,21 +76,22 @@ namespace RocksmithToTabLib
             gpif.Tracks.Add(gpTrack);
             gpif.MasterTrack.Tracks.Add(gpTrack.Id);
 
-            ExportBars(track.Bars);
+            ExportBars(track);
         }
 
-        void ExportBars(List<Bar> bars)
+        void ExportBars(Track track)
         {
             int lastTempo = -1;
-            for (int i = 0; i < bars.Count; ++i)
+            for (int i = 0; i < track.Bars.Count; ++i)
             {
-                var bar = bars[i];
+                var bar = track.Bars[i];
                 if (gpif.MasterBars.Count <= i)
                 {
                     // this only has to be done for the first track, all other tracks
                     // are assumed to have the same bar layout (which makes sense, if
                     // they are supposed to fit together :) ).
                     var masterBar = new MasterBar();
+                    masterBar.Time = string.Format("{0}/{1}", bar.TimeNominator, bar.TimeDenominator);
                     gpif.MasterBars.Add(masterBar);
                     if (bar.BeatsPerMinute != lastTempo)
                     {
@@ -101,9 +103,163 @@ namespace RocksmithToTabLib
                         tempo.Value[0] = bar.BeatsPerMinute;
                         tempo.Value[1] = 2; // no idea what this represents
                         gpif.MasterTrack.Automations.Add(tempo);
+                        lastTempo = bar.BeatsPerMinute;
                     }
                 }
+
+                // construct a voice for this bar
+                var voice = new Voice();
+                voice.Id = gpif.Voices.Count;
+                foreach (var chord in bar.Chords)
+                {
+                    int id = ExportOrFindBeat(chord);
+                    voice.Beats.Add(id);
+                }
+
+                // see if this voice is already available, otherwise add
+                var searchVoice = gpif.Voices.Find(x => x.Equals(voice));
+                if (searchVoice != null)
+                    voice = searchVoice;
+                else
+                    gpif.Voices.Add(voice);
+
+                // construct the bar
+                var gpBar = new Gpif.Bar();
+                gpBar.Id = gpif.Bars.Count;
+                if (track.Instrument == Track.InstrumentType.Bass)
+                    gpBar.Clef = "F4";
+                else
+                    gpBar.Clef = "G2";
+                gpBar.Voices[0] = voice.Id;
+                // see if this bar is already available, otherwise add
+                var searchBar = gpif.Bars.Find(x => x.Equals(gpBar));
+                if (searchBar != null)
+                    gpBar = searchBar;
+                else
+                    gpif.Bars.Add(gpBar);
+
+                // add to master bar
+                gpif.MasterBars[i].Bars.Add(gpBar.Id);
             }
+        }
+
+
+        int ExportOrFindBeat(Chord chord)
+        {
+            var beat = new Beat();
+            beat.Id = gpif.Beats.Count;
+            foreach (var note in chord.Notes)
+            {
+                int id = ExportOrFindNote(note.Value);
+                beat.Notes.Add(id);
+            }
+
+            // construct rhythm
+            var rhythm = new Rhythm();
+            rhythm.Id = gpif.Rhythms.Count;
+            switch (chord.Duration)
+            {
+                case 192:
+                    rhythm.NoteValue = "Whole";
+                    break;
+                case 144:
+                    rhythm.NoteValue = "Half";
+                    rhythm.AugmentationDot = new Rhythm.Dot() { Count = 1 };
+                    break;
+                case 96:
+                    rhythm.NoteValue = "Half";
+                    break;
+                case 72:
+                    rhythm.NoteValue = "Quarter";
+                    rhythm.AugmentationDot = new Rhythm.Dot() { Count = 1 };
+                    break;
+                case 48:
+                    rhythm.NoteValue = "Quarter";
+                    break;
+                case 36:
+                    rhythm.NoteValue = "Eighth";
+                    rhythm.AugmentationDot = new Rhythm.Dot() { Count = 1 };
+                    break;
+                case 32:
+                    rhythm.NoteValue = "Quarter";
+                    rhythm.PrimaryTuplet = new Rhythm.Tuplet() { Den = 2, Num = 3 };
+                    break;
+                case 24:
+                    rhythm.NoteValue = "Eighth";
+                    break;
+                case 18:
+                    rhythm.NoteValue = "16th";
+                    rhythm.AugmentationDot = new Rhythm.Dot() { Count = 1 };
+                    break;
+                case 16:
+                    rhythm.NoteValue = "Eighth";
+                    rhythm.PrimaryTuplet = new Rhythm.Tuplet() { Den = 2, Num = 3 };
+                    break;
+                case 12:
+                    rhythm.NoteValue = "16th";
+                    break;
+                case 9:
+                    rhythm.NoteValue = "32nd";
+                    rhythm.AugmentationDot = new Rhythm.Dot() { Count = 1 };
+                    break;
+                case 8:
+                    rhythm.NoteValue = "16th";
+                    rhythm.PrimaryTuplet = new Rhythm.Tuplet() { Den = 2, Num = 3 };
+                    break;
+                case 6:
+                    rhythm.NoteValue = "32nd";
+                    break;
+                case 4:
+                    rhythm.NoteValue = "32nd";
+                    rhythm.PrimaryTuplet = new Rhythm.Tuplet() { Den = 2, Num = 3 };
+                    break;
+                case 3:
+                    rhythm.NoteValue = "64th";
+                    break;
+                case 2:
+                    rhythm.NoteValue = "64th";
+                    rhythm.PrimaryTuplet = new Rhythm.Tuplet() { Den = 2, Num = 3 };
+                    break;
+                default:
+                    Console.WriteLine("Warning: Rhythm Duration {0} not handled, defaulting to quarter note.", chord.Duration);
+                    rhythm.NoteValue = "Quarter";
+                    break;
+            }
+            // see if this rhythm already exists, otherwise add
+            var searchRhythm = gpif.Rhythms.Find(x => x.Equals(rhythm));
+            if (searchRhythm != null)
+                rhythm = searchRhythm;
+            else
+                gpif.Rhythms.Add(rhythm);
+
+            beat.Rhythm.Ref = rhythm.Id;
+
+            // see if this beat already exists, otherwise add
+            var searchBeat = gpif.Beats.Find(x => x.Equals(beat));
+            if (searchBeat != null)
+                beat = searchBeat;
+            else
+                gpif.Beats.Add(beat);
+
+            return beat.Id;
+        }
+
+        int ExportOrFindNote(Note note)
+        {
+            var gpNote = new Gpif.Note();
+            gpNote.Id = gpif.Notes.Count;
+            // add string and fret numbers
+            gpNote.Properties.Add(new Property() { Name = "String", String = note.String });
+            gpNote.Properties.Add(new Property() { Name = "Fret", Fret = note.Fret });
+
+            // see if this note already exists, otherwise add
+            var searchNote = gpif.Notes.Find(x => x.Equals(gpNote));
+            if (searchNote != null)
+                gpNote = searchNote;
+            else
+                gpif.Notes.Add(gpNote);
+
+            return gpNote.Id;
         }
     }
 }
