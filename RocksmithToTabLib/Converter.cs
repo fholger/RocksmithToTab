@@ -269,6 +269,78 @@ namespace RocksmithToTabLib
                     }
                 }
                 bar.Chords.RemoveAll(x => x.Duration == 0);
+
+                CleanRhythm(bar);
+            }
+        }
+
+        static void CleanRhythm(Bar bar)
+        {
+            // it often happens that the Durations calculated from Rocksmith's absolute times
+            // are 1 or 2 short of a "sane" note value. Try to shift such values to the previous
+            // or following note to get the rhythm right.
+            int[] saneDurations = new int[] { 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 196 };
+            int[] shifts = new int[] { 1, -1, 2, -2, 3, -3 };
+
+            int barDuration = 0;
+            int expectedDuration = 48 * 4 * bar.TimeNominator / bar.TimeDenominator;
+
+            for (int i = 0; i < bar.Chords.Count; ++i)
+            {
+                var chord = bar.Chords[i];
+                barDuration += chord.Duration;
+
+                if (i == bar.Chords.Count - 1)
+                {
+                    // see if the whole bar's duration is ok, otherwise correct by throwing away
+                    // the surplus.
+                    if (barDuration != expectedDuration)
+                    {
+                        Console.WriteLine("{0} at end of bar does not match expected duration {1}, fixing... {2}", barDuration, expectedDuration, chord.Duration);
+                        chord.Duration -= (barDuration - expectedDuration);
+                        Console.WriteLine("Now: {0}", chord.Duration);
+                    }
+                }
+
+                if (saneDurations.Contains(chord.Duration))
+                    continue;
+
+                if (i > 0)
+                {
+                    // try to shift to previous note first, as that one might have passed as sane,
+                    // but if it's a low value, it could easily become another sane note
+                    var prev = bar.Chords[i - 1];
+                    foreach (var shift in shifts)
+                    {
+                        if (saneDurations.Contains(chord.Duration + shift) &&
+                            saneDurations.Contains(prev.Duration - shift))
+                        {
+                            Console.WriteLine("Shifting sloppy rhythm to previous note. ({0}, {1})", prev.Duration, chord.Duration);
+                            chord.Duration += shift;
+                            prev.Duration -= shift;
+                            Console.WriteLine("Now: ({0}, {1})", prev.Duration, chord.Duration);
+                            break;
+                        }
+                    }
+                }
+
+                if (i < bar.Chords.Count - 1 && !saneDurations.Contains(chord.Duration))
+                {
+                    // now just shift to the next note
+                    var next = bar.Chords[i + 1];
+                    foreach (var shift in shifts)
+                    {
+                        if (saneDurations.Contains(chord.Duration + shift))
+                        {
+                            Console.WriteLine("Shifting sloppy rhythm to next note. ({0}, {1})", chord.Duration, next.Duration);
+                            chord.Duration += shift;
+                            next.Duration -= shift;
+                            barDuration += shift;
+                            Console.WriteLine("Now: ({0}, {1})", chord.Duration, next.Duration);
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
