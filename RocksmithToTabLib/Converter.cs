@@ -105,11 +105,13 @@ namespace RocksmithToTabLib
                     if (currentMeasure != null)
                     {
                         currentMeasure.End = ebeat.Time;
+                        currentMeasure.BeatTimes.Add(ebeat.Time);
                         // figure out time and tempo
                         currentMeasure.GuessTimeAndBPM(arrangement.AverageTempo);
                     }
 
                     currentMeasure = new Bar() { TimeNominator = 1, Start = ebeat.Time };
+                    currentMeasure.BeatTimes.Add(ebeat.Time);
                     bars.Add(currentMeasure);
                 }
                 else
@@ -123,6 +125,7 @@ namespace RocksmithToTabLib
                     else
                     {
                         currentMeasure.TimeNominator += 1;
+                        currentMeasure.BeatTimes.Add(ebeat.Time);
                     }
                 }
             }

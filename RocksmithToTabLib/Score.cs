@@ -85,6 +85,7 @@ namespace RocksmithToTabLib
         public Bar()
         {
             Chords = new List<Chord>();
+            BeatTimes = new List<Single>();
         }
 
         public int BeatsPerMinute { get; set; }
@@ -96,6 +97,8 @@ namespace RocksmithToTabLib
         // start and end times in Rocksmith
         public Single Start { get; set; }
         public Single End { get; set; }
+
+        public List<Single> BeatTimes { get; set; }
 
         public bool ContainsTime(Single time)
         {
@@ -109,8 +112,27 @@ namespace RocksmithToTabLib
         /// </summary>
         public int GetDuration(Single start, Single length)
         {
-            Single quarterNoteLength = (End - Start) / TimeNominator * TimeDenominator / 4;
-            return (int) Math.Round(length / quarterNoteLength * 48);
+            // Since notes can be just a bit offbeat, duration recognition is actually
+            // quite tricky. Taking into account the individual sub-beats helps a lot, 
+            // since they might relay a bit of information about the amount the beats are
+            // off from the metronome. So we split each note into the parts belonging to 
+            // one sub-beat and calculate the note duration for that beat individually.
+            Single duration = 0;
+            for (int i = 0; i < BeatTimes.Count - 1; ++i)
+            {
+                if (start >= BeatTimes[i + 1])
+                    continue;
+                if (start + length < BeatTimes[i])
+                    break;
+
+                var beatLength = BeatTimes[i+1] - BeatTimes[i];
+                var noteStart = Math.Max(start, BeatTimes[i]);
+                var noteEnd = Math.Min(start + length, BeatTimes[i+1]);
+                var beatDuration = (noteEnd - noteStart) / beatLength * TimeNominator / TimeDenominator;
+                duration += beatDuration;
+            }
+
+            return (int)Math.Round(duration * 48);
         }
 
         public Single GetDurationLength(Single start, int duration)

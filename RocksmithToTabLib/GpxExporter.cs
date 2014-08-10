@@ -175,12 +175,20 @@ namespace RocksmithToTabLib
                 case 192:
                     rhythm.NoteValue = "Whole";
                     break;
+                case 168:  // should avoid this, split note instead (TODO)
+                    rhythm.NoteValue = "Half";
+                    rhythm.AugmentationDot = new Rhythm.Dot() { Count = 2 };
+                    break;
                 case 144:
                     rhythm.NoteValue = "Half";
                     rhythm.AugmentationDot = new Rhythm.Dot() { Count = 1 };
                     break;
                 case 96:
                     rhythm.NoteValue = "Half";
+                    break;
+                case 84:  // should avoid this, split note instead (TODO)
+                    rhythm.NoteValue = "Quarter";
+                    rhythm.AugmentationDot = new Rhythm.Dot() { Count = 2 };
                     break;
                 case 72:
                     rhythm.NoteValue = "Quarter";
