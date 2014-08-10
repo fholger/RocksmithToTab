@@ -178,6 +178,7 @@ namespace RocksmithToTabLib
         {
             Notes = new Dictionary<int, Note>();
             ChordId = -1;
+            BrushDirection = BrushType.None;
         }
 
         public int ChordId { get; set; }
@@ -186,6 +187,14 @@ namespace RocksmithToTabLib
         public int Duration { get; set; }
         // index a note by its string
         public Dictionary<int, Note> Notes { get; set; }
+
+        public enum BrushType
+        {
+            None,
+            Down,
+            Up
+        }
+        public BrushType BrushDirection { get; set; }
 
         // start time in Rocksmith
         public Single Start { get; set; }

@@ -236,6 +236,15 @@ namespace RocksmithToTabLib
                     kvp.Value.PalmMuted = true;
             }
 
+            // we will show a strum hint for all chords played with an up-stroke,
+            // and a down-stroke hint for all chords with more than 3 notes (to exclude power-chords)
+            //if (rsChord.Strum.ToLower() == "up")
+            //    chord.BrushDirection = Chord.BrushType.Up;
+            //else if (chord.Notes.Count > 3 && rsChord.Strum.ToLower() == "down")
+            //    chord.BrushDirection = Chord.BrushType.Down;
+            // disabled, since apparently the strum hints aren't really useful. I might have
+            // misunderstood the parameter.
+
             return chord;
         }
 

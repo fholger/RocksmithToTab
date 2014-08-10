@@ -167,6 +167,19 @@ namespace RocksmithToTabLib
                 beat.Notes.Add(id);
             }
 
+            // should we display a strum hint?
+            if (chord.BrushDirection != Chord.BrushType.None)
+            {
+                var brushProp = new Property() { Name = "Brush" };
+                if (chord.BrushDirection == Chord.BrushType.Down)
+                    brushProp.Direction = "Down";
+                else
+                    brushProp.Direction = "Up";
+                if (beat.Properties == null)
+                    beat.Properties = new List<Property>();
+                beat.Properties.Add(brushProp);
+            }
+
             // construct rhythm
             var rhythm = new Rhythm();
             rhythm.Id = gpif.Rhythms.Count;
