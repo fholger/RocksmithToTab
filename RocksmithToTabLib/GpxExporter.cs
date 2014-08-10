@@ -49,6 +49,16 @@ namespace RocksmithToTabLib
             tuningProp.Name = "Tuning";
             tuningProp.Pitches = track.Tuning.ToList();
             gpTrack.Properties.Add(tuningProp);
+            // add capo?
+            if (track.Capo > 0)
+            {
+                gpTrack.Properties.Add(new Gpif.Property()
+                    {
+                        Name = "CapoFret",
+                        Fret = track.Capo
+                    }
+                );
+            }
 
             if (track.Instrument == Track.InstrumentType.Guitar)
             {
