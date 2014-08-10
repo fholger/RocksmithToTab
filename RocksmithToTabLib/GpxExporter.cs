@@ -11,6 +11,7 @@ namespace RocksmithToTabLib
     {
         private GPIF gpif;
         private bool[] hopo;
+        private bool[] link;
 
         public void ExportGpif(Score score, string fileName)
         {
@@ -41,6 +42,7 @@ namespace RocksmithToTabLib
         void ExportTrack(Track track)
         {
             hopo = new bool[] { false, false, false, false, false, false };
+            link = new bool[] { false, false, false, false, false, false };
 
             var gpTrack = new Gpif.Track();
             gpTrack.Id = gpif.Tracks.Count;
@@ -291,6 +293,12 @@ namespace RocksmithToTabLib
             if (note.Muted)
                 gpNote.Properties.Add(new Property() { Name = "Muted", Enable = new Property.EnableType() });
 
+            // handle ties with previous/next note
+            if (link[note.String] || note.LinkNext)
+            {
+                gpNote.Tie = new Gpif.Note.TieType() { Destination = link[note.String], Origin = note.LinkNext };
+                link[note.String] = note.LinkNext;
+            }
             // handle hammer-on / pull-off
             if (hopo[note.String])
             {

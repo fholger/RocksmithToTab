@@ -38,6 +38,9 @@ namespace RocksmithToTabLib
             // figure out note durations and clean up potentially overlapping notes
             CalculateNoteDurations(track.Bars);
 
+            // split those note values that can't or shouldn't be represented as a single note value
+            SplitNotes(track.Bars);
+
             return track;
         }
 
@@ -263,7 +266,8 @@ namespace RocksmithToTabLib
                 PalmMuted = rsNote.PalmMute != 0,
                 Muted = rsNote.Mute != 0,
                 Hopo = rsNote.HammerOn != 0 || rsNote.PullOff != 0,
-                Vibrato = rsNote.Vibrato > 0
+                Vibrato = rsNote.Vibrato > 0,
+                LinkNext = rsNote.LinkNext != 0
             };
             if (rsNote.SlideTo != -1)
                 note.Slide = Note.SlideType.ToNext;
@@ -388,25 +392,6 @@ namespace RocksmithToTabLib
                 if (saneDurations.Contains(chord.Duration))
                     continue;
 
-                //if (i > 0)
-                //{
-                //    // try to shift to previous note first, as that one might have passed as sane,
-                //    // but if it's a low value, it could easily become another sane note
-                //    var prev = bar.Chords[i - 1];
-                //    foreach (var shift in shifts)
-                //    {
-                //        if (saneDurations.Contains(chord.Duration + shift) &&
-                //            saneDurations.Contains(prev.Duration - shift))
-                //        {
-                //            Console.WriteLine("Shifting sloppy rhythm to previous note. ({0}, {1})", prev.Duration, chord.Duration);
-                //            chord.Duration += shift;
-                //            prev.Duration -= shift;
-                //            Console.WriteLine("Now: ({0}, {1})", prev.Duration, chord.Duration);
-                //            break;
-                //        }
-                //    }
-                //}
-
                 if (i < bar.Chords.Count - 1 && !saneDurations.Contains(chord.Duration))
                 {
                     // now just shift to the next note
@@ -425,6 +410,80 @@ namespace RocksmithToTabLib
                     }
                 }
             }
+        }
+
+
+        static void SplitNotes(List<Bar> bars)
+        {
+            int[] saneDurations = new int[] { 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 196 };
+
+            foreach (var bar in bars)
+            {
+                int beatDuration = 48 * 4 / bar.TimeDenominator;
+                List<int> beatSplits = new List<int>();
+                beatSplits.Add(beatDuration);
+                for (int j = 2; j <= 4; ++j)
+                {
+                    if (beatDuration % j == 0)
+                        beatSplits.Add(beatDuration / j);
+                }
+
+                int curProgress = 0;
+                for (int i = 0; i < bar.Chords.Count; ++i)
+                {
+                    var chord = bar.Chords[i];
+                    if (!saneDurations.Contains(chord.Duration))
+                    {
+                        // see if we can split to the next full beat / half beat, etc.
+                        foreach (var split in beatSplits)
+                        {
+                            int toNextBeat = split - (curProgress % split);
+                            if (toNextBeat <= chord.Duration && saneDurations.Contains(toNextBeat))
+                            {
+                                var newChord = SplitChord(chord, toNextBeat);
+                                bar.Chords.Insert(i + 1, newChord);
+                                break;
+                            }
+                        }
+                    }
+
+                    curProgress += chord.Duration;
+                }
+            }
+        }
+
+        static Chord SplitChord(Chord chord, int splitPoint)
+        {
+            var newChord = new Chord()
+            {
+                ChordId = chord.ChordId,
+                BrushDirection = chord.BrushDirection,
+                Duration = chord.Duration - splitPoint
+            };
+            chord.Duration = splitPoint;
+
+            // copy over notes, but be careful to set techniques at the right points
+            foreach (var kvp in chord.Notes)
+            {
+                var note = kvp.Value;
+                var newNote = new Note()
+                {
+                    Fret = note.Fret,
+                    String = note.String,
+                    Hopo = note.Hopo,
+                    LinkNext = note.LinkNext,
+                    Slide = note.Slide,
+                    Muted = note.Muted,
+                    PalmMuted = note.PalmMuted,
+                    Vibrato = note.Vibrato
+                };
+                note.Hopo = false;
+                note.LinkNext = true;
+                note.Slide = Note.SlideType.None;
+                newChord.Notes.Add(kvp.Key, newNote);
+            }
+
+            return newChord;
         }
     }
 }
