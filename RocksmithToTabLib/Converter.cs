@@ -207,13 +207,13 @@ namespace RocksmithToTabLib
                     chord.Notes.Add(note.String, CreateNote(note, capo));
                 }
             }
-            else if (chordTemplates.ContainsKey(chord.ChordId))
+            if (chordTemplates.ContainsKey(chord.ChordId))
             {
                 // need to determine chords from the chord template
                 var template = chordTemplates[chord.ChordId];
                 for (int i = 0; i < 6; ++i)
                 {
-                    if (template.Frets[i] >= 0)
+                    if (template.Frets[i] >= 0 && !chord.Notes.ContainsKey(i))
                     {
                         var note = new Note()
                         {
@@ -224,7 +224,7 @@ namespace RocksmithToTabLib
                     }
                 }
             }
-            else
+            if (chord.Notes.Count == 0)
             {
                 Console.WriteLine("Warning: Empty chord. Cannot find chord with chordId {0}.", chord.ChordId);
             }
