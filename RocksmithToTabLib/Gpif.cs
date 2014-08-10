@@ -35,9 +35,9 @@ namespace Gpif
     [XmlType]
     public class Score
     {
-        public string Title;
-        public string Artist;
-        public string Album;
+        public CData Title = new CData();
+        public CData Artist = new CData();
+        public CData Album = new CData();
     }
 
     [XmlType]
@@ -146,8 +146,8 @@ namespace Gpif
     {
         [XmlAttribute("id")]
         public int Id;
-        public string Name;
-        public string ShortName;
+        public CData Name;
+        public CData ShortName;
         public Instrument @Instrument;
         public GeneralMidi @GeneralMidi = new GeneralMidi();
         public List<Property> Properties = new List<Property>();
@@ -371,4 +371,65 @@ namespace Gpif
         }
     }
 
+
+    /// <summary>
+    /// Helper class to deal with some of the text information needing to be CDATA text.
+    /// Taken from http://stackoverflow.com/questions/1379888/how-do-you-serialize-a-string-as-cdata-using-xmlserializer
+    /// </summary>
+    public class CData : IXmlSerializable
+    {
+        private string _value;
+
+        /// <summary>
+        /// Allow direct assignment from string:
+        /// CData cdata = "abc";
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static implicit operator CData(string value)
+        {
+            return new CData(value);
+        }
+
+        /// <summary>
+        /// Allow direct assigment to string
+        /// string str = cdata;
+        /// </summary>
+        /// <param name="cdata"></param>
+        /// <returns></returns>
+        public static implicit operator string(CData cdata)
+        {
+            return cdata._value;
+        }
+
+        public CData()
+            : this(string.Empty)
+        {
+        }
+
+        public CData(string value)
+        {
+            _value = value;
+        }
+
+        public override string ToString()
+        {
+            return _value;
+        }
+
+        public System.Xml.Schema.XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(System.Xml.XmlReader reader)
+        {
+            _value = reader.ReadElementString();
+        }
+
+        public void WriteXml(System.Xml.XmlWriter writer)
+        {
+            writer.WriteCData(_value);
+        }
+    }
 }

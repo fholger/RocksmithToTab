@@ -56,23 +56,34 @@ namespace RocksmithToTabLib
         {
             var templates = new Dictionary<int, ChordTemplate>();
 
-            foreach (var rsTemplate in arrangement.ChordTemplates)
+            for (int i = 0; i < arrangement.ChordTemplates.Length; ++i)
             {
-                if (rsTemplate.ChordId.HasValue)
+                var rsTemplate = arrangement.ChordTemplates[i];
+
+                var template = new ChordTemplate()
                 {
-                    // only store those with a ChordId, we have no use for any other
-                    var template = new ChordTemplate()
-                    {
-                        ChordId = rsTemplate.ChordId.Value,
-                        Name = rsTemplate.ChordName,
-                        Frets = new int[] { rsTemplate.Fret0, rsTemplate.Fret1, rsTemplate.Fret2,
-                            rsTemplate.Fret3, rsTemplate.Fret4, rsTemplate.Fret5 },
-                        Fingers = new int[] { rsTemplate.Finger0, rsTemplate.Finger1, 
-                            rsTemplate.Finger2, rsTemplate.Finger3, rsTemplate.Finger4,
-                            rsTemplate.Finger5 }
-                    };
-                    templates.Add(template.ChordId, template);
+                    ChordId = i,
+                    Name = rsTemplate.ChordName,
+                    Frets = new int[] { rsTemplate.Fret0, rsTemplate.Fret1, rsTemplate.Fret2,
+                        rsTemplate.Fret3, rsTemplate.Fret4, rsTemplate.Fret5 },
+                    Fingers = new int[] { rsTemplate.Finger0, rsTemplate.Finger1, 
+                        rsTemplate.Finger2, rsTemplate.Finger3, rsTemplate.Finger4,
+                        rsTemplate.Finger5 }
+                };
+                if (rsTemplate.ChordId.HasValue)
+                    template.ChordId = rsTemplate.ChordId.Value;
+
+                // correct for capo position
+                for (int j = 0; j < 6; ++j)
+                {
+                    if (template.Frets[j] > 0)
+                        template.Frets[j] -= arrangement.Capo;
                 }
+
+                if (!templates.ContainsKey(template.ChordId))
+                    templates.Add(template.ChordId, template);
+                else
+                    Console.WriteLine("Warning: ChordId {0} already present in templates list.", template.ChordId);
             }
 
             return templates;
@@ -149,8 +160,8 @@ namespace RocksmithToTabLib
                 {
                     var bar = bars[currentBar];
                     // gather notes and chords for the selected difficulty level that lie within this bar
-                    var notes = from n in level.Notes where bar.ContainsTime(n.Time) select CreateChord(n);
-                    var chords = from c in level.Chords where bar.ContainsTime(c.Time) select CreateChord(c, chordTemplates);
+                    var notes = from n in level.Notes where bar.ContainsTime(n.Time) select CreateChord(n, arrangement.Capo);
+                    var chords = from c in level.Chords where bar.ContainsTime(c.Time) select CreateChord(c, chordTemplates, arrangement.Capo);
                     bar.Chords = notes.Union(chords).OrderBy(x => x.Start).ToList();
                     Console.WriteLine("Bar {0}: Added {1} chords.", currentBar, bar.Chords.Count);
 
@@ -169,16 +180,16 @@ namespace RocksmithToTabLib
         }
 
 
-        static Chord CreateChord(SongNote2014 note)
+        static Chord CreateChord(SongNote2014 note, int capo)
         {
             var chord = new Chord();
             chord.Start = note.Time;
-            chord.Notes.Add(note.String, CreateNote(note));
+            chord.Notes.Add(note.String, CreateNote(note, capo));
             return chord;
         }
 
 
-        static Chord CreateChord(SongChord2014 rsChord, Dictionary<int, ChordTemplate> chordTemplates)
+        static Chord CreateChord(SongChord2014 rsChord, Dictionary<int, ChordTemplate> chordTemplates, int capo)
         {
             var chord = new Chord();
             chord.Start = rsChord.Time;
@@ -187,7 +198,7 @@ namespace RocksmithToTabLib
             {
                 foreach (var note in rsChord.ChordNotes)
                 {
-                    chord.Notes.Add(note.String, CreateNote(note));
+                    chord.Notes.Add(note.String, CreateNote(note, capo));
                 }
             }
             else if (chordTemplates.ContainsKey(chord.ChordId))
@@ -207,17 +218,24 @@ namespace RocksmithToTabLib
                     }
                 }
             }
+            else
+            {
+                Console.WriteLine("Warning: Empty chord. Cannot find chord with chordId {0}.", chord.ChordId);
+            }
             return chord;
         }
 
 
-        static Note CreateNote(SongNote2014 rsNote)
+        static Note CreateNote(SongNote2014 rsNote, int capo)
         {
             var note = new Note()
             {
                 String = rsNote.String,
                 Fret = rsNote.Fret
             };
+            // adjust for capo
+            if (note.Fret > 0)
+                note.Fret -= capo;
 
             return note;
         }
