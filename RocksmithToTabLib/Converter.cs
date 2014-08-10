@@ -196,7 +196,9 @@ namespace RocksmithToTabLib
         {
             var chord = new Chord();
             chord.Start = note.Time;
-            chord.Notes.Add(note.String, CreateNote(note, capo));
+            var convertedNote = CreateNote(note, capo);
+            chord.Notes.Add(note.String, convertedNote);
+            chord.Tremolo = convertedNote.Tremolo;
             return chord;
         }
 
@@ -206,6 +208,7 @@ namespace RocksmithToTabLib
             var chord = new Chord();
             chord.Start = rsChord.Time;
             chord.ChordId = rsChord.ChordId;
+            chord.Tremolo = false;
             if (rsChord.ChordNotes != null)
             {
                 foreach (var note in rsChord.ChordNotes)
@@ -236,6 +239,7 @@ namespace RocksmithToTabLib
             }
 
             // some properties set on the chord in Rocksmith need to be passed down to the individual notes
+            // and vice versa
             foreach (var kvp in chord.Notes)
             {
                 if (rsChord.PalmMute != 0)
@@ -244,6 +248,8 @@ namespace RocksmithToTabLib
                     kvp.Value.Muted = true;
                 if (rsChord.Accent != 0)
                     kvp.Value.Accent = true;
+                if (kvp.Value.Tremolo)
+                    chord.Tremolo = true;
             }
 
             // we will show a strum hint for all chords played with an up-stroke,
@@ -271,7 +277,8 @@ namespace RocksmithToTabLib
                 Vibrato = rsNote.Vibrato > 0,
                 LinkNext = rsNote.LinkNext != 0,
                 Accent = rsNote.Accent != 0,
-                Harmonic = rsNote.Harmonic != 0
+                Harmonic = rsNote.Harmonic != 0,
+                Tremolo = rsNote.Tremolo != 0
             };
             if (rsNote.SlideTo != -1)
                 note.Slide = Note.SlideType.ToNext;

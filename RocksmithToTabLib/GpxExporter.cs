@@ -182,6 +182,13 @@ namespace RocksmithToTabLib
                 beat.Properties.Add(brushProp);
             }
 
+            // tremolo picking
+            if (chord.Tremolo)
+            {
+                // 32nd notes tremolo picking (should be appropriate)
+                beat.Tremolo = "1/8"; 
+            }
+
             // construct rhythm
             var rhythm = new Rhythm();
             rhythm.Id = gpif.Rhythms.Count;

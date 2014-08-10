@@ -263,6 +263,7 @@ namespace Gpif
         public int Id;
         public string Bank = null;  // e.g. "Strat-Guitar"
         public string Dynamic = "MF";
+        public string Tremolo = null;
 
         public class RhythmType
         {
@@ -304,6 +305,7 @@ namespace Gpif
         }
 
         public bool ShouldSerializeBank() { return Bank != null; }
+        public bool ShouldSerializeTremolo() { return Tremolo != null; }
     }
 
     public class Note

@@ -187,6 +187,7 @@ namespace RocksmithToTabLib
         public int Duration { get; set; }
         // index a note by its string
         public Dictionary<int, Note> Notes { get; set; }
+        public bool Tremolo { get; set; }
 
         public enum BrushType
         {
@@ -212,6 +213,7 @@ namespace RocksmithToTabLib
         public bool LinkNext { get; set; }
         public bool Accent { get; set; }
         public bool Harmonic { get; set; }
+        public bool Tremolo { get; set; }
 
         public enum SlideType
         {
