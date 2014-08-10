@@ -88,7 +88,7 @@ namespace Gpif
         }
     }
 
-    public class Property
+    public class Property : IEquatable<Property>
     {
         [XmlAttribute("name")]
         public string Name;  // for notes: "String", "Fret", "Slide", "HopoOrigin", "HopoDestination"
@@ -118,8 +118,13 @@ namespace Gpif
             }
         }
         
-        public class EnableType
-        { }
+        public class EnableType : IEquatable<EnableType>
+        {
+            public bool Equals(EnableType other)
+            {
+                return other != null;
+            }
+        }
 
         public EnableType @Enable;  // initialize this for HopoOrigin or HopoDestination
 
@@ -134,15 +139,16 @@ namespace Gpif
 
         public bool Equals(Property other)
         {
-            if (other == null)
-                return false;
-            bool result = (Name == other.Name) && (String == other.String) && (Fret == other.Fret)
-                && (Flags == other.Flags) && (Direction == other.Direction);
-            if (Pitches != null && other.Pitches != null)
-                result = result && Enumerable.SequenceEqual(Pitches, other.Pitches);
-            else
-                result = result && Pitches == other.Pitches;
-            return result;
+            return (other != null)
+                && (Name == other.Name) 
+                && (String == other.String) 
+                && (Fret == other.Fret)
+                && (Flags == other.Flags) 
+                && (Direction == other.Direction)
+                && (HType == other.HType)
+                && (HFret == other.HFret)
+                && GpifCompare.ListEqual(Pitches, other.Pitches)
+                && GpifCompare.Equal(Enable, other.Enable);
         }
     }
 
@@ -202,7 +208,7 @@ namespace Gpif
         }
     }
 
-    public class Bar
+    public class Bar : IEquatable<Bar>
     {
         [XmlAttribute("id")]
         public int Id;
@@ -230,7 +236,7 @@ namespace Gpif
         }
     }
 
-    public class Voice
+    public class Voice : IEquatable<Voice>
     {
         [XmlAttribute("id")]
         public int Id;
@@ -257,7 +263,7 @@ namespace Gpif
         }
     }
 
-    public class Beat
+    public class Beat : IEquatable<Beat>
     {
         [XmlAttribute("id")]
         public int Id;
@@ -293,29 +299,27 @@ namespace Gpif
 
         public bool Equals(Beat other)
         {
-            if (other == null)
-                return false;
-            bool result = (Bank == other.Bank) && (Dynamic == other.Dynamic) 
-                && (Rhythm.Ref == other.Rhythm.Ref) && Enumerable.SequenceEqual(Notes, other.Notes);
-            if (Properties != null && other.Properties != null)
-                result = result && Enumerable.SequenceEqual(Properties, other.Properties);
-            else
-                result = result && Properties == other.Properties;
-            return result;
+            return (other != null)
+                && (Bank == other.Bank) 
+                && (Dynamic == other.Dynamic) 
+                && (Tremolo == other.Tremolo)
+                && (Rhythm.Ref == other.Rhythm.Ref) 
+                && Enumerable.SequenceEqual(Notes, other.Notes)
+                && GpifCompare.ListEqual(Properties, other.Properties);
         }
 
         public bool ShouldSerializeBank() { return Bank != null; }
         public bool ShouldSerializeTremolo() { return Tremolo != null; }
     }
 
-    public class Note
+    public class Note : IEquatable<Note>
     {
         [XmlAttribute("id")]
         public int Id;
         public int? Accent;
         public string Vibrato; // "Slight" or "Wide"
 
-        public class TieType
+        public class TieType : IEquatable<TieType>
         {
             [XmlAttribute("origin")]
             public bool Origin;
@@ -334,20 +338,23 @@ namespace Gpif
 
         public bool Equals(Note other)
         {
-            return (other != null) && (Vibrato == other.Vibrato) && (Tie == other.Tie) 
-                && Enumerable.SequenceEqual(Properties, other.Properties);
+            return (other != null) 
+                && (Accent == other.Accent)
+                && (Vibrato == other.Vibrato) 
+                && GpifCompare.Equal(Tie, other.Tie)
+                && GpifCompare.ListEqual(Properties, other.Properties);
         }
 
         public bool ShouldSerializeAccent() { return Accent != null; }
     }
 
-    public class Rhythm
+    public class Rhythm : IEquatable<Rhythm>
     {
         [XmlAttribute("id")]
         public int Id;
         public string NoteValue;  // "Whole", "Half", "Quarther", "Eighth", "16th", "32nd", "64th"
 
-        public class Tuplet
+        public class Tuplet : IEquatable<Tuplet>
         {
             [XmlAttribute("num")]
             public int Num;  // e.g. for triplets, set to 3
@@ -361,7 +368,7 @@ namespace Gpif
         }
         public Tuplet PrimaryTuplet;
 
-        public class Dot
+        public class Dot : IEquatable<Dot>
         {
             [XmlAttribute("count")]
             public int Count;
@@ -375,8 +382,10 @@ namespace Gpif
 
         public bool Equals(Rhythm other)
         {
-            return (other != null) && (NoteValue == other.NoteValue) 
-                && (PrimaryTuplet == other.PrimaryTuplet) && (AugmentationDot == other.AugmentationDot);
+            return (other != null) 
+                && (NoteValue == other.NoteValue) 
+                && GpifCompare.Equal(PrimaryTuplet, other.PrimaryTuplet) 
+                && GpifCompare.Equal(AugmentationDot, other.AugmentationDot);
         }
     }
 
@@ -439,6 +448,27 @@ namespace Gpif
         public void WriteXml(System.Xml.XmlWriter writer)
         {
             writer.WriteCData(_value);
+        }
+    }
+
+
+    class GpifCompare
+    {
+        public static bool Equal<T>(T obj1, T obj2)
+        {
+            return EqualityComparer<T>.Default.Equals(obj1, obj2);
+        }
+
+        public static bool ListEqual<T>(List<T> l1, List<T> l2)
+        {
+            if (l1 == l2)
+                return true;
+            if (l1 == null || l2 == null || l1.Count != l2.Count)
+                return false;
+            for (int i = 0; i < l1.Count; ++i)
+                if (!Equal(l1[i], l2[i]))
+                    return false;
+            return true;
         }
     }
 }

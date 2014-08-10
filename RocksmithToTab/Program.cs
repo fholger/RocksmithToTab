@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CommandLine;
 using CommandLine.Text;
 using RocksmithToTabLib;
@@ -18,13 +19,13 @@ namespace RocksmithToTab
                 try
                 {
                     var browser = new PsarcBrowser(options.PsarcFile);
-
+            
                     if (options.ListSongs)
                     {
                         ListSongs(browser);
                         return;
                     }
-
+            
                     foreach (var song in options.Tracks)
                     {
                         var score = new Score();
@@ -42,7 +43,7 @@ namespace RocksmithToTab
                                 score.Year = arrangement.AlbumYear;
                             }
                         }
-
+            
                         var exporter = new GpxExporter();
                         exporter.ExportGpif(score, song + ".gpif");
                     }
