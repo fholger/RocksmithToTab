@@ -176,5 +176,15 @@ namespace RocksmithToTabLib
         public int Fret { get; set; }
         public bool PalmMuted { get; set; }
         public bool Hopo { get; set; }
+        public bool Vibrato { get; set; }
+
+        public enum SlideType
+        {
+            None,
+            ToNext,
+            UnpitchDown,
+            UnpitchUp
+        }
+        public SlideType Slide { get; set; }
     }
 }

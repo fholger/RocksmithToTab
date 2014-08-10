@@ -280,6 +280,24 @@ namespace RocksmithToTabLib
                 hopo[note.String] = true;
             }
 
+            // handle vibrato
+            if (note.Vibrato)
+                gpNote.Vibrato = "Slight";
+
+            // handle slights
+            int slideFlag = 0;
+            switch (note.Slide)
+            {
+                case Note.SlideType.ToNext:
+                    slideFlag = 2; break;
+                case Note.SlideType.UnpitchDown:
+                    slideFlag = 4; break;
+                case Note.SlideType.UnpitchUp:
+                    slideFlag = 8; break;
+            }
+            if (slideFlag != 0)
+                gpNote.Properties.Add(new Property() { Name = "Slide", Flags = slideFlag });
+
             // see if this note already exists, otherwise add
             var searchNote = gpif.Notes.Find(x => x.Equals(gpNote));
             if (searchNote != null)

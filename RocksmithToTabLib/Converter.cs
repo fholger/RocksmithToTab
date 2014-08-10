@@ -244,8 +244,18 @@ namespace RocksmithToTabLib
                 String = rsNote.String,
                 Fret = rsNote.Fret,
                 PalmMuted = rsNote.PalmMute != 0,
-                Hopo = rsNote.HammerOn != 0 || rsNote.PullOff != 0
+                Hopo = rsNote.HammerOn != 0 || rsNote.PullOff != 0,
+                Vibrato = rsNote.Vibrato > 0
             };
+            if (rsNote.SlideTo != -1)
+                note.Slide = Note.SlideType.ToNext;
+            else if (rsNote.SlideUnpitchTo != -1)
+            {
+                if (rsNote.SlideUnpitchTo > rsNote.Fret)
+                    note.Slide = Note.SlideType.UnpitchUp;
+                else
+                    note.Slide = Note.SlideType.UnpitchDown;
+            }
             // adjust for capo
             if (note.Fret > 0)
                 note.Fret -= capo;
