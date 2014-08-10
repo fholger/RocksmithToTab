@@ -242,6 +242,8 @@ namespace RocksmithToTabLib
                     kvp.Value.PalmMuted = true;
                 if (rsChord.FretHandMute != 0)
                     kvp.Value.Muted = true;
+                if (rsChord.Accent != 0)
+                    kvp.Value.Accent = true;
             }
 
             // we will show a strum hint for all chords played with an up-stroke,
@@ -267,7 +269,8 @@ namespace RocksmithToTabLib
                 Muted = rsNote.Mute != 0,
                 Hopo = rsNote.HammerOn != 0 || rsNote.PullOff != 0,
                 Vibrato = rsNote.Vibrato > 0,
-                LinkNext = rsNote.LinkNext != 0
+                LinkNext = rsNote.LinkNext != 0,
+                Accent = rsNote.Accent != 0
             };
             if (rsNote.SlideTo != -1)
                 note.Slide = Note.SlideType.ToNext;

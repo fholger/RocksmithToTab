@@ -315,6 +315,10 @@ namespace RocksmithToTabLib
             if (note.Vibrato)
                 gpNote.Vibrato = "Slight";
 
+            // handle accent
+            if (note.Accent)
+                gpNote.Accent = 4;
+
             // handle slights
             int slideFlag = 0;
             switch (note.Slide)

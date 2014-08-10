@@ -306,6 +306,7 @@ namespace Gpif
     {
         [XmlAttribute("id")]
         public int Id;
+        public int? Accent;
         public string Vibrato; // "Slight" or "Wide"
 
         public class TieType
@@ -330,6 +331,8 @@ namespace Gpif
             return (other != null) && (Vibrato == other.Vibrato) && (Tie == other.Tie) 
                 && Enumerable.SequenceEqual(Properties, other.Properties);
         }
+
+        public bool ShouldSerializeAccent() { return Accent != null; }
     }
 
     public class Rhythm
