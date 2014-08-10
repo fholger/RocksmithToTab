@@ -319,6 +319,21 @@ namespace RocksmithToTabLib
             if (note.Accent)
                 gpNote.Accent = 4;
 
+            // handle harmonics
+            if (note.Harmonic)
+            {
+                gpNote.Properties.Add(new Property()
+                {
+                    Name = "HarmonicType",
+                    HType = "Natural"
+                });
+                gpNote.Properties.Add(new Property()
+                {
+                    Name = "HarmonicFret",
+                    HFret = note.Fret == 3 ? "3.2" : note.Fret.ToString()
+                });
+            }
+
             // handle slights
             int slideFlag = 0;
             switch (note.Slide)

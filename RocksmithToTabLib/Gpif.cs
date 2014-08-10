@@ -96,6 +96,8 @@ namespace Gpif
         public int? Fret;  // for notes
         public int? Flags;  // used in slides
         public string Direction = null;  // "Up" or "Down", used in "Brush"
+        public string HType = null;  // harmonics type
+        public string HFret = null;  // harmonics fret
 
         [XmlIgnore]
         public List<int> Pitches;
@@ -127,6 +129,8 @@ namespace Gpif
         public bool ShouldSerializeFlags() { return Flags.HasValue; }
         public bool ShouldSerializeDirection() { return Direction != null; }
         public bool ShouldSerializePitchesString() { return PitchesString != null; }
+        public bool ShouldSerializeHType() { return HType != null; }
+        public bool ShouldSerializeHFret() { return HFret != null; }
 
         public bool Equals(Property other)
         {

@@ -270,7 +270,8 @@ namespace RocksmithToTabLib
                 Hopo = rsNote.HammerOn != 0 || rsNote.PullOff != 0,
                 Vibrato = rsNote.Vibrato > 0,
                 LinkNext = rsNote.LinkNext != 0,
-                Accent = rsNote.Accent != 0
+                Accent = rsNote.Accent != 0,
+                Harmonic = rsNote.Harmonic != 0
             };
             if (rsNote.SlideTo != -1)
                 note.Slide = Note.SlideType.ToNext;

@@ -211,6 +211,7 @@ namespace RocksmithToTabLib
         public bool Vibrato { get; set; }
         public bool LinkNext { get; set; }
         public bool Accent { get; set; }
+        public bool Harmonic { get; set; }
 
         public enum SlideType
         {
