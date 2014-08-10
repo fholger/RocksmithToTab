@@ -366,7 +366,7 @@ namespace RocksmithToTabLib
             // it often happens that the Durations calculated from Rocksmith's absolute times
             // are 1 or 2 short of a "sane" note value. Try to shift such values to the previous
             // or following note to get the rhythm right.
-            int[] saneDurations = new int[] { 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 196 };
+            int[] saneDurations = new int[] { 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
             int[] shifts = new int[] { 1, -1, 2, -2, 3, -3 };
 
             int barDuration = 0;
@@ -415,7 +415,7 @@ namespace RocksmithToTabLib
 
         static void SplitNotes(List<Bar> bars)
         {
-            int[] saneDurations = new int[] { 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 196 };
+            int[] saneDurations = new int[] { 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
 
             foreach (var bar in bars)
             {

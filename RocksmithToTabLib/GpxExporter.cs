@@ -296,8 +296,8 @@ namespace RocksmithToTabLib
             // handle ties with previous/next note
             if (link[note.String] || note.LinkNext)
             {
-                gpNote.Tie = new Gpif.Note.TieType() { Destination = link[note.String], Origin = note.LinkNext };
-                link[note.String] = note.LinkNext;
+                gpNote.Tie = new Gpif.Note.TieType() { Destination = link[note.String], Origin = note.LinkNext && note.Slide != Note.SlideType.ToNext };
+                link[note.String] = note.LinkNext && note.Slide != Note.SlideType.ToNext;
             }
             // handle hammer-on / pull-off
             if (hopo[note.String])
