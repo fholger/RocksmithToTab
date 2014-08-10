@@ -53,6 +53,11 @@ namespace RocksmithToTabLib
             var tuningProp = new Gpif.Property();
             tuningProp.Name = "Tuning";
             tuningProp.Pitches = track.Tuning.ToList();
+            if (track.Instrument == Track.InstrumentType.Bass)
+            {
+                // remove last two entries, as they are not used in bass and confuse Guitar Pro
+                tuningProp.Pitches.RemoveRange(4, 2);
+            }
             gpTrack.Properties.Add(tuningProp);
             // add capo?
             if (track.Capo > 0)
