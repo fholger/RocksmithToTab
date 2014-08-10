@@ -285,9 +285,11 @@ namespace RocksmithToTabLib
             // add string and fret numbers
             gpNote.Properties.Add(new Property() { Name = "String", String = note.String });
             gpNote.Properties.Add(new Property() { Name = "Fret", Fret = note.Fret });
-            // should we add palm-muting?
+            // should we add muting?
             if (note.PalmMuted)
                 gpNote.Properties.Add(new Property() { Name = "PalmMuted", Enable = new Property.EnableType() });
+            if (note.Muted)
+                gpNote.Properties.Add(new Property() { Name = "Muted", Enable = new Property.EnableType() });
 
             // handle hammer-on / pull-off
             if (hopo[note.String])

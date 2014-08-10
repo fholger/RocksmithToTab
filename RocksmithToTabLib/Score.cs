@@ -128,7 +128,7 @@ namespace RocksmithToTabLib
                 var beatLength = BeatTimes[i+1] - BeatTimes[i];
                 var noteStart = Math.Max(start, BeatTimes[i]);
                 var noteEnd = Math.Min(start + length, BeatTimes[i+1]);
-                var beatDuration = (noteEnd - noteStart) / beatLength * TimeNominator / TimeDenominator;
+                var beatDuration = (noteEnd - noteStart) / beatLength * 4 / TimeDenominator;
                 duration += beatDuration;
             }
 
@@ -206,6 +206,7 @@ namespace RocksmithToTabLib
         public int String { get; set; }
         public int Fret { get; set; }
         public bool PalmMuted { get; set; }
+        public bool Muted { get; set; }
         public bool Hopo { get; set; }
         public bool Vibrato { get; set; }
 

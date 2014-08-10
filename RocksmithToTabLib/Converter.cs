@@ -132,9 +132,12 @@ namespace RocksmithToTabLib
 
             if (bars.Count > 0)
             {
-                var lastBar = bars.Last();
-                lastBar.End = arrangement.SongLength;
-                lastBar.GuessTimeAndBPM(arrangement.AverageTempo);                
+                //var lastBar = bars.Last();
+                //lastBar.End = arrangement.SongLength;
+                //lastBar.GuessTimeAndBPM(arrangement.AverageTempo);                
+
+                // remove last bar, as it seems to have no actual function
+                bars.RemoveAt(bars.Count - 1);
             }
 
             return bars;
@@ -234,6 +237,8 @@ namespace RocksmithToTabLib
             {
                 if (rsChord.PalmMute != 0)
                     kvp.Value.PalmMuted = true;
+                if (rsChord.FretHandMute != 0)
+                    kvp.Value.Muted = true;
             }
 
             // we will show a strum hint for all chords played with an up-stroke,
@@ -256,6 +261,7 @@ namespace RocksmithToTabLib
                 String = rsNote.String,
                 Fret = rsNote.Fret,
                 PalmMuted = rsNote.PalmMute != 0,
+                Muted = rsNote.Mute != 0,
                 Hopo = rsNote.HammerOn != 0 || rsNote.PullOff != 0,
                 Vibrato = rsNote.Vibrato > 0
             };
@@ -382,24 +388,24 @@ namespace RocksmithToTabLib
                 if (saneDurations.Contains(chord.Duration))
                     continue;
 
-                if (i > 0)
-                {
-                    // try to shift to previous note first, as that one might have passed as sane,
-                    // but if it's a low value, it could easily become another sane note
-                    var prev = bar.Chords[i - 1];
-                    foreach (var shift in shifts)
-                    {
-                        if (saneDurations.Contains(chord.Duration + shift) &&
-                            saneDurations.Contains(prev.Duration - shift))
-                        {
-                            Console.WriteLine("Shifting sloppy rhythm to previous note. ({0}, {1})", prev.Duration, chord.Duration);
-                            chord.Duration += shift;
-                            prev.Duration -= shift;
-                            Console.WriteLine("Now: ({0}, {1})", prev.Duration, chord.Duration);
-                            break;
-                        }
-                    }
-                }
+                //if (i > 0)
+                //{
+                //    // try to shift to previous note first, as that one might have passed as sane,
+                //    // but if it's a low value, it could easily become another sane note
+                //    var prev = bar.Chords[i - 1];
+                //    foreach (var shift in shifts)
+                //    {
+                //        if (saneDurations.Contains(chord.Duration + shift) &&
+                //            saneDurations.Contains(prev.Duration - shift))
+                //        {
+                //            Console.WriteLine("Shifting sloppy rhythm to previous note. ({0}, {1})", prev.Duration, chord.Duration);
+                //            chord.Duration += shift;
+                //            prev.Duration -= shift;
+                //            Console.WriteLine("Now: ({0}, {1})", prev.Duration, chord.Duration);
+                //            break;
+                //        }
+                //    }
+                //}
 
                 if (i < bar.Chords.Count - 1 && !saneDurations.Contains(chord.Duration))
                 {
