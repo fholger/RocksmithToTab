@@ -174,5 +174,7 @@ namespace RocksmithToTabLib
     {
         public int String { get; set; }
         public int Fret { get; set; }
+        public bool PalmMuted { get; set; }
+        public bool Hopo { get; set; }
     }
 }

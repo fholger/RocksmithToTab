@@ -10,6 +10,7 @@ namespace RocksmithToTabLib
     public class GpxExporter
     {
         private GPIF gpif;
+        private bool[] hopo;
 
         public void ExportGpif(Score score, string fileName)
         {
@@ -39,6 +40,8 @@ namespace RocksmithToTabLib
 
         void ExportTrack(Track track)
         {
+            hopo = new bool[] { false, false, false, false, false, false };
+
             var gpTrack = new Gpif.Track();
             gpTrack.Id = gpif.Tracks.Count;
             gpTrack.Name = track.Name + " Level " + track.DifficultyLevel.ToString();
@@ -261,6 +264,21 @@ namespace RocksmithToTabLib
             // add string and fret numbers
             gpNote.Properties.Add(new Property() { Name = "String", String = note.String });
             gpNote.Properties.Add(new Property() { Name = "Fret", Fret = note.Fret });
+            // should we add palm-muting?
+            if (note.PalmMuted)
+                gpNote.Properties.Add(new Property() { Name = "PalmMuted", Enable = new Property.EnableType() });
+
+            // handle hammer-on / pull-off
+            if (hopo[note.String])
+            {
+                gpNote.Properties.Add(new Property() { Name = "HopoDestination", Enable = new Property.EnableType() });
+                hopo[note.String] = false;
+            }
+            if (note.Hopo)
+            {
+                gpNote.Properties.Add(new Property() { Name = "HopoOrigin", Enable = new Property.EnableType() });
+                hopo[note.String] = true;
+            }
 
             // see if this note already exists, otherwise add
             var searchNote = gpif.Notes.Find(x => x.Equals(gpNote));

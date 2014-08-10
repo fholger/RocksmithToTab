@@ -176,6 +176,9 @@ namespace RocksmithToTabLib
                     ++currentBar;
                 }
             }
+
+            TransferTechniques(bars);
+
             return maxDifficulty;
         }
 
@@ -222,6 +225,14 @@ namespace RocksmithToTabLib
             {
                 Console.WriteLine("Warning: Empty chord. Cannot find chord with chordId {0}.", chord.ChordId);
             }
+
+            // some properties set on the chord in Rocksmith need to be passed down to the individual notes
+            foreach (var kvp in chord.Notes)
+            {
+                if (rsChord.PalmMute != 0)
+                    kvp.Value.PalmMuted = true;
+            }
+
             return chord;
         }
 
@@ -231,13 +242,39 @@ namespace RocksmithToTabLib
             var note = new Note()
             {
                 String = rsNote.String,
-                Fret = rsNote.Fret
+                Fret = rsNote.Fret,
+                PalmMuted = rsNote.PalmMute != 0,
+                Hopo = rsNote.HammerOn != 0 || rsNote.PullOff != 0
             };
             // adjust for capo
             if (note.Fret > 0)
                 note.Fret -= capo;
 
             return note;
+        }
+
+
+        static void TransferTechniques(List<Bar> bars)
+        {
+            // Rocksmith places techniques like hammer-on / pull-off on the second note.
+            // However, for our exporter it is much easier to handle the flag being set
+            // on the first note, so we'll go through all notes and move the flag one note
+            // to the left.
+            bool[] hopo = new bool[] { false, false, false, false, false, false };
+            for (int b = bars.Count - 1; b >= 0; --b)
+            {
+                var bar = bars[b];
+                for (int c = bar.Chords.Count - 1; c >= 0; --c)
+                {
+                    var chord = bar.Chords[c];
+                    foreach (var kvp in chord.Notes)
+                    {
+                        bool temp = kvp.Value.Hopo;
+                        kvp.Value.Hopo = hopo[kvp.Key];
+                        hopo[kvp.Key] = temp;
+                    }
+                }
+            }
         }
 
 
