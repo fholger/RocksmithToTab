@@ -465,9 +465,9 @@ namespace RocksmithToTabLib
                 gpNote.Properties.Add(new Property() { Name = "Slide", Flags = slideFlag });
 
             // if available, place left hand fingering hint
-            if (note.LeftFingering > 0 && note.LeftFingering <= 4)
+            if (note.LeftFingering >= 0 && note.LeftFingering <= 4)
             {
-                var fingerNames = new string[] { "", "I", "M", "A", "C" };
+                var fingerNames = new string[] { "P", "I", "M", "A", "C" };
                 gpNote.LeftFingering = fingerNames[note.LeftFingering];
             }
 

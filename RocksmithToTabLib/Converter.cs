@@ -498,6 +498,7 @@ namespace RocksmithToTabLib
                     Vibrato = note.Vibrato,
                     Harmonic = note.Harmonic,
                     Tremolo = note.Tremolo,
+                    LeftFingering = -1,
                     Tapped = false
                 };
                 note.Hopo = false;
