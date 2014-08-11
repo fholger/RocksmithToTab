@@ -119,7 +119,7 @@ namespace RocksmithToTabLib
                 int maxFret = 0;
                 for (int i = 0; i < 6; ++i)
                 {
-                    if (kvp.Value.Frets[i] != -1)
+                    if (kvp.Value.Frets[i] > 0)
                     {
                         minFret = Math.Min(kvp.Value.Frets[i], minFret);
                         maxFret = Math.Max(kvp.Value.Frets[i], maxFret);
@@ -141,14 +141,14 @@ namespace RocksmithToTabLib
                         diagram.Diagram.Frets.Add(new Diagram.FretType()
                         {
                             String = i,
-                            Fret = kvp.Value.Frets[i] - minFret
+                            Fret = (kvp.Value.Frets[i] == 0) ? 0 : kvp.Value.Frets[i] - minFret
                         });
                     }
 
                     var position = new Diagram.Position()
                     {
                         String = i,
-                        Fret = kvp.Value.Frets[i] - minFret
+                        Fret = (kvp.Value.Frets[i] == 0) ? 0 : kvp.Value.Frets[i] - minFret
                     };
                     switch (kvp.Value.Fingers[i])
                     {
@@ -402,6 +402,10 @@ namespace RocksmithToTabLib
             {
                 gpNote.Properties.Add(new Property() { Name = "HopoOrigin", Enable = new Property.EnableType() });
                 hopo[note.String] = true;
+            }
+            if (note.Tapped)
+            {
+                gpNote.Properties.Add(new Property() { Name = "Tapped", Enable = new Property.EnableType() });
             }
 
             // handle vibrato

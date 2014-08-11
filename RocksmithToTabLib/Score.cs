@@ -213,6 +213,7 @@ namespace RocksmithToTabLib
         public bool Accent { get; set; }
         public bool Harmonic { get; set; }
         public bool Tremolo { get; set; }
+        public bool Tapped { get; set; }
 
         public enum SlideType
         {

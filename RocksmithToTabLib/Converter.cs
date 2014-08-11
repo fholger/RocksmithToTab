@@ -276,7 +276,8 @@ namespace RocksmithToTabLib
                 LinkNext = rsNote.LinkNext != 0,
                 Accent = rsNote.Accent != 0,
                 Harmonic = rsNote.Harmonic != 0,
-                Tremolo = rsNote.Tremolo != 0
+                Tremolo = rsNote.Tremolo != 0,
+                Tapped = rsNote.Tap != 0
             };
             if (rsNote.SlideTo != -1)
                 note.Slide = Note.SlideType.ToNext;
@@ -484,7 +485,10 @@ namespace RocksmithToTabLib
                     Slide = note.Slide,
                     Muted = note.Muted,
                     PalmMuted = note.PalmMuted,
-                    Vibrato = note.Vibrato
+                    Vibrato = note.Vibrato,
+                    Harmonic = note.Harmonic,
+                    Tremolo = note.Tremolo,
+                    Tapped = false
                 };
                 note.Hopo = false;
                 note.LinkNext = true;
