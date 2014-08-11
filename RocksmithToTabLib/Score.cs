@@ -214,10 +214,12 @@ namespace RocksmithToTabLib
         public bool LinkNext { get; set; }
         public bool Accent { get; set; }
         public bool Harmonic { get; set; }
+        public bool PinchHarmonic { get; set; }
         public bool Tremolo { get; set; }
         public bool Tapped { get; set; }
         public bool Slapped { get; set; }
         public bool Popped { get; set; }
+        public int LeftFingering { get; set; }
 
         public enum SlideType
         {

@@ -444,6 +444,11 @@ namespace RocksmithToTabLib
                     HFret = note.Fret == 3 ? "3.2" : note.Fret.ToString()
                 });
             }
+            else if (note.PinchHarmonic)
+            {
+                gpNote.Properties.Add(new Property() { Name = "HarmonicType", HType = "Pinch" });
+                gpNote.Properties.Add(new Property() { Name = "HarmonicFret", HFret = "12" });
+            }
 
             // handle slights
             int slideFlag = 0;
@@ -458,6 +463,13 @@ namespace RocksmithToTabLib
             }
             if (slideFlag != 0)
                 gpNote.Properties.Add(new Property() { Name = "Slide", Flags = slideFlag });
+
+            // if available, place left hand fingering hint
+            if (note.LeftFingering > 0 && note.LeftFingering <= 4)
+            {
+                var fingerNames = new string[] { "", "I", "M", "A", "C" };
+                gpNote.LeftFingering = fingerNames[note.LeftFingering];
+            }
 
             // see if this note already exists, otherwise add
             var searchNote = gpif.Notes.Find(x => x.Equals(gpNote));

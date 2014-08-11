@@ -381,6 +381,7 @@ namespace Gpif
         public int Id;
         public int? Accent;
         public string Vibrato; // "Slight" or "Wide"
+        public string LeftFingering;  // fingering hint
 
         public class TieType : IEquatable<TieType>
         {
@@ -409,6 +410,7 @@ namespace Gpif
         }
 
         public bool ShouldSerializeAccent() { return Accent != null; }
+        public bool ShouldSerializeLeftFingering() { return LeftFingering != null; }
     }
 
     public class Rhythm : IEquatable<Rhythm>

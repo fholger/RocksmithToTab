@@ -282,10 +282,12 @@ namespace RocksmithToTabLib
                 LinkNext = rsNote.LinkNext != 0,
                 Accent = rsNote.Accent != 0,
                 Harmonic = rsNote.Harmonic != 0,
+                PinchHarmonic = rsNote.HarmonicPinch != 0,
                 Tremolo = rsNote.Tremolo != 0,
                 Tapped = rsNote.Tap != 0,
                 Slapped = rsNote.Slap == 1,
-                Popped = rsNote.Pluck == 1
+                Popped = rsNote.Pluck == 1,
+                LeftFingering = rsNote.LeftHand
             };
             if (rsNote.SlideTo != -1)
                 note.Slide = Note.SlideType.ToNext;
