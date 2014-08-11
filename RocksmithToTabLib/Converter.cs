@@ -172,14 +172,12 @@ namespace RocksmithToTabLib
                     var notes = from n in level.Notes where bar.ContainsTime(n.Time) select CreateChord(n, arrangement.Capo);
                     var chords = from c in level.Chords where bar.ContainsTime(c.Time) select CreateChord(c, chordTemplates, arrangement.Capo);
                     bar.Chords = notes.Union(chords).OrderBy(x => x.Start).ToList();
-                    Console.WriteLine("Bar {0}: Added {1} chords.", currentBar, bar.Chords.Count);
 
                     // in case that the bar is empty or the first note does not coincide with the start
                     // of the bar, we add an empty chord to the beginning indicating silence.
                     if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
                     {
                         bar.Chords.Insert(0, new Chord() { Start = bar.Start });
-                        Console.WriteLine("Bar {0}: Added silence at the beginning.", currentBar);
                     }
 
                     ++currentBar;

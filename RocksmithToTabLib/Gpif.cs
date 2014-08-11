@@ -91,7 +91,7 @@ namespace Gpif
     public class Property : IEquatable<Property>
     {
         [XmlAttribute("name")]
-        public string Name;  // for notes: "String", "Fret", "Slide", "HopoOrigin", "HopoDestination"
+        public string Name;  // for notes: "String", "FretType", "Slide", "HopoOrigin", "HopoDestination"
         public int? String;  // for notes
         public int? Fret;  // for notes
         public int? Flags;  // used in slides
@@ -128,6 +128,8 @@ namespace Gpif
 
         public EnableType @Enable;  // initialize this for HopoOrigin or HopoDestination
 
+        public List<Item> Items;  // used in chord diagrams
+
         // hints to the XML serializer to keep output clean
         public bool ShouldSerializeString() { return String.HasValue; }
         public bool ShouldSerializeFret() { return Fret.HasValue; }
@@ -151,6 +153,64 @@ namespace Gpif
                 && GpifCompare.Equal(Enable, other.Enable);
         }
     }
+
+    public class Item
+    {
+        [XmlAttribute("id")]
+        public int Id;
+        [XmlAttribute("name")]
+        public string Name;
+        public Diagram @Diagram = new Diagram();
+    }
+
+    public class Diagram
+    {
+        [XmlAttribute("stringCount")]
+        public int StringCount;
+        [XmlAttribute("fretCount")]
+        public int FretCount = 5;
+        [XmlAttribute("baseFret")]
+        public int BaseFret = 0;
+        [XmlIgnore]
+        public int[] BarsStates = new int[] { 1, 1, 1, 1, 1 };
+
+        public class FretType
+        {
+            [XmlAttribute("string")]
+            public int String;
+            [XmlAttribute("fret")]
+            public int Fret;
+        }
+        [XmlElement("Fret")]
+        public List<FretType> Frets = new List<FretType>();
+
+        public class Position
+        {
+            [XmlAttribute("finger")]
+            public string Finger;  // "None", "Index", "Middle", "Ring", "Pinky", "Thumb"
+            [XmlAttribute("fret")]
+            public int Fret;
+            [XmlAttribute("string")]
+            public int String;
+        }
+        public List<Position> Fingering = new List<Position>();
+
+        [XmlAttribute("barsStates")]
+        public string BarsStatesString
+        {
+            get
+            {
+                return string.Join(" ", BarsStates);
+            }
+            set
+            {
+                BarsStates = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToArray();
+            }
+
+        }
+    }
+
+
 
     public class Track
     {
@@ -270,6 +330,7 @@ namespace Gpif
         public string Bank = null;  // e.g. "Strat-Guitar"
         public string Dynamic = "MF";
         public string Tremolo = null;
+        public CData Chord = null;
 
         public class RhythmType
         {
@@ -304,12 +365,14 @@ namespace Gpif
                 && (Dynamic == other.Dynamic) 
                 && (Tremolo == other.Tremolo)
                 && (Rhythm.Ref == other.Rhythm.Ref) 
+                && GpifCompare.Equal(Chord, other.Chord)
                 && Enumerable.SequenceEqual(Notes, other.Notes)
                 && GpifCompare.ListEqual(Properties, other.Properties);
         }
 
         public bool ShouldSerializeBank() { return Bank != null; }
         public bool ShouldSerializeTremolo() { return Tremolo != null; }
+        public bool ShouldSerializeChord() { return Chord != null; }
     }
 
     public class Note : IEquatable<Note>
@@ -394,7 +457,7 @@ namespace Gpif
     /// Helper class to deal with some of the text information needing to be CDATA text.
     /// Taken from http://stackoverflow.com/questions/1379888/how-do-you-serialize-a-string-as-cdata-using-xmlserializer
     /// </summary>
-    public class CData : IXmlSerializable
+    public class CData : IXmlSerializable, IEquatable<CData>
     {
         private string _value;
 
@@ -448,6 +511,11 @@ namespace Gpif
         public void WriteXml(System.Xml.XmlWriter writer)
         {
             writer.WriteCData(_value);
+        }
+
+        public bool Equals(CData other)
+        {
+            return other != null && _value == other._value;
         }
     }
 

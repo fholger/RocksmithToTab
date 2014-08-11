@@ -167,7 +167,6 @@ namespace RocksmithToTabLib
 
             BeatsPerMinute = (int)Math.Round(4.0/TimeDenominator * 60.0 / avgTimePerBeat);
 
-            Console.WriteLine("Found measure with {0}/{1} time and {2} BPM.", TimeNominator, TimeDenominator, BeatsPerMinute);
         }
     }
 

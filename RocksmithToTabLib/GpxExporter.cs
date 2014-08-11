@@ -12,6 +12,7 @@ namespace RocksmithToTabLib
         private GPIF gpif;
         private bool[] hopo;
         private bool[] link;
+        private int prevChordId = -1;
 
         public void ExportGpif(Score score, string fileName)
         {
@@ -93,15 +94,88 @@ namespace RocksmithToTabLib
                 // TODO: Vocals
             }
 
+            // add chord diagrams
+            ExportChordDiagrams(gpTrack, track);
+
             gpif.Tracks.Add(gpTrack);
             gpif.MasterTrack.Tracks.Add(gpTrack.Id);
 
             ExportBars(track);
         }
 
+
+        void ExportChordDiagrams(Gpif.Track gpTrack, Track track)
+        {
+            var diagrams = new Property() { Name = "DiagramCollection", Items = new List<Item>() };
+            foreach (var kvp in track.ChordTemplates)
+            {
+                // only display those with an actual name
+                if (kvp.Value.Name == string.Empty)
+                    continue;
+
+                // first, we need to determine at what base fret to start the chord diagram,
+                // as all fret values are then relative to that
+                int minFret = 100;
+                int maxFret = 0;
+                for (int i = 0; i < 6; ++i)
+                {
+                    if (kvp.Value.Frets[i] != -1)
+                    {
+                        minFret = Math.Min(kvp.Value.Frets[i], minFret);
+                        maxFret = Math.Max(kvp.Value.Frets[i], maxFret);
+                    }
+                }
+                if (maxFret > 5)
+                    minFret = Math.Max(0, minFret - 1);
+                else
+                    minFret = 0;
+
+                var diagram = new Item() { Id = kvp.Value.ChordId, Name = kvp.Value.Name };
+                diagram.Diagram.StringCount = (track.Instrument == Track.InstrumentType.Bass ? 4 : 6);
+                diagram.Diagram.FretCount = 5;
+                diagram.Diagram.BaseFret = minFret;
+                for (int i = 0; i < 6; ++i)
+                {
+                    if (kvp.Value.Frets[i] != -1)
+                    {
+                        diagram.Diagram.Frets.Add(new Diagram.FretType()
+                        {
+                            String = i,
+                            Fret = kvp.Value.Frets[i] - minFret
+                        });
+                    }
+
+                    var position = new Diagram.Position()
+                    {
+                        String = i,
+                        Fret = kvp.Value.Frets[i] - minFret
+                    };
+                    switch (kvp.Value.Fingers[i])
+                    {
+                        case 1:
+                            position.Finger = "Index"; break;
+                        case 2:
+                            position.Finger = "Middle"; break;
+                        case 3:
+                            position.Finger = "Ring"; break;
+                        case 4:
+                            position.Finger = "Pinky"; break;
+                        default:
+                            position.Finger = "None"; break;
+                    }
+                    diagram.Diagram.Fingering.Add(position);
+                }
+
+                diagrams.Items.Add(diagram);
+            }
+            gpTrack.Properties.Add(diagrams);
+        }
+
+
         void ExportBars(Track track)
         {
             int lastTempo = -1;
+            prevChordId = -1;
             for (int i = 0; i < track.Bars.Count; ++i)
             {
                 var bar = track.Bars[i];
@@ -281,6 +355,13 @@ namespace RocksmithToTabLib
                 gpif.Rhythms.Add(rhythm);
 
             beat.Rhythm.Ref = rhythm.Id;
+
+            // should we display a chord name?
+            if (chord.ChordId != -1 && chord.ChordId != prevChordId)
+            {
+                beat.Chord = chord.ChordId.ToString();
+            }
+            prevChordId = chord.ChordId;
 
             // see if this beat already exists, otherwise add
             var searchBeat = gpif.Beats.Find(x => x.Equals(beat));
