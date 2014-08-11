@@ -268,6 +268,20 @@ namespace RocksmithToTabLib
                 beat.Tremolo = "1/8"; 
             }
 
+            // slap/pop notes
+            if (chord.Slapped)
+            {
+                if (beat.Properties == null)
+                    beat.Properties = new List<Property>();
+                beat.Properties.Add(new Property() { Name = "Slapped", Enable = new Property.EnableType() });
+            }
+            if (chord.Popped)
+            {
+                if (beat.Properties == null)
+                    beat.Properties = new List<Property>();
+                beat.Properties.Add(new Property() { Name = "Popped", Enable = new Property.EnableType() });
+            }
+
             // construct rhythm
             var rhythm = new Rhythm();
             rhythm.Id = gpif.Rhythms.Count;

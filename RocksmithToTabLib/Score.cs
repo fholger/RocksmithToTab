@@ -187,6 +187,8 @@ namespace RocksmithToTabLib
         // index a note by its string
         public Dictionary<int, Note> Notes { get; set; }
         public bool Tremolo { get; set; }
+        public bool Slapped { get; set; }
+        public bool Popped { get; set; }
 
         public enum BrushType
         {
@@ -214,6 +216,8 @@ namespace RocksmithToTabLib
         public bool Harmonic { get; set; }
         public bool Tremolo { get; set; }
         public bool Tapped { get; set; }
+        public bool Slapped { get; set; }
+        public bool Popped { get; set; }
 
         public enum SlideType
         {

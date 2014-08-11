@@ -197,6 +197,8 @@ namespace RocksmithToTabLib
             var convertedNote = CreateNote(note, capo);
             chord.Notes.Add(note.String, convertedNote);
             chord.Tremolo = convertedNote.Tremolo;
+            chord.Slapped = convertedNote.Slapped;
+            chord.Popped = convertedNote.Popped;
             return chord;
         }
 
@@ -248,6 +250,10 @@ namespace RocksmithToTabLib
                     kvp.Value.Accent = true;
                 if (kvp.Value.Tremolo)
                     chord.Tremolo = true;
+                if (kvp.Value.Slapped)
+                    chord.Slapped = true;
+                if (kvp.Value.Popped)
+                    chord.Popped = true;
             }
 
             // we will show a strum hint for all chords played with an up-stroke,
@@ -277,7 +283,9 @@ namespace RocksmithToTabLib
                 Accent = rsNote.Accent != 0,
                 Harmonic = rsNote.Harmonic != 0,
                 Tremolo = rsNote.Tremolo != 0,
-                Tapped = rsNote.Tap != 0
+                Tapped = rsNote.Tap != 0,
+                Slapped = rsNote.Slap == 1,
+                Popped = rsNote.Pluck == 1
             };
             if (rsNote.SlideTo != -1)
                 note.Slide = Note.SlideType.ToNext;
