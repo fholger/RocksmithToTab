@@ -49,9 +49,6 @@
     <Reference Include="X360">
       <HintPath>..\X360.dll</HintPath>
     </Reference>
-    <Reference Include="Xml.Schema.Linq">
-      <HintPath>..\Xml.Schema.Linq.dll</HintPath>
-    </Reference>
     <Reference Include="zlib.net">
       <HintPath>..\zlib.net.dll</HintPath>
     </Reference>
