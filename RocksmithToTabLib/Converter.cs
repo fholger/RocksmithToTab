@@ -298,6 +298,14 @@ namespace RocksmithToTabLib
                 else
                     note.Slide = Note.SlideType.UnpitchDown;
             }
+            //if (rsNote.Bend > 0 || rsNote.BendValues != null)
+            //{
+            //    Console.WriteLine("Detected note bend at time {3} on string {0}, fret {1}. Bend value: {2}", rsNote.String, rsNote.Fret, rsNote.Bend, rsNote.Time);
+            //    foreach (var val in rsNote.BendValues)
+            //    {
+            //        Console.WriteLine("  Bend value at {0}: {1}  (unk5: {2})  [{3}%]", val.Time, val.Step, val.Unk5, (val.Time-rsNote.Time)/rsNote.Sustain*100);
+            //    }
+            //}
             // adjust for capo
             if (note.Fret > 0)
                 note.Fret -= capo;
@@ -349,7 +357,7 @@ namespace RocksmithToTabLib
                         chord.Duration = 0; // to be deleted on this condition after the loop
                         if (i < bar.Chords.Count - 1)
                         {
-                            Console.WriteLine("Note value too short, merging with next note in bar {0}", b);
+                            //Console.WriteLine("Note value too short, merging with next note in bar {0}", b);
                             var next = bar.Chords[i + 1];
                             next.Start = chord.Start;
                             foreach (var kvp in chord.Notes)
@@ -364,7 +372,7 @@ namespace RocksmithToTabLib
                             // very unlikely (?) should merge with next bar
                             if (b != bars.Count-1)
                             {
-                                Console.WriteLine("Note value too short, merging with first note of next bar in bar {0}", b);
+                                //Console.WriteLine("Note value too short, merging with first note of next bar in bar {0}", b);
                                 var next = bars[b + 1].Chords.First();
                                 foreach (var kvp in chord.Notes)
                                 {
@@ -403,9 +411,9 @@ namespace RocksmithToTabLib
                     // the surplus.
                     if (barDuration != expectedDuration)
                     {
-                        Console.WriteLine("{0} at end of bar does not match expected duration {1}, fixing... {2}", barDuration, expectedDuration, chord.Duration);
+                        Console.WriteLine("  {0} at end of bar does not match expected duration {1}, fixing... {2}", barDuration, expectedDuration, chord.Duration);
                         chord.Duration -= (barDuration - expectedDuration);
-                        Console.WriteLine("Now: {0}", chord.Duration);
+                        Console.WriteLine("  Now: {0}", chord.Duration);
                     }
                 }
 
@@ -420,11 +428,11 @@ namespace RocksmithToTabLib
                     {
                         if (saneDurations.Contains(chord.Duration + shift))
                         {
-                            Console.WriteLine("Shifting sloppy rhythm to next note. ({0}, {1})", chord.Duration, next.Duration);
+                            Console.WriteLine("  Shifting sloppy rhythm to next note. ({0}, {1})", chord.Duration, next.Duration);
                             chord.Duration += shift;
                             next.Duration -= shift;
                             barDuration += shift;
-                            Console.WriteLine("Now: ({0}, {1})", chord.Duration, next.Duration);
+                            Console.WriteLine("  Now: ({0}, {1})", chord.Duration, next.Duration);
                             break;
                         }
                     }

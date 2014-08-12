@@ -63,6 +63,10 @@ namespace RocksmithToTabLib
                 var splitPoint = fileName.LastIndexOf('_');
                 var identifier = fileName.Substring(0, splitPoint);
                 var arrangement = fileName.Substring(splitPoint + 1);
+                
+                // temporary: exclude vocals from list until we can actually deal with them
+                if (arrangement.ToLower() == "vocals" || arrangement.ToLower() == "jvocals")
+                    continue;
 
                 if (currentSong == null || currentSong.Identifier != identifier)
                 {
@@ -95,6 +99,7 @@ namespace RocksmithToTabLib
                             // information. Just ignore this.
                         }
                     }
+                    entry.Data.Position = 0;
                 }
 
                 currentSong.Arrangements.Add(arrangement);
@@ -136,6 +141,8 @@ namespace RocksmithToTabLib
             {
                 var manifest = JsonConvert.DeserializeObject<Manifest2014<Attributes2014>>(
                     reader.ReadToEnd());
+                if (manifest == null)
+                    return null;
                 attr = manifest.Entries.ToArray()[0].Value.ToArray()[0].Value;
             }
 
