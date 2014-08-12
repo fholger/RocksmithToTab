@@ -83,8 +83,16 @@ namespace RocksmithToTab
                             if (options.SplitArrangements)
                             {
                                 // create a separate file for each arrangement
-                                exporter.ExportGpif(score, Path.Combine(options.OutputDirectory,
-                                    song.Identifier + "_" + arr + ".gpif"));
+                                if (options.OutputFormat == "gpif")
+                                {
+                                    exporter.ExportGpif(score, Path.Combine(options.OutputDirectory,
+                                        song.Identifier + "_" + arr + ".gpif"));
+                                }
+                                else
+                                {
+                                    exporter.ExportGPX(score, Path.Combine(options.OutputDirectory,
+                                        song.Identifier + "_" + arr + ".gpx"));
+                                }
                                 // remember to remove the track from the score again
                                 score.Tracks.Clear();
                             }
@@ -92,8 +100,16 @@ namespace RocksmithToTab
 
                         if (!options.SplitArrangements)
                         {
-                            exporter.ExportGpif(score, Path.Combine(options.OutputDirectory, 
-                                song.Identifier + ".gpif"));
+                            if (options.OutputFormat == "gpif")
+                            {
+                                exporter.ExportGpif(score, Path.Combine(options.OutputDirectory, 
+                                    song.Identifier + ".gpif"));
+                            }
+                            else
+                            {
+                                exporter.ExportGPX(score, Path.Combine(options.OutputDirectory,
+                                    song.Identifier + ".gpx"));
+                            }
                         }
                     }
                 }

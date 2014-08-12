@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using Gpif;
 
 namespace RocksmithToTabLib
@@ -23,6 +24,17 @@ namespace RocksmithToTabLib
         public void ExportGPX(Score score, string fileName, bool compress = true)
         {
             Export(score);
+            Stream stream = new MemoryStream();
+            gpif.Save(stream);
+            stream.Position = 0;
+            stream = GpxContainer.CreateGPXContainer(stream);
+            if (compress)
+                stream = GpxContainer.CompressGPX(stream);
+
+            using (var outFile = File.Open(fileName, FileMode.Create))
+            {
+                stream.CopyTo(outFile);
+            }
         }
 
 

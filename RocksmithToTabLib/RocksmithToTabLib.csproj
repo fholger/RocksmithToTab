@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="Converter.cs" />
     <Compile Include="Gpif.cs" />
+    <Compile Include="GpxContainer.cs" />
     <Compile Include="GpxExporter.cs" />
     <Compile Include="PsarcBrowser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
