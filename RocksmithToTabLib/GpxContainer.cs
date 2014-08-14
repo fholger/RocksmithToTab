@@ -133,19 +133,13 @@ namespace RocksmithToTabLib
                 // there are any number of more sophisticated approaches, one being to build a suffix
                 // tree to find the largest common substring. However, I have a feeling it would not
                 // dramatically improve the compression, although it might improve performance...
-                int size = 4;
+                int size;
                 int offset = Math.Max(0, pos - 0x7fff);
-                int foundPos = 0;
-                while ((foundPos = FindPreviousOccurence(content, offset, pos, size)) != -1)
-                {
-                    offset = foundPos;
-                    size *= 2;
-                }
-                size /= 2;
+                offset = FindPreviousOccurence(content, offset, pos, out size);
 
-                if (size > 2)
+                if (size > 4)
                 {
-                    // successful match found
+                    // found a sufficiently long match
                     bits.WriteBit(1);
                     offset = pos - offset;  // reverse the offset
                     // determine highest bit in size or offset
@@ -182,27 +176,30 @@ namespace RocksmithToTabLib
             return output;
         }
 
-        static int FindPreviousOccurence(byte[] data, int start, int position, int size)
+        static int FindPreviousOccurence(byte[] data, int start, int position, out int size)
         {
-            if (size > data.Length - position)
-                return -1;
-
-            for (int i = start; i < position - size; ++i)
+            int longestMatch = 0;
+            int matchPos = -1;
+            int maxSize = data.Length - position;
+        
+            for (int i = start; i < position - longestMatch; ++i)
             {
-                bool found = true;
-                for (int j = 0; j < size; ++j)
+                for (int j = 0; j < Math.Min(maxSize, position - i); ++j)
                 {
                     if (data[i + j] != data[position + j])
                     {
-                        found = false;
+                        if (j > longestMatch)
+                        {
+                            longestMatch = j;
+                            matchPos = i;
+                        }
                         break;
                     }
                 }
-                if (found)
-                    return i;
             }
 
-            return -1;
+            size = longestMatch;
+            return matchPos;
         }
     }
 
