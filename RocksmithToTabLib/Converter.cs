@@ -175,37 +175,61 @@ namespace RocksmithToTabLib
                 allNotes = allNotes.Concat(notes.Concat(chords));
             }
 
-            Chord lastChord = null;
+            // Now put the chords into the bars they belong.
+            // We also use this opportunity to merge single notes that are placed at
+            // (almost) the same time.
+            Chord toMerge = null;
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
-                float endTime = (b < bars.Count - 1) ? bars[b + 1].Start : float.MaxValue;
                 // gather chords that lie within this bar
-                bar.Chords = allNotes.Where(x => x.Start >= bar.Start && x.Start < endTime)
+                bar.Chords = allNotes.Where(x => x.Start >= bar.Start && x.Start < bar.End)
                     .OrderBy(x => x.Start).ToList();
 
-                Chord nextChord = (bar.Chords.Count != 0) ? bar.Chords.Last() : null;
+                for (int i = 0; i < bar.Chords.Count; ++i)
+                {
+                    var chord = bar.Chords[i];
+                    chord.End = (i < bar.Chords.Count - 1) ? bar.Chords[i + 1].Start : bar.End;
+                    if (toMerge != null)
+                    {
+                        // merge previous chord with this one
+                        chord.Start = Math.Max(bar.Start, toMerge.Start);
+                        foreach (var kvp in toMerge.Notes)
+                        {
+                            if (!chord.Notes.ContainsKey(kvp.Key))
+                            {
+                                chord.Notes.Add(kvp.Key, kvp.Value);
+                                chord.Popped = chord.Popped || kvp.Value.Popped;
+                                chord.Slapped = chord.Slapped || kvp.Value.Slapped;
+                                chord.Tremolo = chord.Tremolo || kvp.Value.Tremolo;
+                            }
+                            else
+                                Console.WriteLine("  Warning: Trying to merge close notes, but note already present in bar {0}, note {1}", b, i);
+                        }
+                        toMerge.Start = 0;  // will delete on this condition
+                        toMerge = null;
+                    }
+
+                    if (chord.End - chord.Start < 0.01)
+                    {
+                        // chord is too short, merge with next
+                        toMerge = chord;
+                    }
+                }
+                bar.Chords.RemoveAll(x => x.Start < bar.Start);
+
                 // in case that the bar is empty or the first note does not coincide with the start
                 // of the bar, we either extend the previous chord, or add silence.
                 if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
                 {
-                    if (lastChord != null)
-                    {
-                        // extend the chord from the previous bar into the silence
-                        var newChord = ExtendChord(lastChord, bar.Start);
-                        bar.Chords.Insert(0, newChord);
-                    }
-                    else
-                    {
-                        // an empty chord indicates silence.
-                        bar.Chords.Insert(0, new Chord() { Start = bar.Start });
-                    }
+                      // an empty chord indicates silence.
+                      var end = (bar.Chords.Count != 0) ? bar.Chords.First().Start : bar.End;
+                      bar.Chords.Insert(0, new Chord() { Start = bar.Start, End = end });
                 }
-                lastChord = nextChord;
             }
             
 
-            TransferTechniques(bars);
+            TransferHopo(bars);
 
             return maxDifficulty;
         }
@@ -380,9 +404,9 @@ namespace RocksmithToTabLib
         }
 
 
-        static void TransferTechniques(List<Bar> bars)
+        static void TransferHopo(List<Bar> bars)
         {
-            // Rocksmith places techniques like hammer-on / pull-off on the second note.
+            // Rocksmith places hammer-on / pull-off on the second note.
             // However, for our exporter it is much easier to handle the flag being set
             // on the first note, so we'll go through all notes and move the flag one note
             // to the left.
@@ -415,41 +439,7 @@ namespace RocksmithToTabLib
                     var chord = bar.Chords[i];
                     Single end = (i == bar.Chords.Count - 1) ? bar.End : bar.Chords[i + 1].Start;
                     chord.Duration = bar.GetDuration(chord.Start, end - chord.Start);
-                    if (chord.Duration < 2)
-                    {
-                        // a duration of 2 is a 64th triplet - that's the lowest we will go.
-                        // If the duration is smaller than that, we are going to merge them 
-                        // with the next chord.
-                        chord.Duration = 0; // to be deleted on this condition after the loop
-                        if (i < bar.Chords.Count - 1)
-                        {
-                            //Console.WriteLine("Note value too short, merging with next note in bar {0}", b);
-                            var next = bar.Chords[i + 1];
-                            next.Start = chord.Start;
-                            foreach (var kvp in chord.Notes)
-                            {
-                                if (!next.Notes.ContainsKey(kvp.Key))
-                                    next.Notes.Add(kvp.Key, kvp.Value);
-                            }
-
-                        }
-                        else
-                        {
-                            // very unlikely (?) should merge with next bar
-                            if (b != bars.Count-1)
-                            {
-                                //Console.WriteLine("Note value too short, merging with first note of next bar in bar {0}", b);
-                                var next = bars[b + 1].Chords.First();
-                                foreach (var kvp in chord.Notes)
-                                {
-                                    if (!next.Notes.ContainsKey(kvp.Key))
-                                        next.Notes.Add(kvp.Key, kvp.Value);
-                                }
-                            }
-                        }
-                    }
                 }
-                bar.Chords.RemoveAll(x => x.Duration == 0);
 
                 CleanRhythm(bar);
             }

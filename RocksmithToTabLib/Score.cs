@@ -200,6 +200,7 @@ namespace RocksmithToTabLib
 
         // start time in Rocksmith
         public Single Start { get; set; }
+        public Single End { get; set; }
     }
 
 
