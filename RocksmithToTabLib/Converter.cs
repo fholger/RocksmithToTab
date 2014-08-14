@@ -308,7 +308,8 @@ namespace RocksmithToTabLib
                 Tapped = rsNote.Tap != 0,
                 Slapped = rsNote.Slap == 1,
                 Popped = rsNote.Pluck == 1,
-                LeftFingering = rsNote.LeftHand
+                LeftFingering = rsNote.LeftHand,
+                Sustain = rsNote.Sustain
             };
             if (rsNote.SlideTo != -1)
                 note.Slide = Note.SlideType.ToNext;
@@ -319,14 +320,17 @@ namespace RocksmithToTabLib
                 else
                     note.Slide = Note.SlideType.UnpitchDown;
             }
-            //if (rsNote.Bend > 0 || rsNote.BendValues != null)
-            //{
-            //    Console.WriteLine("Detected note bend at time {3} on string {0}, fret {1}. Bend value: {2}", rsNote.String, rsNote.Fret, rsNote.Bend, rsNote.Time);
-            //    foreach (var val in rsNote.BendValues)
-            //    {
-            //        Console.WriteLine("  Bend value at {0}: {1}  (unk5: {2})  [{3}%]", val.Time, val.Step, val.Unk5, (val.Time-rsNote.Time)/rsNote.Sustain*100);
-            //    }
-            //}
+            if (rsNote.BendValues != null)
+            {
+                foreach (var val in rsNote.BendValues)
+                {
+                    note.BendValues.Add(new Note.BendValue()
+                    {
+                        Start = val.Time,
+                        Step = val.Step
+                    });
+                }
+            }
             // adjust for capo
             if (note.Fret > 0)
                 note.Fret -= capo;

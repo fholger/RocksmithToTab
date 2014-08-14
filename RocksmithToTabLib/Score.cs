@@ -220,6 +220,7 @@ namespace RocksmithToTabLib
         public bool Slapped { get; set; }
         public bool Popped { get; set; }
         public int LeftFingering { get; set; }
+        public float Sustain { get; set; }
 
         public enum SlideType
         {
@@ -229,5 +230,19 @@ namespace RocksmithToTabLib
             UnpitchUp
         }
         public SlideType Slide { get; set; }
+
+        public class BendValue
+        {
+            public float Start;
+            public float RelativePosition;
+            public float Step;
+        }
+        public List<BendValue> BendValues { get; set; }
+
+
+        public Note()
+        {
+            BendValues = new List<BendValue>();
+        }
     }
 }
