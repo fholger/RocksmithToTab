@@ -175,6 +175,7 @@ namespace RocksmithToTabLib
                 allNotes = allNotes.Concat(notes.Concat(chords));
             }
 
+            Chord lastChord = null;
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
@@ -183,12 +184,24 @@ namespace RocksmithToTabLib
                 bar.Chords = allNotes.Where(x => x.Start >= bar.Start && x.Start < endTime)
                     .OrderBy(x => x.Start).ToList();
 
+                Chord nextChord = (bar.Chords.Count != 0) ? bar.Chords.Last() : null;
                 // in case that the bar is empty or the first note does not coincide with the start
-                // of the bar, we add an empty chord to the beginning indicating silence.
+                // of the bar, we either extend the previous chord, or add silence.
                 if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
                 {
-                    bar.Chords.Insert(0, new Chord() { Start = bar.Start });
+                    if (lastChord != null)
+                    {
+                        // extend the chord from the previous bar into the silence
+                        var newChord = ExtendChord(lastChord, bar.Start);
+                        bar.Chords.Insert(0, newChord);
+                    }
+                    else
+                    {
+                        // an empty chord indicates silence.
+                        bar.Chords.Insert(0, new Chord() { Start = bar.Start });
+                    }
                 }
+                lastChord = nextChord;
             }
             
 
@@ -319,6 +332,47 @@ namespace RocksmithToTabLib
                 note.Fret -= capo;
 
             return note;
+        }
+
+
+        static Chord ExtendChord(Chord chord, float startTime)
+        {
+            var newChord = new Chord()
+            {
+                ChordId = chord.ChordId,
+                BrushDirection = chord.BrushDirection,
+                Start = startTime,
+                Popped = false,
+                Slapped = false,
+                Tremolo = chord.Tremolo
+            };
+
+            // copy over notes, but be careful to set techniques at the right points
+            foreach (var kvp in chord.Notes)
+            {
+                var note = kvp.Value;
+                var newNote = new Note()
+                {
+                    Fret = note.Fret,
+                    String = note.String,
+                    Hopo = note.Hopo,
+                    LinkNext = note.LinkNext,
+                    Slide = note.Slide,
+                    Muted = note.Muted,
+                    PalmMuted = note.PalmMuted,
+                    Vibrato = note.Vibrato,
+                    Harmonic = note.Harmonic,
+                    Tremolo = note.Tremolo,
+                    LeftFingering = -1,
+                    Tapped = false
+                };
+                note.Hopo = false;
+                note.LinkNext = true;
+                note.Slide = Note.SlideType.None;
+                newChord.Notes.Add(kvp.Key, newNote);
+            }
+
+            return newChord;
         }
 
 
@@ -494,7 +548,10 @@ namespace RocksmithToTabLib
             {
                 ChordId = chord.ChordId,
                 BrushDirection = chord.BrushDirection,
-                Duration = chord.Duration - splitPoint
+                Duration = chord.Duration - splitPoint,
+                Popped = false,
+                Slapped = false,
+                Tremolo = chord.Tremolo
             };
             chord.Duration = splitPoint;
 
