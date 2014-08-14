@@ -153,8 +153,8 @@ namespace RocksmithToTabLib
             // levels only contain notes for phrases where the notes differ from lower levels.
             // This makes collection a little awkward, as we have to go phrase by phrase, 
             // to extract all the right notes.
-            int currentBar = 0;
             int maxDifficulty = 0;
+            IEnumerable<Chord> allNotes = new List<Chord>();
             for (int pit = 0; pit < arrangement.PhraseIterations.Length; ++pit)
             {
                 var phraseIteration = arrangement.PhraseIterations[pit];
@@ -162,27 +162,35 @@ namespace RocksmithToTabLib
                 int difficulty = Math.Min(difficultyLevel, phrase.MaxDifficulty);
                 var level = arrangement.Levels.FirstOrDefault(x => x.Difficulty == difficulty);
                 maxDifficulty = Math.Max(difficulty, maxDifficulty);
-                
-                while (currentBar < bars.Count && 
-                    (pit == arrangement.PhraseIterations.Length-1 ||
-                    bars[currentBar].Start < arrangement.PhraseIterations[pit+1].Time))
+                float startTime = phraseIteration.Time;
+                float endTime = float.MaxValue;
+                if (pit < arrangement.PhraseIterations.Length - 1)
+                    endTime = arrangement.PhraseIterations[pit + 1].Time;
+
+                // gather single notes and chords inside this phrase iteration
+                var notes = from n in level.Notes where n.Time >= startTime && n.Time < endTime 
+                            select CreateChord(n, arrangement.Capo);
+                var chords = from c in level.Chords where c.Time >= startTime && c.Time < endTime
+                             select CreateChord(c, chordTemplates, arrangement.Capo);
+                allNotes = allNotes.Concat(notes.Concat(chords));
+            }
+
+            for (int b = 0; b < bars.Count; ++b)
+            {
+                var bar = bars[b];
+                float endTime = (b < bars.Count - 1) ? bars[b + 1].Start : float.MaxValue;
+                // gather chords that lie within this bar
+                bar.Chords = allNotes.Where(x => x.Start >= bar.Start && x.Start < endTime)
+                    .OrderBy(x => x.Start).ToList();
+
+                // in case that the bar is empty or the first note does not coincide with the start
+                // of the bar, we add an empty chord to the beginning indicating silence.
+                if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
                 {
-                    var bar = bars[currentBar];
-                    // gather notes and chords for the selected difficulty level that lie within this bar
-                    var notes = from n in level.Notes where bar.ContainsTime(n.Time) select CreateChord(n, arrangement.Capo);
-                    var chords = from c in level.Chords where bar.ContainsTime(c.Time) select CreateChord(c, chordTemplates, arrangement.Capo);
-                    bar.Chords = notes.Union(chords).OrderBy(x => x.Start).ToList();
-
-                    // in case that the bar is empty or the first note does not coincide with the start
-                    // of the bar, we add an empty chord to the beginning indicating silence.
-                    if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
-                    {
-                        bar.Chords.Insert(0, new Chord() { Start = bar.Start });
-                    }
-
-                    ++currentBar;
+                    bar.Chords.Insert(0, new Chord() { Start = bar.Start });
                 }
             }
+            
 
             TransferTechniques(bars);
 
