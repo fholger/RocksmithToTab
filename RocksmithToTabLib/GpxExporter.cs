@@ -369,7 +369,7 @@ namespace RocksmithToTabLib
                     rhythm.PrimaryTuplet = new Rhythm.Tuplet() { Den = 2, Num = 3 };
                     break;
                 default:
-                    Console.WriteLine("Warning: Rhythm Duration {0} not handled, defaulting to quarter note.", chord.Duration);
+                    Console.WriteLine("  Warning: Rhythm Duration {0} not handled, defaulting to quarter note.", chord.Duration);
                     rhythm.NoteValue = "Quarter";
                     break;
             }

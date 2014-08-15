@@ -232,6 +232,7 @@ namespace RocksmithToTabLib
             UnpitchUp
         }
         public SlideType Slide { get; set; }
+        public int SlideTarget { get; set; }
 
         public class BendValue
         {

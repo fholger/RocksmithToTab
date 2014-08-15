@@ -43,8 +43,9 @@ namespace RocksmithToTabLib
             SplitNotes(track.Bars);
 
             // take care of some after-processing for certain techniques
-            TransferHopo(track.Bars);
+            SplitImplicitSlides(track.Bars);
             CalculateBendOffsets(track.Bars);
+            TransferHopo(track.Bars);
 
             return track;
         }
@@ -346,7 +347,7 @@ namespace RocksmithToTabLib
                 if (bar.Chords.First().Notes.Count == 0 && sustainedNotes.Count == 0 && lastChord != null)
                 {
                     // extend the chord from the previous bar into the silence
-                    var newChord = ExtendChord(lastChord, bar.Start);
+                    var newChord = SplitChord(lastChord, bar.Start);
                     bar.Chords[0] = newChord;
                 }
                 lastChord = nextChord;
@@ -445,7 +446,7 @@ namespace RocksmithToTabLib
         }
 
 
-        static Chord ExtendChord(Chord chord, float startTime)
+        static Chord SplitChord(Chord chord, float startTime)
         {
             var newChord = new Chord()
             {
@@ -518,7 +519,7 @@ namespace RocksmithToTabLib
                             {
                                 if (!next.Notes.ContainsKey(kvp.Key))
                                     next.Notes.Add(kvp.Key, kvp.Value);
-                                else
+                                else if (!next.Notes[kvp.Key]._Extended)
                                     Console.WriteLine("  Warning: Not possible to merge empty note with neighbour in bar {0}", b);
                             }
 
@@ -534,7 +535,8 @@ namespace RocksmithToTabLib
                                 {
                                     if (!next.Notes.ContainsKey(kvp.Key))
                                         next.Notes.Add(kvp.Key, kvp.Value);
-                                    Console.WriteLine("  Warning: Not possible to merge empty note with next bar in bar {0}", b);
+                                    else if (!next.Notes[kvp.Key]._Extended)
+                                        Console.WriteLine("  Warning: Not possible to merge empty note with next bar in bar {0}", b);
                                 }
                             }
                         }
@@ -625,7 +627,10 @@ namespace RocksmithToTabLib
                             int toNextBeat = split - (curProgress % split);
                             if (toNextBeat <= chord.Duration && saneDurations.Contains(toNextBeat))
                             {
-                                var newChord = SplitChord(chord, toNextBeat);
+                                float startTime = chord.Start + bar.GetDurationLength(chord.Start, toNextBeat);
+                                var newChord = SplitChord(chord, startTime);
+                                newChord.Duration = chord.Duration - toNextBeat;
+                                chord.Duration = toNextBeat;
                                 bar.Chords.Insert(i + 1, newChord);
                                 break;
                             }
@@ -637,47 +642,11 @@ namespace RocksmithToTabLib
             }
         }
 
-        static Chord SplitChord(Chord chord, int splitPoint)
+
+        static void SplitImplicitSlides(List<Bar> bars)
         {
-            var newChord = new Chord()
-            {
-                ChordId = chord.ChordId,
-                BrushDirection = chord.BrushDirection,
-                Duration = chord.Duration - splitPoint,
-                Popped = false,
-                Slapped = false,
-                Tremolo = chord.Tremolo
-            };
-            chord.Duration = splitPoint;
 
-            // copy over notes, but be careful to set techniques at the right points
-            foreach (var kvp in chord.Notes)
-            {
-                var note = kvp.Value;
-                var newNote = new Note()
-                {
-                    Fret = note.Fret,
-                    String = note.String,
-                    Hopo = note.Hopo,
-                    LinkNext = note.LinkNext,
-                    Slide = note.Slide,
-                    Muted = note.Muted,
-                    PalmMuted = note.PalmMuted,
-                    Vibrato = note.Vibrato,
-                    Harmonic = note.Harmonic,
-                    Tremolo = note.Tremolo,
-                    LeftFingering = -1,
-                    Tapped = false
-                };
-                note.Hopo = false;
-                note.LinkNext = true;
-                note.Slide = Note.SlideType.None;
-                newChord.Notes.Add(kvp.Key, newNote);
-            }
-
-            return newChord;
         }
-
 
         static void CalculateBendOffsets(List<Bar> bars)
         {
