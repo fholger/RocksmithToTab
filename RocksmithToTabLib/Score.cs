@@ -206,6 +206,7 @@ namespace RocksmithToTabLib
 
     public class Note
     {
+        public Single Start { get; set; }
         public int String { get; set; }
         public int Fret { get; set; }
         public bool PalmMuted { get; set; }

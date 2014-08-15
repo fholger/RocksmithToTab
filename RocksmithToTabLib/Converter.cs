@@ -41,6 +41,8 @@ namespace RocksmithToTabLib
             // split those note values that can't or shouldn't be represented as a single note value
             SplitNotes(track.Bars);
 
+            TransferHopo(track.Bars);
+
             return track;
         }
 
@@ -176,9 +178,10 @@ namespace RocksmithToTabLib
             }
 
             // Now put the chords into the bars they belong.
-            // We also use this opportunity to extend chords at the end of a bar into silence
-            // at the beginning of the next bar
+            // We also use this opportunity to extend sustained notes or chords at the end of 
+            // a bar.
             Chord lastChord = null;
+            var sustainedNotes = new Dictionary<int, Note>();
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
@@ -187,28 +190,54 @@ namespace RocksmithToTabLib
                     .OrderBy(x => x.Start).ToList();
 
                 Chord nextChord = (bar.Chords.Count != 0) ? bar.Chords.Last() : null;
-                // in case that the bar is empty or the first note does not coincide with the start
-                // of the bar, we either extend the previous chord, or add silence
+
+                // if the bar is empty or the first chord does not start wit the bar,
+                // fill the beginning of the bar with silence.
                 if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
-                //for (int i = 0; i < bar.Chords.Count; ++i)
                 {
-                    if (lastChord != null)
-                    {
-                        // extend the chord from the previous bar into the silence
-                        var newChord = ExtendChord(lastChord, bar.Start);
-                        bar.Chords.Insert(0, newChord);
-                    }
-                    else
-                    {
-                        // an empty chord indicates silence.
-                        bar.Chords.Insert(0, new Chord() { Start = bar.Start });
-                    }
+                    // an empty chord indicates silence.
+                    bar.Chords.Insert(0, new Chord() { Start = bar.Start });
+                }
+                // if the first chord of the bar is empty (silent), we will extend the last
+                // chord of the previous bar (if applicable)
+                if (bar.Chords.First().Notes.Count == 0 && sustainedNotes.Count == 0 && lastChord != null)
+                {
+                    // extend the chord from the previous bar into the silence
+                    var newChord = ExtendChord(lastChord, bar.Start);
+                    bar.Chords[0] = newChord;
                 }
                 lastChord = nextChord;
+
+                // next, we handle sustained notes
+                foreach (var chord in bar.Chords)
+                {
+                    // add previous sustained notes to the current chord
+                    foreach (var kvp in sustainedNotes)
+                    {
+                        if (kvp.Value.Start + kvp.Value.Sustain < chord.Start)
+                            continue;  // already past its sustain time
+
+                        if (!chord.Notes.ContainsKey(kvp.Key))
+                        {
+                            var newNote = SplitNote(kvp.Value, chord.Start);
+                            chord.Notes.Add(kvp.Key, newNote);
+                        }
+                        else
+                        {
+                            Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
+                        }
+                    }
+                    sustainedNotes.Clear();
+                    // now see if any notes in the current chord should be sustained
+                    foreach (var kvp in chord.Notes)
+                    {
+                        if (kvp.Value.Sustain > 0)
+                            sustainedNotes.Add(kvp.Key, kvp.Value);
+                    }
+                }
+
             }
             
-
-            TransferHopo(bars);
 
             return maxDifficulty;
         }
@@ -297,6 +326,7 @@ namespace RocksmithToTabLib
         {
             var note = new Note()
             {
+                Start = rsNote.Time,
                 String = rsNote.String,
                 Fret = rsNote.Fret,
                 PalmMuted = rsNote.PalmMute != 0,
@@ -341,6 +371,38 @@ namespace RocksmithToTabLib
             return note;
         }
 
+        static Note SplitNote(Note note, float startTime)
+        {
+            Note newNote = new Note()
+            {
+                Start = startTime,
+                String = note.String,
+                Fret = note.Fret,
+                Hopo = false,
+                Accent = note.Accent,
+                Harmonic = note.Harmonic,
+                PinchHarmonic = note.PinchHarmonic,
+                LeftFingering = -1,
+                Popped = false,
+                Slapped = false,
+                LinkNext = note.LinkNext,
+                Muted = note.Muted,
+                PalmMuted = note.PalmMuted,
+                Tapped = false,
+                Slide = note.Slide,
+                Vibrato = note.Vibrato,
+                Tremolo = note.Tremolo,
+                Sustain = note.Start + note.Sustain - startTime
+            };
+            note.Slide = Note.SlideType.None;
+            note.LinkNext = true;
+            note.Sustain = startTime - note.Start;
+
+            // TODO: Split bend values
+
+            return newNote;
+        }
+
 
         static Chord ExtendChord(Chord chord, float startTime)
         {
@@ -354,28 +416,10 @@ namespace RocksmithToTabLib
                 Tremolo = chord.Tremolo
             };
 
-            // copy over notes, but be careful to set techniques at the right points
+            // copy over notes
             foreach (var kvp in chord.Notes)
             {
-                var note = kvp.Value;
-                var newNote = new Note()
-                {
-                    Fret = note.Fret,
-                    String = note.String,
-                    Hopo = note.Hopo,
-                    LinkNext = note.LinkNext,
-                    Slide = note.Slide,
-                    Muted = note.Muted,
-                    PalmMuted = note.PalmMuted,
-                    Vibrato = note.Vibrato,
-                    Harmonic = note.Harmonic,
-                    Tremolo = note.Tremolo,
-                    LeftFingering = -1,
-                    Tapped = false
-                };
-                note.Hopo = false;
-                note.LinkNext = true;
-                note.Slide = Note.SlideType.None;
+                var newNote = SplitNote(kvp.Value, startTime);
                 newChord.Notes.Add(kvp.Key, newNote);
             }
 
