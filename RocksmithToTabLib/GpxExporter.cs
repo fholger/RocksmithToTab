@@ -462,7 +462,7 @@ namespace RocksmithToTabLib
                 gpNote.Properties.Add(new Property() { Name = "HarmonicFret", HFret = "12" });
             }
 
-            // handle slights
+            // handle slides
             int slideFlag = 0;
             switch (note.Slide)
             {
@@ -475,6 +475,51 @@ namespace RocksmithToTabLib
             }
             if (slideFlag != 0)
                 gpNote.Properties.Add(new Property() { Name = "Slide", Flags = slideFlag });
+
+            // handle bends
+            if (note.BendValues.Count != 0)
+            {
+                float origin = 0;
+                float destination = 0;
+                float middle = 0;
+                float middleOffset1 = 0;
+                float middleOffset2 = 0;
+                float destinationOffset = 0;
+
+                foreach (var bend in note.BendValues)
+                {
+                    if (bend.Start <= note.Start)
+                        origin = bend.Step;
+                    else
+                    {
+                        if (bend.Step > middle)
+                        {
+                            middle = bend.Step;
+                            middleOffset1 = bend.RelativePosition;
+                            middleOffset2 = bend.RelativePosition;
+                        }
+                        else if (bend.Step == middle)
+                            middleOffset2 = bend.RelativePosition;
+                    }
+                }
+                destination = note.BendValues.Last().Step;
+                destinationOffset = note.BendValues.Last().RelativePosition;
+                // add the properties
+                if (origin != 0 || middle != 0 || destination != 0)
+                {
+                    // for some reason, some notes have nonsensical bend data attached, so ignore that
+                    gpNote.Properties.Add(new Property() { Name = "Bended", Enable = new Property.EnableType() });
+                    gpNote.Properties.Add(new Property() { Name = "BendOriginValue", Float = Math.Round(origin * 50) });
+                    if (middle != destination)
+                    {
+                        gpNote.Properties.Add(new Property() { Name = "BendMiddleValue", Float = Math.Round(middle * 50) });
+                        gpNote.Properties.Add(new Property() { Name = "BendMiddleOffset1", Float = Math.Round(middleOffset1 * 100) });
+                        gpNote.Properties.Add(new Property() { Name = "BendMiddleOffset2", Float = Math.Round(middleOffset2 * 100) });
+                    }
+                    gpNote.Properties.Add(new Property() { Name = "BendDestinationValue", Float = Math.Round(destination * 50) });
+                    gpNote.Properties.Add(new Property() { Name = "BendDestinationOffset", Float = Math.Round(destinationOffset * 100) });
+                }
+            }
 
             // if available, place left hand fingering hint
             if (note.LeftFingering >= 0 && note.LeftFingering <= 4)

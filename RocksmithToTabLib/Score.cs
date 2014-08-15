@@ -242,9 +242,13 @@ namespace RocksmithToTabLib
         public List<BendValue> BendValues { get; set; }
 
 
+        public bool _Extended;  // internal marker that this note is a linked note created for sustain
+
+
         public Note()
         {
             BendValues = new List<BendValue>();
+            _Extended = false;
         }
     }
 }

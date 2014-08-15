@@ -42,7 +42,9 @@ namespace RocksmithToTabLib
             // split those note values that can't or shouldn't be represented as a single note value
             SplitNotes(track.Bars);
 
+            // take care of some after-processing for certain techniques
             TransferHopo(track.Bars);
+            CalculateBendOffsets(track.Bars);
 
             return track;
         }
@@ -89,7 +91,7 @@ namespace RocksmithToTabLib
                 if (!templates.ContainsKey(template.ChordId))
                     templates.Add(template.ChordId, template);
                 else
-                    Console.WriteLine("Warning: ChordId {0} already present in templates list.", template.ChordId);
+                    Console.WriteLine("  Warning: ChordId {0} already present in templates list.", template.ChordId);
             }
 
             return templates;
@@ -236,7 +238,7 @@ namespace RocksmithToTabLib
             }
             if (chord.Notes.Count == 0)
             {
-                Console.WriteLine("Warning: Empty chord. Cannot find chord with chordId {0}.", chord.ChordId);
+                Console.WriteLine("  Warning: Empty chord. Cannot find chord with chordId {0}.", chord.ChordId);
             }
 
             // some properties set on the chord in Rocksmith need to be passed down to the individual notes
@@ -401,13 +403,43 @@ namespace RocksmithToTabLib
                 Slide = note.Slide,
                 Vibrato = note.Vibrato,
                 Tremolo = note.Tremolo,
-                Sustain = note.Start + note.Sustain - startTime
+                Sustain = note.Start + note.Sustain - startTime,
+                _Extended = true
             };
             note.Slide = Note.SlideType.None;
             note.LinkNext = true;
             note.Sustain = startTime - note.Start;
 
-            // TODO: Split bend values
+            // Split bend values
+            newNote.BendValues = note.BendValues.Where(x => x.Start >= startTime).ToList();
+            note.BendValues = note.BendValues.Where(x => x.Start <= startTime).ToList();
+            var before = note.BendValues.LastOrDefault();
+            var after = newNote.BendValues.FirstOrDefault();
+            if (after != null)
+            {
+                // there may be a linear change in bend between the two notes, calculate the 
+                // bend value at the point between both notes and insert into each note
+                float beforeStart = (before != null) ? before.Start : 0;
+                float beforeStep = (before != null) ? before.Step : 0;
+                float distance = after.Start - beforeStart;
+                float steps = after.Step - beforeStep;
+                float gradient = steps / distance;
+                var bend = new Note.BendValue()
+                {
+                    Start = startTime,
+                    Step = beforeStep + gradient * (startTime - beforeStart)
+                };
+                newNote.BendValues.Insert(0, bend);
+                note.BendValues.Add(bend);
+            }
+            else if (before != null && before.Step != 0)
+            {
+                newNote.BendValues.Insert(0, new Note.BendValue()
+                    {
+                        Start = startTime,
+                        Step = before.Step
+                    });
+            }
 
             return newNote;
         }
@@ -645,5 +677,31 @@ namespace RocksmithToTabLib
 
             return newChord;
         }
+
+
+        static void CalculateBendOffsets(List<Bar> bars)
+        {
+            // so far, we only have absolute time positions for bend steps.
+            // we'll convert them to a relative position referencing the
+            // current note's length. we can easily do this by just comparing
+            // the time offset with the note's sustain.
+            foreach (var bar in bars)
+            {
+                foreach (var chord in bar.Chords)
+                {
+                    foreach (var kvp in chord.Notes)
+                    {
+                        var note = kvp.Value;
+                        foreach (var bend in note.BendValues)
+                        {
+                            float distance = bend.Start - chord.Start;
+                            bend.RelativePosition = distance / note.Sustain;
+                        }
+                    }
+                }
+            }
+        }
+
+
     }
 }

@@ -107,6 +107,7 @@ namespace Gpif
         public string Direction = null;  // "Up" or "Down", used in "Brush"
         public string HType = null;  // harmonics type
         public string HFret = null;  // harmonics fret
+        public double? Float = null;  // used in bends
 
         [XmlIgnore]
         public List<int> Pitches;
@@ -147,6 +148,7 @@ namespace Gpif
         public bool ShouldSerializePitchesString() { return PitchesString != null; }
         public bool ShouldSerializeHType() { return HType != null; }
         public bool ShouldSerializeHFret() { return HFret != null; }
+        public bool ShouldSerializeFloat() { return Float != null; }
 
         public bool Equals(Property other)
         {
