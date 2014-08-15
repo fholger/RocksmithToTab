@@ -296,7 +296,10 @@ namespace RocksmithToTabLib
                 Sustain = rsNote.Sustain
             };
             if (rsNote.SlideTo != -1)
+            {
                 note.Slide = Note.SlideType.ToNext;
+                note.SlideTarget = rsNote.SlideTo;
+            }
             else if (rsNote.SlideUnpitchTo != -1)
             {
                 if (rsNote.SlideUnpitchTo > rsNote.Fret)
@@ -402,6 +405,7 @@ namespace RocksmithToTabLib
                 PalmMuted = note.PalmMuted,
                 Tapped = false,
                 Slide = note.Slide,
+                SlideTarget = note.SlideTarget,
                 Vibrato = note.Vibrato,
                 Tremolo = note.Tremolo,
                 Sustain = note.Start + note.Sustain - startTime,
@@ -645,7 +649,50 @@ namespace RocksmithToTabLib
 
         static void SplitImplicitSlides(List<Bar> bars)
         {
-
+            // Unfortunately, for targeted slides, Rocksmith does not always follow the sliding note
+            // with a target note, so the target note may be implied only. Of course, this does not 
+            // work for our export, so if we find such a case, we need to split the sliding note into
+            // two and set the second one to the target.
+            for (int b = 0; b < bars.Count; ++b)
+            {
+                var bar = bars[b];
+                var nextBar = (b < bars.Count-1) ? bars[b+1] : null;
+                for (int i = 0; i < bar.Chords.Count; ++i)
+                {
+                    var chord = bar.Chords[i];
+                    var nextChord = (i < bar.Chords.Count - 1) ? bar.Chords[i + 1] : ((nextBar != null) ? nextBar.Chords.FirstOrDefault() : null);
+                    // see if there's an unmatched slide in the current chord.
+                    foreach (var kvp in chord.Notes)
+                    {
+                        var note = kvp.Value;
+                        if (note.Slide == Note.SlideType.ToNext)
+                        {
+                            if (nextChord == null || !nextChord.Notes.ContainsKey(kvp.Key) ||
+                                nextChord.Notes[kvp.Key].Fret != note.SlideTarget)
+                            {
+                                // split the chord in half
+                                int duration = chord.Duration / 2;
+                                var newChord = SplitChord(chord, bar.GetDurationLength(chord.Start, duration));
+                                foreach (var kvp2 in newChord.Notes)
+                                {
+                                    if (kvp2.Value.Slide == Note.SlideType.ToNext)
+                                    {
+                                        kvp2.Value.Fret = kvp2.Value.SlideTarget;
+                                        var prevNote = chord.Notes[kvp2.Key];
+                                        prevNote.Slide = Note.SlideType.ToNext;
+                                        prevNote.SlideTarget = kvp2.Value.Fret;
+                                        kvp2.Value.Slide = Note.SlideType.None;
+                                        kvp2.Value.SlideTarget = -1;
+                                    }
+                                }
+                                newChord.Duration = chord.Duration - duration;
+                                chord.Duration = duration;
+                                bar.Chords.Insert(i + 1, newChord);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         static void CalculateBendOffsets(List<Bar> bars)
