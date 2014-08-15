@@ -61,9 +61,24 @@ namespace RocksmithToTabLib
         }
 
 
+        static void PrintChordTemplate(ChordTemplate template)
+        {
+            Console.WriteLine("  Chord name: {0}   Chord id: {1}", template.Name, template.ChordId);
+            Console.Write("   Frets: ");
+            foreach (var f in template.Frets)
+                Console.Write("{0} ", f);
+            Console.WriteLine();
+            Console.Write("   Fingers: ");
+            foreach (var f in template.Fingers)
+                Console.Write("{0} ", f);
+            Console.WriteLine();
+        }
+
+
         static Dictionary<int, ChordTemplate> GetChordTemplates(Song2014 arrangement)
         {
             var templates = new Dictionary<int, ChordTemplate>();
+            var missingChordIds = new List<ChordTemplate>();
 
             for (int i = 0; i < arrangement.ChordTemplates.Length; ++i)
             {
@@ -79,9 +94,6 @@ namespace RocksmithToTabLib
                         rsTemplate.Finger2, rsTemplate.Finger3, rsTemplate.Finger4,
                         rsTemplate.Finger5 }
                 };
-                if (rsTemplate.ChordId.HasValue)
-                    template.ChordId = rsTemplate.ChordId.Value;
-
                 // correct for capo position
                 for (int j = 0; j < 6; ++j)
                 {
@@ -89,11 +101,34 @@ namespace RocksmithToTabLib
                         template.Frets[j] -= arrangement.Capo;
                 }
 
-                if (!templates.ContainsKey(template.ChordId))
-                    templates.Add(template.ChordId, template);
-                else
-                    Console.WriteLine("  Warning: ChordId {0} already present in templates list.", template.ChordId);
+                templates.Add(template.ChordId, template);
+
+                //if (rsTemplate.ChordId.HasValue)
+                //{
+                //    template.ChordId = rsTemplate.ChordId.Value;
+                //
+                //    if (!templates.ContainsKey(template.ChordId))
+                //        templates.Add(template.ChordId, template);
+                //    else
+                //    {
+                //        Console.WriteLine("  Warning: ChordId {0} already present in templates list.", template.ChordId);
+                //        PrintChordTemplate(templates[template.ChordId]);
+                //        PrintChordTemplate(template);
+                //    }
+                //}
+                //else
+                //    missingChordIds.Add(template);
             }
+
+            // now assign the chords with missing chordIds the next free chord id
+            //int chordId = 0;
+            //foreach (var template in missingChordIds)
+            //{
+            //    while (templates.ContainsKey(chordId))
+            //        ++chordId;
+            //    template.ChordId = chordId;
+            //    templates.Add(chordId, template);
+            //}
 
             return templates;
         }
