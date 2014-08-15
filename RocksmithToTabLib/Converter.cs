@@ -34,6 +34,7 @@ namespace RocksmithToTabLib
 
             // gather notes
             track.DifficultyLevel = CollectNotesForDifficulty(arrangement, track.Bars, track.ChordTemplates, difficultyLevel);
+            HandleSustainsAndSilence(track.Bars);
 
             // figure out note durations and clean up potentially overlapping notes
             CalculateNoteDurations(track.Bars);
@@ -178,66 +179,13 @@ namespace RocksmithToTabLib
             }
 
             // Now put the chords into the bars they belong.
-            // We also use this opportunity to extend sustained notes or chords at the end of 
-            // a bar.
-            Chord lastChord = null;
-            var sustainedNotes = new Dictionary<int, Note>();
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
                 // gather chords that lie within this bar
                 bar.Chords = allNotes.Where(x => x.Start >= bar.Start && x.Start < bar.End)
                     .OrderBy(x => x.Start).ToList();
-
-                Chord nextChord = (bar.Chords.Count != 0) ? bar.Chords.Last() : null;
-
-                // if the bar is empty or the first chord does not start wit the bar,
-                // fill the beginning of the bar with silence.
-                if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
-                {
-                    // an empty chord indicates silence.
-                    bar.Chords.Insert(0, new Chord() { Start = bar.Start });
-                }
-                // if the first chord of the bar is empty (silent), we will extend the last
-                // chord of the previous bar (if applicable)
-                if (bar.Chords.First().Notes.Count == 0 && sustainedNotes.Count == 0 && lastChord != null)
-                {
-                    // extend the chord from the previous bar into the silence
-                    var newChord = ExtendChord(lastChord, bar.Start);
-                    bar.Chords[0] = newChord;
-                }
-                lastChord = nextChord;
-
-                // next, we handle sustained notes
-                foreach (var chord in bar.Chords)
-                {
-                    // add previous sustained notes to the current chord
-                    foreach (var kvp in sustainedNotes)
-                    {
-                        if (kvp.Value.Start + kvp.Value.Sustain < chord.Start)
-                            continue;  // already past its sustain time
-
-                        if (!chord.Notes.ContainsKey(kvp.Key))
-                        {
-                            var newNote = SplitNote(kvp.Value, chord.Start);
-                            chord.Notes.Add(kvp.Key, newNote);
-                        }
-                        else
-                        {
-                            Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
-                        }
-                    }
-                    sustainedNotes.Clear();
-                    // now see if any notes in the current chord should be sustained
-                    foreach (var kvp in chord.Notes)
-                    {
-                        if (kvp.Value.Sustain > 0)
-                            sustainedNotes.Add(kvp.Key, kvp.Value);
-                    }
-                }
-
             }
-            
 
             return maxDifficulty;
         }
@@ -370,6 +318,67 @@ namespace RocksmithToTabLib
 
             return note;
         }
+
+
+        static void HandleSustainsAndSilence(List<Bar> bars)
+        {
+            // Wo go through all bars and extend sustained notes or chords at the end of 
+            // a bar.
+            Chord lastChord = null;
+            var sustainedNotes = new Dictionary<int, Note>();
+            for (int b = 0; b < bars.Count; ++b)
+            {
+                var bar = bars[b];
+
+                Chord nextChord = (bar.Chords.Count != 0) ? bar.Chords.Last() : null;
+
+                // if the bar is empty or the first chord does not start wit the bar,
+                // fill the beginning of the bar with silence.
+                if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
+                {
+                    // an empty chord indicates silence.
+                    bar.Chords.Insert(0, new Chord() { Start = bar.Start });
+                }
+                // if the first chord of the bar is empty (silent), we will extend the last
+                // chord of the previous bar (if applicable)
+                if (bar.Chords.First().Notes.Count == 0 && sustainedNotes.Count == 0 && lastChord != null)
+                {
+                    // extend the chord from the previous bar into the silence
+                    var newChord = ExtendChord(lastChord, bar.Start);
+                    bar.Chords[0] = newChord;
+                }
+                lastChord = nextChord;
+
+                // next, we handle sustained notes
+                foreach (var chord in bar.Chords)
+                {
+                    // add previous sustained notes to the current chord
+                    foreach (var kvp in sustainedNotes)
+                    {
+                        if (kvp.Value.Start + kvp.Value.Sustain < chord.Start)
+                            continue;  // already past its sustain time
+
+                        if (!chord.Notes.ContainsKey(kvp.Key))
+                        {
+                            var newNote = SplitNote(kvp.Value, chord.Start);
+                            chord.Notes.Add(kvp.Key, newNote);
+                        }
+                        else
+                        {
+                            Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
+                        }
+                    }
+                    sustainedNotes.Clear();
+                    // now see if any notes in the current chord should be sustained
+                    foreach (var kvp in chord.Notes)
+                    {
+                        if (kvp.Value.Sustain > 0)
+                            sustainedNotes.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+        }
+
 
         static Note SplitNote(Note note, float startTime)
         {
