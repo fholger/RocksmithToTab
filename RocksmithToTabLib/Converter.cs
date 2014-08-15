@@ -176,9 +176,9 @@ namespace RocksmithToTabLib
             }
 
             // Now put the chords into the bars they belong.
-            // We also use this opportunity to merge single notes that are placed at
-            // (almost) the same time.
-            Chord toMerge = null;
+            // We also use this opportunity to extend chords at the end of a bar into silence
+            // at the beginning of the next bar
+            Chord lastChord = null;
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
@@ -186,46 +186,25 @@ namespace RocksmithToTabLib
                 bar.Chords = allNotes.Where(x => x.Start >= bar.Start && x.Start < bar.End)
                     .OrderBy(x => x.Start).ToList();
 
-                for (int i = 0; i < bar.Chords.Count; ++i)
-                {
-                    var chord = bar.Chords[i];
-                    chord.End = (i < bar.Chords.Count - 1) ? bar.Chords[i + 1].Start : bar.End;
-                    if (toMerge != null)
-                    {
-                        // merge previous chord with this one
-                        chord.Start = Math.Max(bar.Start, toMerge.Start);
-                        foreach (var kvp in toMerge.Notes)
-                        {
-                            if (!chord.Notes.ContainsKey(kvp.Key))
-                            {
-                                chord.Notes.Add(kvp.Key, kvp.Value);
-                                chord.Popped = chord.Popped || kvp.Value.Popped;
-                                chord.Slapped = chord.Slapped || kvp.Value.Slapped;
-                                chord.Tremolo = chord.Tremolo || kvp.Value.Tremolo;
-                            }
-                            else
-                                Console.WriteLine("  Warning: Trying to merge close notes, but note already present in bar {0}, note {1}", b, i);
-                        }
-                        toMerge.Start = 0;  // will delete on this condition
-                        toMerge = null;
-                    }
-
-                    if (chord.End - chord.Start < 0.01)
-                    {
-                        // chord is too short, merge with next
-                        toMerge = chord;
-                    }
-                }
-                bar.Chords.RemoveAll(x => x.Start < bar.Start);
-
+                Chord nextChord = (bar.Chords.Count != 0) ? bar.Chords.Last() : null;
                 // in case that the bar is empty or the first note does not coincide with the start
-                // of the bar, we either extend the previous chord, or add silence.
+                // of the bar, we either extend the previous chord, or add silence
                 if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
+                //for (int i = 0; i < bar.Chords.Count; ++i)
                 {
-                      // an empty chord indicates silence.
-                      var end = (bar.Chords.Count != 0) ? bar.Chords.First().Start : bar.End;
-                      bar.Chords.Insert(0, new Chord() { Start = bar.Start, End = end });
+                    if (lastChord != null)
+                    {
+                        // extend the chord from the previous bar into the silence
+                        var newChord = ExtendChord(lastChord, bar.Start);
+                        bar.Chords.Insert(0, newChord);
+                    }
+                    else
+                    {
+                        // an empty chord indicates silence.
+                        bar.Chords.Insert(0, new Chord() { Start = bar.Start });
+                    }
                 }
+                lastChord = nextChord;
             }
             
 
@@ -439,7 +418,44 @@ namespace RocksmithToTabLib
                     var chord = bar.Chords[i];
                     Single end = (i == bar.Chords.Count - 1) ? bar.End : bar.Chords[i + 1].Start;
                     chord.Duration = bar.GetDuration(chord.Start, end - chord.Start);
+                    if (chord.Duration < 2)
+                    {
+                        // a duration of 2 is a 64th triplet - that's the lowest we will go.
+                        // If the duration is smaller than that, we are going to merge them
+                        // with the next chord.
+                        chord.Duration = 0; // to be deleted on this condition after the loop
+                        if (i < bar.Chords.Count - 1)
+                        {
+                            //Console.WriteLine("Note value too short, merging with next note in bar {0}", b);
+                            var next = bar.Chords[i + 1];
+                            next.Start = chord.Start;
+                            foreach (var kvp in chord.Notes)
+                            {
+                                if (!next.Notes.ContainsKey(kvp.Key))
+                                    next.Notes.Add(kvp.Key, kvp.Value);
+                                else
+                                    Console.WriteLine("  Warning: Not possible to merge empty note with neighbour in bar {0}", b);
+                            }
+
+                        }
+                        else
+                        {
+                            // very unlikely (?) should merge with next bar
+                            if (b != bars.Count - 1)
+                            {
+                                //Console.WriteLine("Note value too short, merging with first note of next bar in bar {0}", b);
+                                var next = bars[b + 1].Chords.First();
+                                foreach (var kvp in chord.Notes)
+                                {
+                                    if (!next.Notes.ContainsKey(kvp.Key))
+                                        next.Notes.Add(kvp.Key, kvp.Value);
+                                    Console.WriteLine("  Warning: Not possible to merge empty note with next bar in bar {0}", b);
+                                }
+                            }
+                        }
+                    }
                 }
+                bar.Chords.RemoveAll(x => x.Duration == 0);
 
                 CleanRhythm(bar);
             }
