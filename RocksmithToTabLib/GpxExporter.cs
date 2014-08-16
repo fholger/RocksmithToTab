@@ -144,7 +144,7 @@ namespace RocksmithToTabLib
 
                 var diagram = new Item() { Id = kvp.Value.ChordId, Name = kvp.Value.Name };
                 diagram.Diagram.StringCount = (track.Instrument == Track.InstrumentType.Bass ? 4 : 6);
-                diagram.Diagram.FretCount = 5;
+                diagram.Diagram.FretCount = Math.Max(5, maxFret - minFret);
                 diagram.Diagram.BaseFret = minFret;
                 for (int i = 0; i < 6; ++i)
                 {
