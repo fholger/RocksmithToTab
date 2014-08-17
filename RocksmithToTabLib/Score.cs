@@ -110,7 +110,7 @@ namespace RocksmithToTabLib
         /// The note duration is represented as an int in multiples of
         /// 1/48 of a quarter note.
         /// </summary>
-        public int GetDuration(Single start, Single length)
+        public Single GetDuration(Single start, Single length)
         {
             // Since notes can be just a bit offbeat, duration recognition is actually
             // quite tricky. Taking into account the individual sub-beats helps a lot, 
@@ -132,7 +132,7 @@ namespace RocksmithToTabLib
                 duration += beatDuration;
             }
 
-            return (int)Math.Round(duration * 48);
+            return duration * 48;
         }
 
         public Single GetDurationLength(Single start, int duration)

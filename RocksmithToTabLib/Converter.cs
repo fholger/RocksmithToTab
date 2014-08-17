@@ -406,7 +406,7 @@ namespace RocksmithToTabLib
                         }
                         else
                         {
-                            Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
+                            //Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
                         }
                     }
                     sustainedNotes.Clear();
@@ -537,12 +537,17 @@ namespace RocksmithToTabLib
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
+                Console.Write(">>BAR {0}>> ", b+1);
+                float total = 0;
 
                 for (int i = 0; i < bar.Chords.Count; ++i)
                 {
                     var chord = bar.Chords[i];
                     Single end = (i == bar.Chords.Count - 1) ? bar.End : bar.Chords[i + 1].Start;
-                    chord.Duration = bar.GetDuration(chord.Start, end - chord.Start);
+                    float duration = bar.GetDuration(chord.Start, end - chord.Start);
+                    Console.Write("{0:f2} ", duration);
+                    chord.Duration = (int)Math.Round(duration);
+                    total += duration;
                     if (chord.Duration < 2)
                     {
                         // a duration of 2 is a 64th triplet - that's the lowest we will go.
@@ -558,8 +563,8 @@ namespace RocksmithToTabLib
                             {
                                 if (!next.Notes.ContainsKey(kvp.Key))
                                     next.Notes.Add(kvp.Key, kvp.Value);
-                                else if (!next.Notes[kvp.Key]._Extended)
-                                    Console.WriteLine("  Warning: Not possible to merge empty note with neighbour in bar {0}", b);
+                                //else if (!next.Notes[kvp.Key]._Extended)
+                                //    Console.WriteLine("  Warning: Not possible to merge empty note with neighbour in bar {0}", b);
                             }
 
                         }
@@ -574,13 +579,15 @@ namespace RocksmithToTabLib
                                 {
                                     if (!next.Notes.ContainsKey(kvp.Key))
                                         next.Notes.Add(kvp.Key, kvp.Value);
-                                    else if (!next.Notes[kvp.Key]._Extended)
-                                        Console.WriteLine("  Warning: Not possible to merge empty note with next bar in bar {0}", b);
+                                    //else if (!next.Notes[kvp.Key]._Extended)
+                                    //    Console.WriteLine("  Warning: Not possible to merge empty note with next bar in bar {0}", b);
                                 }
                             }
                         }
                     }
+
                 }
+                Console.WriteLine("   << S {0:f2}", total);
                 bar.Chords.RemoveAll(x => x.Duration == 0);
 
                 CleanRhythm(bar);
