@@ -534,7 +534,7 @@ namespace RocksmithToTabLib
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
-                Console.Write(">>BAR {0}>> ", b+1);
+                //Console.Write(">>BAR {0}>> ", b+1);
                 float total = 0;
 
                 var noteDurations = new List<float>();
@@ -543,11 +543,11 @@ namespace RocksmithToTabLib
                     var chord = bar.Chords[i];
                     Single end = (i == bar.Chords.Count - 1) ? bar.End : bar.Chords[i + 1].Start;
                     float duration = bar.GetDuration(chord.Start, end - chord.Start);
-                    Console.Write("{0:f2} ", duration);
+                    //Console.Write("{0:f2} ", duration);
                     noteDurations.Add(duration);
                     total += duration;
                 }
-                Console.WriteLine("   << S {0:f2}", total);
+                //Console.WriteLine("   << S {0:f2}", total);
 
                 var cleanRhythm = RhythmDetector.GetRhythm(noteDurations, bar.GetBarDuration(), bar.GetBeatDuration());
                 int curIndex = -1;

@@ -18,7 +18,6 @@ namespace RocksmithToTabLib
         public static List<RhythmValue> GetRhythm(List<float> noteDurations, int measureDuration, int beatDuration)
         {
             float scaling = measureDuration / noteDurations.Sum();
-            Console.WriteLine("Scaling notes: {0}", scaling);
             var noteEnds = new List<float>();
             float total = 0;
             for (int i = 0; i < noteDurations.Count; ++i)
@@ -27,21 +26,8 @@ namespace RocksmithToTabLib
                 total += noteDurations[i];
                 noteEnds.Add(total);
             }
-            Console.Write("Initial note ends:  ");
-            for (int i = 0; i < noteEnds.Count; ++i)
-            {
-                Console.Write("{0:f2}  ", noteEnds[i]);
-            }
-            Console.WriteLine();
 
             MatchRhythm(noteEnds, 0, noteEnds.Count, 0, measureDuration, beatDuration);
-
-            Console.Write("Final endings:  ");
-            for (int i = 0; i < noteEnds.Count; ++i)
-            {
-                Console.Write("{0:f2}  ", noteEnds[i]);
-            }
-            Console.WriteLine();
 
             // determine final note values
             var ret = new List<RhythmValue>();
@@ -63,7 +49,7 @@ namespace RocksmithToTabLib
 
         static void MatchRhythm(List<float> noteEnds, int start, int end, float offset, float length, int beatDuration)
         {
-            Console.WriteLine("MatchRhythm(start: {0}, end: {1}, offset: {2}, length: {3}, beatDuration: {4})", start, end, offset, length, beatDuration);
+            //Console.WriteLine("MatchRhythm(start: {0}, end: {1}, offset: {2}, length: {3}, beatDuration: {4})", start, end, offset, length, beatDuration);
             // recursion condition: end if only one note is left in the current interval
             if (end - start <= 1)
                 return;
@@ -129,7 +115,7 @@ namespace RocksmithToTabLib
                 float leftScaling = correctedLeftLength / originalLeftLength;
                 float rightScaling = correctedRightLength / originalRightLength;
                 noteEnds[minMatchPos] = minMatchEnd;
-                Console.WriteLine("Corrected note {0} to length {1}", minMatchPos, minMatchEnd);
+                //Console.WriteLine("Corrected note {0} to length {1}", minMatchPos, minMatchEnd);
                 for (int i = start; i < minMatchPos; ++i)
                 {
                     // rescale left side
@@ -140,12 +126,6 @@ namespace RocksmithToTabLib
                     // rescale right side
                     noteEnds[i] = offset + (noteEnds[i] - offset) * rightScaling;
                 }
-                Console.Write("Current endings:  ");
-                for (int i = 0; i < noteEnds.Count; ++i)
-                {
-                    Console.Write("{0:f2}  ", noteEnds[i]);
-                }
-                Console.WriteLine();
                 // recurse left
                 MatchRhythm(noteEnds, start, minMatchPos + 1, offset, correctedLeftLength, beatDuration);
                 // recurse right
@@ -174,6 +154,12 @@ namespace RocksmithToTabLib
                 if (durations[i].Duration == 0)
                     continue;
 
+                if (PrintableDurations.Contains(durations[i].Duration))
+                {
+                    curPos += durations[i].Duration;
+                    continue;
+                }
+
                 bool done = false;
 
                 int curBeat = beatLength;
@@ -183,7 +169,6 @@ namespace RocksmithToTabLib
 
                 while (!done && curBeat >= 2)
                 {
-                    Console.WriteLine("Processing note {0}, current beat {1}", i, curBeat);
                     int maxMult = noteEnd / curBeat;
                     for (int j = maxMult; j >= 1; --j)
                     {
