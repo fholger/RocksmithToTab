@@ -8,7 +8,7 @@ namespace RocksmithToTabLib
 {
     public class RhythmValue
     {
-        public float Duration;
+        public int Duration;
         public int NoteIndex;
     }
 
@@ -56,6 +56,7 @@ namespace RocksmithToTabLib
                 offset = end;
                 ret.Add(rhythm);
             }
+            SplitDurations(ret, measureDuration, beatDuration);
             return ret;
         }
 
@@ -70,7 +71,7 @@ namespace RocksmithToTabLib
             if (length <= 3)
             {
                 // we can't divide this part any further, so all notes here need to be merged
-                // i.e. all but the last note are set to a length of 0
+                // j.e. all but the last note are set to a length of 0
                 for (int i = start; i < end-1; ++i)
                 {
                     noteEnds[i] = offset;
@@ -154,6 +155,86 @@ namespace RocksmithToTabLib
             {
                 // no luck, try matching to a smaller beat value
                 MatchRhythm(noteEnds, start, end, offset, length, beatDuration / 2);
+            }
+        }
+
+
+        static int[] PrintableDurations = new int[] {1, 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
+
+
+        static void SplitDurations(List<RhythmValue> durations, int measureDuration, int beatLength)
+        {
+            // This function takes care of note values that cannot (or should not) be represented
+            // by a single note, and it also tries to split up the rhythm in a more or less 
+            // readable way. This means e.g. that triplet notes should not stand alone.
+            // (Although the algorithm may not be perfect in prevent single triplets.)
+            int curPos = 0;
+            for (int i = 0; i < durations.Count; ++i)
+            {
+                if (durations[i].Duration == 0)
+                    continue;
+
+                bool done = false;
+
+                int curBeat = beatLength;
+                int noteEnd = curPos + durations[i].Duration;
+                int n = 2;
+                int d = 3;
+
+                while (!done && curBeat >= 2)
+                {
+                    Console.WriteLine("Processing note {0}, current beat {1}", i, curBeat);
+                    int maxMult = noteEnd / curBeat;
+                    for (int j = maxMult; j >= 1; --j)
+                    {
+                        int remaining = noteEnd - j * curBeat;
+                        if (remaining < 2 && remaining != 0)
+                            break;
+                        int duration = durations[i].Duration - remaining;
+                        if (PrintableDurations.Contains(duration))
+                        {
+                            durations[i].Duration = duration;
+                            if (remaining != 0)
+                            {
+                                durations.Insert(i + 1, new RhythmValue()
+                                {
+                                    Duration = remaining,
+                                    NoteIndex = durations[i].NoteIndex
+                                });
+                            }
+                            done = true;
+                            break;
+                        }
+                    }
+
+                    // try next smaller even / triplet beat
+                    curBeat = curBeat * n / d;
+                    if (n == 2)
+                    {
+                        n = 3;
+                        d = 4;
+                    }
+                    else
+                    {
+                        n = 2;
+                        d = 3;
+                    }
+                }
+
+                if (!PrintableDurations.Contains(durations[i].Duration))
+                {
+                    Console.WriteLine("  Warning: Failed to split note duration {0} properly, cutting 1 off...");
+                    var newNote = new RhythmValue()
+                    {
+                        Duration = durations[i].Duration - 2,
+                        NoteIndex = durations[i].NoteIndex
+                    };
+                    durations[i].Duration = 1;
+                    if (newNote.Duration > 0)
+                        durations.Insert(i + 1, newNote);                    
+                }
+
+                curPos += durations[i].Duration;
             }
         }
 

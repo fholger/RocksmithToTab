@@ -182,7 +182,7 @@ namespace RocksmithToTabLib
 
         public int ChordId { get; set; }
         // Duration is set as a multiple of 1/48th of a quarter note,
-        // i.e., 48 = quarter, 24 = eighth, 16 = eighth triplet etc.
+        // j.e., 48 = quarter, 24 = eighth, 16 = eighth triplet etc.
         public int Duration { get; set; }
         // index a note by its string
         public Dictionary<int, Note> Notes { get; set; }

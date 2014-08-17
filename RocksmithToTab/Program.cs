@@ -17,7 +17,7 @@ namespace RocksmithToTab
             //testValues = new List<float>() { 24.0f, 36.03f, 12.03f, 23.94f, 24.0f, 11.94f, 23.87f, 11.68f, 24.51f };
             //testValues = new List<float>() { 23.57f, 36.59f, 12.16f, 23.69f, 24.0f, 11.94f, 24.06f, 12.0f, 24.0f };
             //testValues = new List<float>() { 24.67f, 11.73f, 23.63f, 11.91f, 24.06f, 24.13f, 12.0f, 23.57f, 11.69f, 24.62f };
-            testValues = new List<float>() { 32.05f, 21.95f, 12.0f, 12.0f, 18.0f, 1.3f, 5.98f, 18.1f, 11.96f, 23.96f, 12.0f, 12.0f, 6.0f, 6.0f };
+            testValues = new List<float>() { 32.05f, 21.95f, 12.0f, 12.0f, 18.0f, 5.98f, 18.1f, 11.96f, 23.96f, 12.0f, 12.0f, 6.0f, 6.0f };
             var results = RhythmDetector.GetRhythm(testValues, 192, 48);
             for (int i = 0; i < results.Count; ++i)
             {
