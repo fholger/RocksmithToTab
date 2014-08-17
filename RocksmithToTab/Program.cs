@@ -28,8 +28,8 @@ namespace RocksmithToTab
 
         static void Main(string[] args)
         {
-            TestRhythmDetector();
-            return;
+            //TestRhythmDetector();
+            //return;
 
             // parse command line arguments
             var options = new CmdOptions();

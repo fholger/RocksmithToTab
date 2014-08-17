@@ -141,6 +141,19 @@ namespace RocksmithToTabLib
             return duration / 48.0f * quarterNoteLength;
         }
 
+        public int GetBeatDuration()
+        {
+            if (TimeDenominator == 8)
+                return 24;
+            else
+                return 48;
+        }
+
+        public int GetBarDuration()
+        {
+            return GetBeatDuration() * TimeNominator;
+        }
+
         /// <summary>
         /// Requires that Start, End and TimeNominator have been set. Will try to figure out a
         /// fitting TimeDenominator and BPM.

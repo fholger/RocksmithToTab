@@ -39,9 +39,6 @@ namespace RocksmithToTabLib
             // figure out note durations and clean up potentially overlapping notes
             CalculateNoteDurations(track.Bars);
 
-            // split those note values that can't or shouldn't be represented as a single note value
-            SplitNotes(track.Bars);
-
             // take care of some after-processing for certain techniques
             SplitImplicitSlides(track.Bars);
             CalculateBendOffsets(track.Bars);
@@ -540,31 +537,52 @@ namespace RocksmithToTabLib
                 Console.Write(">>BAR {0}>> ", b+1);
                 float total = 0;
 
+                var noteDurations = new List<float>();
                 for (int i = 0; i < bar.Chords.Count; ++i)
                 {
                     var chord = bar.Chords[i];
                     Single end = (i == bar.Chords.Count - 1) ? bar.End : bar.Chords[i + 1].Start;
                     float duration = bar.GetDuration(chord.Start, end - chord.Start);
                     Console.Write("{0:f2} ", duration);
-                    chord.Duration = (int)Math.Round(duration);
+                    noteDurations.Add(duration);
                     total += duration;
-                    if (chord.Duration < 2)
+                }
+                Console.WriteLine("   << S {0:f2}", total);
+
+                var cleanRhythm = RhythmDetector.GetRhythm(noteDurations, bar.GetBarDuration(), bar.GetBeatDuration());
+                int curIndex = -1;
+                int curChord = 0;
+
+                foreach (var rhythm in cleanRhythm)
+                {
+                    if (rhythm.NoteIndex == curIndex)
                     {
-                        // a duration of 2 is a 64th triplet - that's the lowest we will go.
-                        // If the duration is smaller than that, we are going to merge them
-                        // with the next chord.
-                        chord.Duration = 0; // to be deleted on this condition after the loop
-                        if (i < bar.Chords.Count - 1)
+                        // repeat index means the previous chord was split, so need to duplicate
+                        var prevChord = bar.Chords[curChord - 1];
+                        float splitPoint = prevChord.Start + bar.GetDurationLength(prevChord.Start, prevChord.Duration);
+                        var newChord = SplitChord(prevChord, splitPoint);
+                        bar.Chords.Insert(curChord, newChord);
+                    }
+                    curIndex = rhythm.NoteIndex;
+                    var chord = bar.Chords[curChord];
+                    chord.Duration = rhythm.Duration;
+
+                    if (chord.Duration == 0)
+                    {
+                        // duration of 0 means we should merge with the next chord.
+                        // this can happen e.g. if Rocksmith places several single notes at the same time
+                        // instead of using a chord.
+                        if (curChord < bar.Chords.Count - 1)
                         {
-                            //Console.WriteLine("Note value too short, merging with next note in bar {0}", b);
-                            var next = bar.Chords[i + 1];
+                            Console.WriteLine("Note value too short, merging with next note in bar {0}", b);
+                            var next = bar.Chords[curChord + 1];
                             next.Start = chord.Start;
                             foreach (var kvp in chord.Notes)
                             {
                                 if (!next.Notes.ContainsKey(kvp.Key))
                                     next.Notes.Add(kvp.Key, kvp.Value);
-                                //else if (!next.Notes[kvp.Key]._Extended)
-                                //    Console.WriteLine("  Warning: Not possible to merge empty note with neighbour in bar {0}", b);
+                                else if (!next.Notes[kvp.Key]._Extended)
+                                    Console.WriteLine("  Warning: Not possible to merge empty note with neighbour in bar {0}", b);
                             }
 
                         }
@@ -573,120 +591,27 @@ namespace RocksmithToTabLib
                             // very unlikely (?) should merge with next bar
                             if (b != bars.Count - 1)
                             {
-                                //Console.WriteLine("Note value too short, merging with first note of next bar in bar {0}", b);
+                                Console.WriteLine("Note value too short, merging with first note of next bar in bar {0}", b);
                                 var next = bars[b + 1].Chords.First();
                                 foreach (var kvp in chord.Notes)
                                 {
                                     if (!next.Notes.ContainsKey(kvp.Key))
                                         next.Notes.Add(kvp.Key, kvp.Value);
-                                    //else if (!next.Notes[kvp.Key]._Extended)
-                                    //    Console.WriteLine("  Warning: Not possible to merge empty note with next bar in bar {0}", b);
+                                    else if (!next.Notes[kvp.Key]._Extended)
+                                        Console.WriteLine("  Warning: Not possible to merge empty note with next bar in bar {0}", b);
                                 }
                             }
                         }
                     }
 
+                    ++curChord;
                 }
-                Console.WriteLine("   << S {0:f2}", total);
+                
+
                 bar.Chords.RemoveAll(x => x.Duration == 0);
-
-                CleanRhythm(bar);
             }
         }
 
-        static void CleanRhythm(Bar bar)
-        {
-            // it often happens that the Durations calculated from Rocksmith's absolute times
-            // are 1 or 2 short of a "sane" note value. Try to shift such values to the previous
-            // or following note to get the rhythm right.
-            int[] saneDurations = new int[] { 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
-            int[] shifts = new int[] { 1, -1, 2, -2, 3, -3 };
-
-            int barDuration = 0;
-            int expectedDuration = 48 * 4 * bar.TimeNominator / bar.TimeDenominator;
-
-            for (int i = 0; i < bar.Chords.Count; ++i)
-            {
-                var chord = bar.Chords[i];
-                barDuration += chord.Duration;
-
-                if (i == bar.Chords.Count - 1)
-                {
-                    // see if the whole bar's duration is ok, otherwise correct by throwing away
-                    // the surplus.
-                    if (barDuration != expectedDuration)
-                    {
-                        Console.WriteLine("  {0} at end of bar does not match expected duration {1}, fixing... {2}", barDuration, expectedDuration, chord.Duration);
-                        chord.Duration -= (barDuration - expectedDuration);
-                        Console.WriteLine("  Now: {0}", chord.Duration);
-                    }
-                }
-
-                if (saneDurations.Contains(chord.Duration))
-                    continue;
-
-                if (i < bar.Chords.Count - 1 && !saneDurations.Contains(chord.Duration))
-                {
-                    // now just shift to the next note
-                    var next = bar.Chords[i + 1];
-                    foreach (var shift in shifts)
-                    {
-                        if (saneDurations.Contains(chord.Duration + shift))
-                        {
-                            Console.WriteLine("  Shifting sloppy rhythm to next note. ({0}, {1})", chord.Duration, next.Duration);
-                            chord.Duration += shift;
-                            next.Duration -= shift;
-                            barDuration += shift;
-                            Console.WriteLine("  Now: ({0}, {1})", chord.Duration, next.Duration);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-
-        static void SplitNotes(List<Bar> bars)
-        {
-            int[] saneDurations = new int[] { 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
-
-            foreach (var bar in bars)
-            {
-                int beatDuration = 48 * 4 / bar.TimeDenominator;
-                List<int> beatSplits = new List<int>();
-                beatSplits.Add(beatDuration);
-                for (int j = 2; j <= 4; ++j)
-                {
-                    if (beatDuration % j == 0)
-                        beatSplits.Add(beatDuration / j);
-                }
-
-                int curProgress = 0;
-                for (int i = 0; i < bar.Chords.Count; ++i)
-                {
-                    var chord = bar.Chords[i];
-                    if (!saneDurations.Contains(chord.Duration))
-                    {
-                        // see if we can split to the next full beat / half beat, etc.
-                        foreach (var split in beatSplits)
-                        {
-                            int toNextBeat = split - (curProgress % split);
-                            if (toNextBeat <= chord.Duration && saneDurations.Contains(toNextBeat))
-                            {
-                                float startTime = chord.Start + bar.GetDurationLength(chord.Start, toNextBeat);
-                                var newChord = SplitChord(chord, startTime);
-                                newChord.Duration = chord.Duration - toNextBeat;
-                                chord.Duration = toNextBeat;
-                                bar.Chords.Insert(i + 1, newChord);
-                                break;
-                            }
-                        }
-                    }
-
-                    curProgress += chord.Duration;
-                }
-            }
-        }
 
 
         static void SplitImplicitSlides(List<Bar> bars)
