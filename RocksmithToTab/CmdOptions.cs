@@ -8,7 +8,7 @@ namespace RocksmithToTab
 {
     class CmdOptions
     {
-        [Option('p', "psarc", Required = true, HelpText = "PSARC song archive to open.")]
+        [ValueOption(0)]
         public string PsarcFile { get; set; }
 
         [Option('l', "list", HelpText = "List songs contained in the archive. No conversions are performed.")]
@@ -26,7 +26,7 @@ namespace RocksmithToTab
         [Option('d', "diff", DefaultValue = 255, HelpText = "Difficulty level. (default: max)")]
         public int DifficultyLevel { get; set; }
 
-        [Option('o', "outdir", DefaultValue = ".", HelpText = "Path to the directory where tabs should be created. (default: current work dir)")]
+        [Option('o', "outdir", HelpText = "Path to the directory where tabs should be created. (default: name of the input file minus extension)")]
         public string OutputDirectory { get; set; }
 
         [Option('f', "format", DefaultValue = "gpx", HelpText = "File output format, currently either 'gpx' or 'gpif'. (default: gpx)")]
@@ -43,7 +43,7 @@ namespace RocksmithToTab
                 AddDashesToOption = true
             };
             help.AddPreOptionsLine("\nConvert Rocksmith tracks to GuitarPro .gpx tabs.\n");
-            help.AddPreOptionsLine("Usage: RocksmithToTab -p archive.psarc [-a bass,lead] [-s song1,song2]");
+            help.AddPreOptionsLine("Usage: RocksmithToTab archive.psarc [-a bass,lead] [-s song1,song2]");
             help.AddOptions(this);
             return help;
         }

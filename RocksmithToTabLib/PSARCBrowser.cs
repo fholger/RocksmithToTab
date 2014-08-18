@@ -121,7 +121,7 @@ namespace RocksmithToTabLib
             // In order to instantiate a Rocksmith Song2014 object, we need both
             // the binary .sng file and the attributes contained in the corresponding
             // .json manifest.
-            Console.WriteLine("GetArrangement called with identifier {0} and arrangement {1}", identifier, arrangement);
+            Console.WriteLine("Opening arrangement {1} for song id {0}...", identifier, arrangement);
             var sngFile = archive.Entries.FirstOrDefault(x => x.Name == "songs/bin/generic/" +
                 identifier + "_" + arrangement + ".sng");
             var jsonFile = archive.Entries.FirstOrDefault(x => x.Name.StartsWith("manifests/songs") &&
