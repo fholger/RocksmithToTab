@@ -11,8 +11,27 @@ namespace RocksmithToTab
 {
     class Program
     {
+        static void TestGP5()
+        {
+            Score score = new Score()
+            {
+                Title = "SomeTitle",
+                Artist = "FromSomeone",
+                Album = "Creative Album Name"
+            };
+
+            using (var writer = new BinaryWriter(File.Open("test.gp5", FileMode.Create)))
+            {
+                GP5File.ExportScore(score, writer);
+            }
+        }
+
+
         static void Main(string[] args)
         {
+            TestGP5();
+            return;
+
             // parse command line arguments
             var options = new CmdOptions();
             if (CommandLine.Parser.Default.ParseArguments(args, options))

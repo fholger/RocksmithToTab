@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Converter.cs" />
+    <Compile Include="GP5File.cs" />
     <Compile Include="Gpif.cs" />
     <Compile Include="GpxContainer.cs" />
     <Compile Include="GpxExporter.cs" />
