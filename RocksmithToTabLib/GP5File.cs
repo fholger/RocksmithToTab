@@ -356,7 +356,10 @@ namespace RocksmithToTabLib
             const Byte MIX_TABLE = (1 << 4);
             const Byte TUPLET = (1 << 5);
             const Byte REST = (1 << 6);
-            const Byte STRING_EFFECTS = (1 << 5);
+            const short STRING_EFFECTS = (1 << 5);
+            const Byte TAPPING = 1;
+            const Byte SLAPPING = 2;
+            const Byte POPPING = 3;
 
             // figure out beat duration
             bool dotted = false;
@@ -441,6 +444,14 @@ namespace RocksmithToTabLib
                 flags |= TUPLET;
             //if (changeTempo)
             //    flags |= MIX_TABLE;
+            bool tapped = false;
+            foreach (var kvp in chord.Notes)
+            {
+                if (kvp.Value.Tapped)
+                    tapped = true;
+            }
+            if (chord.Popped || chord.Slapped || tapped)
+                flags |= BEAT_EFFECTS;
 
             writer.Write(flags);
             if (chord.Notes.Count == 0)
@@ -448,6 +459,21 @@ namespace RocksmithToTabLib
             writer.Write(duration);
             if (triplet)
                 writer.Write((Int32)3);  // declare a triplet beat
+
+            // beat effects
+            if ((flags & BEAT_EFFECTS) != 0)
+            {
+                short effectsFlag = 0;
+                if (chord.Popped || chord.Slapped || tapped)
+                    effectsFlag |= STRING_EFFECTS;
+                writer.Write(effectsFlag);
+                if (tapped)
+                    writer.Write(TAPPING);
+                else if (chord.Slapped)
+                    writer.Write(SLAPPING);
+                else if (chord.Popped)
+                    writer.Write(POPPING);
+            }
 
             // now write the actual notes. a flag indicates which strings are being played
             Byte stringFlags = 0;
