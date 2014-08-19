@@ -11,27 +11,8 @@ namespace RocksmithToTab
 {
     class Program
     {
-        static void TestGP5()
-        {
-            Score score = new Score()
-            {
-                Title = "SomeTitle",
-                Artist = "FromSomeone",
-                Album = "Creative Album Name"
-            };
-
-            using (var writer = new BinaryWriter(File.Open("test.gp5", FileMode.Create)))
-            {
-                GP5File.ExportScore(score, writer);
-            }
-        }
-
-
         static void Main(string[] args)
         {
-            TestGP5();
-            return;
-
             // parse command line arguments
             var options = new CmdOptions();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
@@ -112,16 +93,19 @@ namespace RocksmithToTab
                             score.Year = arrangement.AlbumYear;
                             if (options.SplitArrangements)
                             {
+                                string baseFileName = Path.Combine(options.OutputDirectory, song.Identifier + "_" + arr);
                                 // create a separate file for each arrangement
-                                if (options.OutputFormat == "gpif")
+                                if (options.OutputFormat == "gp5")
                                 {
-                                    exporter.ExportGpif(score, Path.Combine(options.OutputDirectory,
-                                        song.Identifier + "_" + arr + ".gpif"));
+                                    GP5File.ExportScore(score, baseFileName + ".gp5");
+                                }
+                                else if (options.OutputFormat == "gpif")
+                                {
+                                    exporter.ExportGpif(score, baseFileName + ".gpif");
                                 }
                                 else
                                 {
-                                    exporter.ExportGPX(score, Path.Combine(options.OutputDirectory,
-                                        song.Identifier + "_" + arr + ".gpx"));
+                                    exporter.ExportGPX(score, baseFileName + ".gpx");
                                 }
                                 // remember to remove the track from the score again
                                 score.Tracks.Clear();
@@ -130,15 +114,18 @@ namespace RocksmithToTab
 
                         if (!options.SplitArrangements)
                         {
-                            if (options.OutputFormat == "gpif")
+                            string baseFileName = Path.Combine(options.OutputDirectory, song.Identifier);
+                            if (options.OutputFormat == "gp5")
                             {
-                                exporter.ExportGpif(score, Path.Combine(options.OutputDirectory, 
-                                    song.Identifier + ".gpif"));
+                                GP5File.ExportScore(score, baseFileName + ".gp5");
+                            }
+                            else if (options.OutputFormat == "gpif")
+                            {
+                                exporter.ExportGpif(score, baseFileName + ".gpif");
                             }
                             else
                             {
-                                exporter.ExportGPX(score, Path.Combine(options.OutputDirectory,
-                                    song.Identifier + ".gpx"));
+                                exporter.ExportGPX(score, baseFileName + ".gpx");
                             }
                         }
                     }

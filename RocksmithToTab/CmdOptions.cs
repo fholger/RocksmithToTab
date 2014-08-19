@@ -29,7 +29,7 @@ namespace RocksmithToTab
         [Option('o', "outdir", HelpText = "Path to the directory where tabs should be created. (default: name of the input file minus extension)")]
         public string OutputDirectory { get; set; }
 
-        [Option('f', "format", DefaultValue = "gpx", HelpText = "File output format, currently either 'gpx' or 'gpif'. (default: gpx)")]
+        [Option('f', "format", DefaultValue = "gpx", HelpText = "File output format, currently either 'gpx', 'gpif' or 'gp5'. (default: gpx)")]
         public string OutputFormat { get; set; }
 
         [HelpOption(HelpText = "Display this help screen.")]

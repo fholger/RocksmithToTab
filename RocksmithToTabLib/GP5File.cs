@@ -23,8 +23,23 @@ namespace RocksmithToTabLib
 		    "Page %N%/%P%",
     	};
         
-        
-        
+        public static void ExportScore(Score score, string fileName)
+        {
+            using (var file = File.Open(fileName, FileMode.Create))
+            {
+                ExportScore(score, file);
+            }
+        }
+
+        public static void ExportScore(Score score, Stream stream)
+        {
+            using (var writer = new BinaryWriter(stream))
+            {
+                ExportScore(score, writer);
+            }
+
+        }
+             
         public static void ExportScore(Score score, BinaryWriter writer)
         {
             WriteHeader(writer);
@@ -153,6 +168,65 @@ namespace RocksmithToTabLib
                 numBars = score.Tracks[0].Bars.Count;
             writer.Write(numBars);
             writer.Write((Int32)score.Tracks.Count);
+
+            if (score.Tracks.Count > 0)
+                WriteMasterBars(writer, score.Tracks[0].Bars);
+
+            writer.Write((Byte)0);
+            writer.Write((Byte)0);
+        }
+
+
+        private static void WriteMasterBars(BinaryWriter writer, List<Bar> bars)
+        {
+            const Byte KEY_CHANGE = 1 << 6;
+            const Byte TIME_CHANGE = (1 << 0) | (1 << 1);
+            int timeNom = 0;
+            int timeDenom = 0;
+            foreach (var bar in bars)
+            {
+                if (bar != bars.First())
+                {
+                    // 1 byte padding in-between bars
+                    writer.Write((Byte)0);
+                }
+
+                Byte flags = 0;
+                if (bar == bars.First())
+                    flags |= KEY_CHANGE;
+                if (timeNom != bar.TimeNominator || timeDenom != bar.TimeDenominator)
+                    flags |= TIME_CHANGE;
+                timeNom = bar.TimeNominator;
+                timeDenom = bar.TimeDenominator;
+
+                writer.Write(flags);
+                if ((flags & TIME_CHANGE) != 0)
+                {
+                    writer.Write((Byte)timeNom);
+                    writer.Write((Byte)timeDenom);
+                }
+                if ((flags & KEY_CHANGE) != 0)
+                {
+                    // first bar needs to define a key signature. since we don't know that,
+                    // we'll just set a default
+                    writer.Write((short)0);
+                }
+                if ((flags & TIME_CHANGE) != 0)
+                {
+                    // write beam eighth notes
+                    int eighthsInDenominator = 8 / timeDenom;
+                    int total = eighthsInDenominator * timeNom;
+                    Byte val = (Byte)(total / 4);
+                    Byte missing = (Byte)(total - 4 * val);
+                    Byte[] output = new Byte[] { val, val, val, val };
+                    if (missing > 0)
+                        output[0] += missing;
+
+                    writer.Write(output);
+                }
+
+                writer.Write((Byte)0);  // triplet feel == NONE
+            }
         }
 
 
