@@ -80,7 +80,7 @@ namespace RocksmithToTab
                 bar.Chords.Add(chord);
             }
 
-            GP5File.ExportScore(score, "gp5test.gp5");
+            new GP5File().ExportScore(score, "gp5test.gp5");
         }
 
 
@@ -146,6 +146,7 @@ namespace RocksmithToTab
                     {
                         var score = new Score();
                         var exporter = new GpxExporter();
+                        var gp5Exporter = new GP5File();
                         // figure out which arrangements to convert
                         var arrangements = song.Arrangements;
                         if (options.Arrangements != null && options.Arrangements.Count > 0)
@@ -172,7 +173,7 @@ namespace RocksmithToTab
                                 // create a separate file for each arrangement
                                 if (options.OutputFormat == "gp5")
                                 {
-                                    GP5File.ExportScore(score, baseFileName + ".gp5");
+                                    gp5Exporter.ExportScore(score, baseFileName + ".gp5");
                                 }
                                 else if (options.OutputFormat == "gpif")
                                 {
@@ -192,7 +193,7 @@ namespace RocksmithToTab
                             string baseFileName = Path.Combine(options.OutputDirectory, song.Identifier);
                             if (options.OutputFormat == "gp5")
                             {
-                                GP5File.ExportScore(score, baseFileName + ".gp5");
+                                gp5Exporter.ExportScore(score, baseFileName + ".gp5");
                             }
                             else if (options.OutputFormat == "gpif")
                             {

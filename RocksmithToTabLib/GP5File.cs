@@ -22,8 +22,14 @@ namespace RocksmithToTabLib
 		    "All Rights Reserved - International Copyright Secured",
 		    "Page %N%/%P%",
     	};
+
+
+        private BinaryWriter writer = null;
+        private Score score = null;
+        private List<bool[]> tieNotes = null;
+
         
-        public static void ExportScore(Score score, string fileName)
+        public void ExportScore(Score score, string fileName)
         {
             using (var file = File.Open(fileName, FileMode.Create))
             {
@@ -31,7 +37,7 @@ namespace RocksmithToTabLib
             }
         }
 
-        public static void ExportScore(Score score, Stream stream)
+        public void ExportScore(Score score, Stream stream)
         {
             using (var writer = new BinaryWriter(stream))
             {
@@ -40,23 +46,29 @@ namespace RocksmithToTabLib
 
         }
              
-        public static void ExportScore(Score score, BinaryWriter writer)
+        public void ExportScore(Score score, BinaryWriter writer)
         {
-            WriteHeader(writer);
-            WriteScoreInfo(writer, score);
-            WriteLyrics(writer, score);
-            WritePageSetup(writer);
-            WriteTempo(writer, score);
-            WriteKey(writer, score);
-            WriteChannels(writer, score);
-            WriteMusicalDirections(writer, score);
+            this.writer = writer;
+            this.score = score;
+
+            WriteHeader();
+            WriteScoreInfo();
+            WriteLyrics();
+            WritePageSetup();
+            WriteTempo();
+            WriteKey();
+            WriteChannels();
+            WriteMusicalDirections();
             writer.Write((Int32)0);  // master reverb setting
-            WriteMeasuresAndTracks(writer, score);
+            WriteMeasuresAndTracks();
+
+            this.score = null;
+            this.writer = null;
         }
 
 
 
-        private static void WriteHeader(BinaryWriter writer)
+        private void WriteHeader()
         {
             writer.Write(FILE_VERSION);
             // need to pad version string to 30 bytes
@@ -65,35 +77,35 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteScoreInfo(BinaryWriter writer, Score score)
+        private void WriteScoreInfo()
         {
-            WriteDoublePrefixedString(writer, score.Title);
-            WriteDoublePrefixedString(writer, "");  // subtitle
-            WriteDoublePrefixedString(writer, score.Artist);
-            WriteDoublePrefixedString(writer, score.Album);
-            WriteDoublePrefixedString(writer, "");  // words by
-            WriteDoublePrefixedString(writer, "");  // music by
-            WriteDoublePrefixedString(writer, "");  // copyright
-            WriteDoublePrefixedString(writer, "");  // tabber
-            WriteDoublePrefixedString(writer, "");  // instructions
+            WriteDoublePrefixedString(score.Title);
+            WriteDoublePrefixedString("");  // subtitle
+            WriteDoublePrefixedString(score.Artist);
+            WriteDoublePrefixedString(score.Album);
+            WriteDoublePrefixedString("");  // words by
+            WriteDoublePrefixedString("");  // music by
+            WriteDoublePrefixedString("");  // copyright
+            WriteDoublePrefixedString("");  // tabber
+            WriteDoublePrefixedString("");  // instructions
             writer.Write((Int32)1);  // number of comments, followed by comments as strings
-            WriteDoublePrefixedString(writer, "");
+            WriteDoublePrefixedString("");
         }
 
 
-        private static void WriteLyrics(BinaryWriter writer, Score score)
+        private void WriteLyrics()
         {
             // placeholder for now, just write empty data
             writer.Write((Int32)0);  // associated track
             for (int i = 0; i < 5; ++i)  // once for each lyrics line
             {
                 writer.Write((Int32)0);  // starting from bar
-                WriteIntPrefixedString(writer, "");  // lyrics string
+                WriteIntPrefixedString("");  // lyrics string
             }
         }
 
 
-        private static void WritePageSetup(BinaryWriter writer)
+        private void WritePageSetup()
         {
             writer.Write((Int32)210);  // page width
             writer.Write((Int32)297);  // page height
@@ -107,22 +119,22 @@ namespace RocksmithToTabLib
 
             for (int i = 0; i < PAGE_SETUP_LINES.Length; ++i)
             {
-                WriteDoublePrefixedString(writer, PAGE_SETUP_LINES[i]);
+                WriteDoublePrefixedString(PAGE_SETUP_LINES[i]);
             }
         }
 
 
-        private static void WriteTempo(BinaryWriter writer, Score score)
+        private void WriteTempo()
         {
             // first comes a string describing the tempo of the song
-            WriteDoublePrefixedString(writer, "");
+            WriteDoublePrefixedString("");
             // then actual BPM
             Int32 avgBPM = (score.Tracks.Count > 0) ? (Int32)score.Tracks[0].AverageBeatsPerMinute : 120;
             writer.Write(avgBPM);
         }
 
 
-        private static void WriteKey(BinaryWriter writer, Score score)
+        private void WriteKey()
         {
             // these fields tell the key of the song. Since we don't know that, we just fill
             // them with 0
@@ -131,24 +143,24 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteChannels(BinaryWriter writer, Score score)
+        private void WriteChannels()
         {
             // this sets used program and volume / effects on each channel, we just
             // use some default values
             // the first two channels are used for guitar, the other two for bass
             // the rest we don't really care about.
-            WriteChannel(writer, 0x1d);
-            WriteChannel(writer, 0x1d);
-            WriteChannel(writer, 0x21);
-            WriteChannel(writer, 0x21);
+            WriteChannel(0x1d);
+            WriteChannel(0x1d);
+            WriteChannel(0x21);
+            WriteChannel(0x21);
             for (int i = 4; i < 64; ++i)
             {
-                WriteChannel(writer, 0);
+                WriteChannel(0);
             }
         }
 
         
-        private static void WriteChannel(BinaryWriter writer, Int32 program)
+        private void WriteChannel(Int32 program)
         {
             writer.Write(program);  // program
             writer.Write((Byte)15);  // volume (from 0 to 16)
@@ -162,7 +174,7 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteMusicalDirections(BinaryWriter writer, Score score)
+        private void WriteMusicalDirections()
         {
             // these tell where the musical symbols like code, fine etc. are placed
             // we are not using those, so we set them to unused (0xffff).
@@ -173,7 +185,7 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteMeasuresAndTracks(BinaryWriter writer, Score score)
+        private void WriteMeasuresAndTracks()
         {
             // write number of measures and number of tracks
             Int32 numBars = 0;
@@ -184,11 +196,11 @@ namespace RocksmithToTabLib
 
             if (score.Tracks.Count > 0)
             {
-                WriteMasterBars(writer, score.Tracks[0].Bars);
+                WriteMasterBars();
 
                 foreach (var track in score.Tracks)
                 {
-                    WriteTrack(writer, track);
+                    WriteTrack(track);
                 }
 
                 // padding
@@ -196,16 +208,21 @@ namespace RocksmithToTabLib
 
                 // now for the actual contents of the measures
                 int currentBPM = (int)score.Tracks[0].AverageBeatsPerMinute;
+                tieNotes = new List<bool[]>();
+                foreach (var track in score.Tracks)
+                    tieNotes.Add(new bool[] { false, false, false, false, false, false });
+
                 for (int b = 0; b < score.Tracks[0].Bars.Count; ++b)
                 {
-                    foreach (var track in score.Tracks)
+                    for (int i = 0; i < score.Tracks.Count; ++i)
                     {
+                        var track = score.Tracks[i];
                         // it can happen that an arrangement has fewer bars than the first one.
                         // This shouldn't normally happen, and as a simple hack we simply reuse the 
                         // bar of the first track instead, hoping that it will be silence.
                         // Might need a better approach if this doesn't hold.
                         var bar = (b < track.Bars.Count) ? track.Bars[b] : score.Tracks[0].Bars[b];
-                        WriteBar(writer, bar, track.Instrument == Track.InstrumentType.Bass, bar.BeatsPerMinute != currentBPM);
+                        WriteBar(bar, i, track.Instrument == Track.InstrumentType.Bass, bar.BeatsPerMinute != currentBPM);
                         writer.Write((Byte)0);  // padding
                     }
                 }
@@ -213,10 +230,11 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteMasterBars(BinaryWriter writer, List<Bar> bars)
+        private void WriteMasterBars()
         {
             const Byte KEY_CHANGE = 1 << 6;
             const Byte TIME_CHANGE = (1 << 0) | (1 << 1);
+            var bars = score.Tracks[0].Bars;
             int timeNom = 0;
             int timeDenom = 0;
             for (int i = 0; i < bars.Count; ++i)
@@ -266,7 +284,7 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteTrack(BinaryWriter writer, Track track)
+        private void WriteTrack(Track track)
         {
             Byte flags = 0;
             writer.Write(flags);
@@ -316,12 +334,12 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteBar(BinaryWriter writer, Bar bar, bool bass, bool changeTempo)
+        private void WriteBar(Bar bar, int trackNumber, bool bass, bool changeTempo)
         {
             writer.Write((Int32)bar.Chords.Count);
             foreach (var chord in bar.Chords)
             {
-                WriteBeat(writer, chord, bass, changeTempo && chord == bar.Chords.First());
+                WriteBeat(chord, trackNumber, bass, changeTempo && chord == bar.Chords.First());
             }
 
             // we also need to provide the second voice, however in our case it's going 
@@ -330,7 +348,7 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteBeat(BinaryWriter writer, Chord chord, bool bass, bool changeTempo)
+        private void WriteBeat(Chord chord, int trackNumber, bool bass, bool changeTempo)
         {
             const Byte DOTTED_NOTE = 1;
             const Byte CHORD_DIAGRAM = (1 << 1);
@@ -443,21 +461,33 @@ namespace RocksmithToTabLib
             var notes = chord.Notes.Values.OrderByDescending(x => x.String);
             foreach (var note in notes)
             {
-                WriteNote(writer, note);
+                WriteNote(note, trackNumber);
             }
 
             writer.Write((short)0);  // padding
         }
 
 
-        private static void WriteNote(BinaryWriter writer, Note note)
+        private void WriteNote(Note note, int trackNumber)
         {
             const Byte NOTE_TYPE = (1 << 4);
             const Byte NOTE_DYNAMICS = (1 << 5);
+            const Byte TYPE_NORMAL = 1;
+            const Byte TYPE_TIED = 2;
+            const Byte TYPE_DEAD = 3;
             Byte flags = NOTE_TYPE | NOTE_DYNAMICS;
 
             writer.Write(flags);
-            writer.Write((Byte)1);  // normal note (TODO)
+            // first: note type
+            if (note.Muted)
+                writer.Write(TYPE_DEAD);
+            else if (tieNotes[trackNumber][note.String])
+                writer.Write(TYPE_TIED);
+            else
+                writer.Write((Byte)TYPE_NORMAL);
+            tieNotes[trackNumber][note.String] = note.LinkNext;
+
+            // dynamics
             writer.Write((Byte)5);  // mezzo-forte
 
             writer.Write((Byte)note.Fret);
@@ -468,12 +498,12 @@ namespace RocksmithToTabLib
 
 
 
-        private static void WriteIntPrefixedString(BinaryWriter writer, string text)
+        private void WriteIntPrefixedString(string text)
         {
             writer.Write((Int32)text.Length);
             writer.Write(text.ToArray());
         }
-        private static void WriteDoublePrefixedString(BinaryWriter writer, string text)
+        private void WriteDoublePrefixedString(string text)
         {
             // GP5 has a weird habit of doubly prefixing strings.
             if (text != null)
