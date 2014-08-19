@@ -188,6 +188,7 @@ namespace RocksmithToTabLib
                     foreach (var bar in track.Bars)
                     {
                         WriteBar(writer, bar, bar.BeatsPerMinute != currentBPM);
+                        writer.Write((Byte)0);  // padding
                     }                    
                 }
             }
@@ -200,8 +201,13 @@ namespace RocksmithToTabLib
             const Byte TIME_CHANGE = (1 << 0) | (1 << 1);
             int timeNom = 0;
             int timeDenom = 0;
-            foreach (var bar in bars)
+            for (int i = 0; i < bars.Count; ++i)
             {
+                var bar = bars[i];
+
+                if (i > 0)
+                    writer.Write((Byte)0);  // padding between bars
+
                 Byte flags = 0;
                 if (bar == bars.First())
                     flags |= KEY_CHANGE;
