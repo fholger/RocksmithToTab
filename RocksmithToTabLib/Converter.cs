@@ -34,10 +34,10 @@ namespace RocksmithToTabLib
 
             // gather notes
             track.DifficultyLevel = CollectNotesForDifficulty(arrangement, track.Bars, track.ChordTemplates, difficultyLevel);
-            HandleSustainsAndSilence(track.Bars);
 
             // figure out note durations and clean up potentially overlapping notes
             CalculateNoteDurations(track.Bars);
+            HandleSustainsAndSilence(track.Bars);
 
             // take care of some after-processing for certain techniques
             SplitImplicitSlides(track.Bars);
@@ -199,6 +199,13 @@ namespace RocksmithToTabLib
                 // gather chords that lie within this bar
                 bar.Chords = collectedNotesList.Where(x => x.Start >= bar.Start && x.Start < bar.End)
                     .OrderBy(x => x.Start).ToList();
+                // if the bar is empty or the first chord does not start wit the bar,
+                // fill the beginning of the bar with silence.
+                if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
+                {
+                    // an empty chord indicates silence.
+                    bar.Chords.Insert(0, new Chord() { Start = bar.Start });
+                }
             }
 
             return maxDifficulty;
@@ -355,21 +362,18 @@ namespace RocksmithToTabLib
             {
                 var bar = bars[b];
 
-                Chord nextChord = (bar.Chords.Count != 0) ? bar.Chords.Last() : null;
+                if (lastChord != null && lastChord.Start == 5.756)
+                    Console.WriteLine("Relevant chord is now last chord");
 
-                // if the bar is empty or the first chord does not start wit the bar,
-                // fill the beginning of the bar with silence.
-                if (bar.Chords.Count == 0 || bar.Chords.First().Start > bar.Start)
-                {
-                    // an empty chord indicates silence.
-                    bar.Chords.Insert(0, new Chord() { Start = bar.Start });
-                }
+                Chord nextChord = (bar.Chords.Last().Notes.Count != 0) ? bar.Chords.Last() : null;
+
                 // if the first chord of the bar is empty (silent), we will extend the last
                 // chord of the previous bar (if applicable)
                 if (bar.Chords.First().Notes.Count == 0 && sustainedNotes.Count == 0 && lastChord != null)
                 {
                     // extend the chord from the previous bar into the silence
                     var newChord = SplitChord(lastChord, bar.Start);
+                    newChord.Duration = bar.Chords[0].Duration;
                     bar.Chords[0] = newChord;
                 }
                 lastChord = nextChord;
@@ -407,6 +411,8 @@ namespace RocksmithToTabLib
 
         static Note SplitNote(Note note, float startTime)
         {
+            if (note.Start == 5.756f)
+                Console.WriteLine("Splitting relevant note...");
             Note newNote = new Note()
             {
                 Start = startTime,
@@ -472,6 +478,8 @@ namespace RocksmithToTabLib
 
         static Chord SplitChord(Chord chord, float startTime)
         {
+            if (chord.Start == 5.756f)
+                Console.WriteLine("Splitting relevant chord...");
             var newChord = new Chord()
             {
                 ChordId = chord.ChordId,

@@ -687,6 +687,22 @@ namespace RocksmithToTabLib
             writer.Write((Byte)1);  // bend type; irrelevant, as it will be overwritten by the actual bend points
             writer.Write((Int32)0);  // max bend height; again, irrelevant
 
+            // it appears we need a bend value at the start and end of the bend, so create a separate 
+            // list and add appropriate first and last values
+            bendValues = new List<Note.BendValue>(bendValues);
+            bendValues.Add(new Note.BendValue()
+                {
+                    RelativePosition = 1,
+                    Step = bendValues.Last().Step
+                });
+            if (bendValues.First().RelativePosition > 0)
+            {
+                bendValues.Insert(0, new Note.BendValue()
+                    {
+                        RelativePosition = 0,
+                        Step = 0
+                    });
+            }
             // TODO: Guitar Pro might only support up to 30 bend points, do we need to check this?
             writer.Write((Int32)bendValues.Count);
             foreach (var bendValue in bendValues)
