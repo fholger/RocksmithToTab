@@ -45,6 +45,40 @@ namespace RocksmithToTab
                 });
                 bar.Chords.Add(chord);
             }
+            
+            
+            track = new Track()
+            {
+                AverageBeatsPerMinute = 120,
+                Capo = 0,
+                Name = "Track 2",
+                Instrument = Track.InstrumentType.Guitar,
+                Tuning = new int[] { 40, 45, 50, 55, 59, 64 }
+            };
+            score.Tracks.Add(track);
+            score.Tracks.Add(track);
+            bar = new Bar()
+            {
+                BeatsPerMinute = 120,
+                TimeNominator = 4,
+                TimeDenominator = 4
+            };
+            track.Bars.Add(bar);
+            track.Bars.Add(bar);
+
+            for (int i = 0; i < 2; ++i)
+            {
+                var chord = new Chord()
+                {
+                    Duration = 96
+                };
+                chord.Notes.Add(i, new Note()
+                {
+                    String = i,
+                    Fret = i,
+                });
+                bar.Chords.Add(chord);
+            }
 
             GP5File.ExportScore(score, "gp5test.gp5");
         }

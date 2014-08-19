@@ -137,8 +137,12 @@ namespace RocksmithToTabLib
             // use some default values
             for (int i = 0; i < 64; ++i)
             {
-                writer.Write((Int32)24);  // program
-                writer.Write((Byte)13);  // volume (from 0 to 16)
+                int ti = i / 2;
+                if (score.Tracks.Count > ti && score.Tracks[ti].Instrument == Track.InstrumentType.Guitar)
+                    writer.Write((Int32)0x1d);  // program for guitar
+                else
+                    writer.Write((Int32)0x21);  // program for bass
+                writer.Write((Byte)15);  // volume (from 0 to 16)
                 writer.Write((Byte)8);  // pan (from 0 to 16)
                 writer.Write((Byte)0);  // chorus
                 writer.Write((Byte)0);  // reverb
@@ -175,21 +179,23 @@ namespace RocksmithToTabLib
                 WriteMasterBars(writer, score.Tracks[0].Bars);
 
                 foreach (var track in score.Tracks)
+                {
                     WriteTrack(writer, track);
+                }
 
                 // padding
-                writer.Write((Byte)0);
-                writer.Write((Byte)0);
+                writer.Write((short)0);
 
                 // now for the actual contents of the measures
                 int currentBPM = (int)score.Tracks[0].AverageBeatsPerMinute;
-                foreach (var track in score.Tracks)
+                for (int b = 0; b < score.Tracks[0].Bars.Count; ++b)
                 {
-                    foreach (var bar in track.Bars)
+                    foreach (var track in score.Tracks)
                     {
-                        WriteBar(writer, bar, bar.BeatsPerMinute != currentBPM);
+                        var bar = track.Bars[b];
+                        WriteBar(writer, bar, track.Instrument == Track.InstrumentType.Bass, bar.BeatsPerMinute != currentBPM);
                         writer.Write((Byte)0);  // padding
-                    }                    
+                    }
                 }
             }
         }
@@ -254,8 +260,10 @@ namespace RocksmithToTabLib
             writer.Write(flags);
             writer.Write((Byte)(8 | flags));
             // track name padded to 40 bytes
-            writer.Write(track.Name.Substring(0, Math.Min(40, track.Name.Length)));
-            for (int i = track.Name.Length; i < 40; ++i)
+            var trackName = track.Name + " Level " + track.DifficultyLevel;
+            trackName = trackName.Substring(0, Math.Min(40, trackName.Length));
+            writer.Write(trackName);
+            for (int i = trackName.Length; i < 40; ++i)
                 writer.Write((Byte)0);
 
             // tuning information
@@ -296,33 +304,21 @@ namespace RocksmithToTabLib
         }
 
 
-        private static void WriteBar(BinaryWriter writer, Bar bar, bool changeTempo)
+        private static void WriteBar(BinaryWriter writer, Bar bar, bool bass, bool changeTempo)
         {
             writer.Write((Int32)bar.Chords.Count);
             foreach (var chord in bar.Chords)
             {
-                WriteBeat(writer, chord, changeTempo && chord == bar.Chords.First());
+                WriteBeat(writer, chord, bass, changeTempo && chord == bar.Chords.First());
             }
 
-            // we also need to provide the second voice, even though in our case it's going 
+            // we also need to provide the second voice, however in our case it's going 
             // to be empty
             writer.Write((Int32)0);
-            //foreach (var chord in bar.Chords)
-            {
-                //var silentChord = new Chord()
-                //{
-                //    Duration = chord.Duration,
-                //};
-                //WriteBeat(writer, silentChord, changeTempo && chord == bar.Chords.First(), true);
-                //writer.Write((Byte)(1 << 6));
-                //writer.Write((Byte)0);
-                //writer.Write((SByte) (-2));
-                //writer.Write((short)0);
-            }
         }
 
 
-        private static void WriteBeat(BinaryWriter writer, Chord chord, bool changeTempo, bool silent = false)
+        private static void WriteBeat(BinaryWriter writer, Chord chord, bool bass, bool changeTempo)
         {
             const Byte DOTTED_NOTE = 1;
             const Byte CHORD_DIAGRAM = (1 << 1);
@@ -421,17 +417,18 @@ namespace RocksmithToTabLib
 
             writer.Write(flags);
             if (chord.Notes.Count == 0)
-                writer.Write((Byte) (silent ? 0 : 2));  // 2 is an actual rest, 0 is silent
+                writer.Write((Byte)2);  // 2 is an actual rest, 0 is silent
             writer.Write(duration);
             if (triplet)
                 writer.Write((Int32)3);  // declare a triplet beat
 
             // now write the actual notes. a flag indicates which strings are being played
             Byte stringFlags = 0;
+            int stringOffset = bass ? 2 : 0;
             foreach (var kvp in chord.Notes)
-                stringFlags |= (Byte)(1 << (kvp.Key+1));
+                stringFlags |= (Byte)(1 << (kvp.Key+1+stringOffset));
             writer.Write(stringFlags);
-            var notes = chord.Notes.Values.OrderBy(x => x.String);
+            var notes = chord.Notes.Values.OrderByDescending(x => x.String);
             foreach (var note in notes)
             {
                 WriteNote(writer, note);
