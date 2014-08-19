@@ -11,59 +11,8 @@ namespace RocksmithToTab
 {
     class Program
     {
-        static void TestGP5Output()
-        {
-            var score = new Score();
-            var track = new Track()
-            {
-                AverageBeatsPerMinute = 120,
-                Capo = 0,
-                Name = "Track 1",
-                Instrument = Track.InstrumentType.Guitar,
-                Tuning = new int[] { 40, 45, 50, 55, 59, 64 }
-            };
-            score.Tracks.Add(track);
-            var bar = new Bar()
-            {
-                BeatsPerMinute = 120,
-                TimeNominator = 4,
-                TimeDenominator = 4
-            };
-            track.Bars.Add(bar);
-
-            for (int i = 0; i < 4; ++i)
-            {
-                var chord = new Chord()
-                {
-                    Duration = 48,
-                    ChordId = 0
-                };
-                chord.Notes.Add(i, new Note()
-                {
-                    String = i,
-                    Fret = 0,
-                });
-                bar.Chords.Add(chord);
-            }
-
-            var template = new ChordTemplate()
-            {
-                ChordId = 0,
-                Frets = new int[] { -1, 0, 2, 2, 1, 0 },
-                Fingers = new int[] { -1, -1, 2, 3, 1, -1 },
-                Name = "Am",
-            };
-            track.ChordTemplates.Add(0, template);
-            
-
-            new GP5File().ExportScore(score, "gp5test.gp5");
-        }
-
-
         static void Main(string[] args)
         {
-            TestGP5Output();
-
             // parse command line arguments
             var options = new CmdOptions();
             if (CommandLine.Parser.Default.ParseArguments(args, options))

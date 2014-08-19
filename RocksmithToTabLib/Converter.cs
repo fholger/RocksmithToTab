@@ -181,19 +181,23 @@ namespace RocksmithToTabLib
                     endTime = arrangement.PhraseIterations[pit + 1].Time;
 
                 // gather single notes and chords inside this phrase iteration
-                var notes = from n in level.Notes where n.Time >= startTime && n.Time < endTime 
-                            select CreateChord(n, arrangement.Capo);
+                var notes_temp = from n in level.Notes where n.Time >= startTime && n.Time < endTime
+                                 select n; //CreateChord(n, arrangement.Capo);
+                var notes = from n in notes_temp select CreateChord(n, arrangement.Capo);
                 var chords = from c in level.Chords where c.Time >= startTime && c.Time < endTime
                              select CreateChord(c, chordTemplates, arrangement.Capo);
                 allNotes = allNotes.Concat(notes.Concat(chords));
             }
+
+            // avoid recreating all the notes/chords at every bar, so cache the conversion
+            var collectedNotesList = allNotes.ToList();
 
             // Now put the chords into the bars they belong.
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
                 // gather chords that lie within this bar
-                bar.Chords = allNotes.Where(x => x.Start >= bar.Start && x.Start < bar.End)
+                bar.Chords = collectedNotesList.Where(x => x.Start >= bar.Start && x.Start < bar.End)
                     .OrderBy(x => x.Start).ToList();
             }
 
@@ -332,6 +336,11 @@ namespace RocksmithToTabLib
             if (note.Fret > 0)
                 note.Fret -= capo;
 
+            if (note.Start == 33.873f)
+            {
+                Console.WriteLine("Problematic note found, linkNext = {0}", note.LinkNext);
+            }
+
             return note;
         }
 
@@ -371,7 +380,7 @@ namespace RocksmithToTabLib
                     // add previous sustained notes to the current chord
                     foreach (var kvp in sustainedNotes)
                     {
-                        if (kvp.Value.Start + kvp.Value.Sustain < chord.Start)
+                        if (kvp.Value.Start + kvp.Value.Sustain <= chord.Start)
                             continue;  // already past its sustain time
 
                         if (!chord.Notes.ContainsKey(kvp.Key))
@@ -381,7 +390,7 @@ namespace RocksmithToTabLib
                         }
                         else
                         {
-                            //Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
+                            Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
                         }
                     }
                     sustainedNotes.Clear();
@@ -408,6 +417,7 @@ namespace RocksmithToTabLib
                 Harmonic = note.Harmonic,
                 PinchHarmonic = note.PinchHarmonic,
                 LeftFingering = -1,
+                RightFingering = -1,
                 Popped = false,
                 Slapped = false,
                 LinkNext = note.LinkNext,

@@ -29,7 +29,7 @@ namespace RocksmithToTab
         [Option('o', "outdir", HelpText = "Path to the directory where tabs should be created. (default: name of the input file minus extension)")]
         public string OutputDirectory { get; set; }
 
-        [Option('f', "format", DefaultValue = "gpx", HelpText = "File output format, currently either 'gpx', 'gpif' or 'gp5'. (default: gpx)")]
+        [Option('f', "format", DefaultValue = "gp5", HelpText = "File output format, currently either 'gp5', 'gpx' or 'gpif'.")]
         public string OutputFormat { get; set; }
 
         [HelpOption(HelpText = "Display this help screen.")]
@@ -42,7 +42,7 @@ namespace RocksmithToTab
                 AdditionalNewLineAfterOption = true,
                 AddDashesToOption = true
             };
-            help.AddPreOptionsLine("\nConvert Rocksmith tracks to GuitarPro .gpx tabs.\n");
+            help.AddPreOptionsLine("\nConvert Rocksmith tracks to Guitar Pro tabs.\n");
             help.AddPreOptionsLine("Usage: RocksmithToTab archive.psarc [-a bass,lead] [-s song1,song2]");
             help.AddOptions(this);
             return help;
