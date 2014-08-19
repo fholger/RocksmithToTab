@@ -76,7 +76,8 @@ namespace RocksmithToTabLib
             WriteDoublePrefixedString(writer, "");  // copyright
             WriteDoublePrefixedString(writer, "");  // tabber
             WriteDoublePrefixedString(writer, "");  // instructions
-            writer.Write((Int32)0);  // number of comments, followed by comments as strings
+            writer.Write((Int32)1);  // number of comments, followed by comments as strings
+            WriteDoublePrefixedString(writer, "");
         }
 
 
@@ -170,14 +171,26 @@ namespace RocksmithToTabLib
             writer.Write((Int32)score.Tracks.Count);
 
             if (score.Tracks.Count > 0)
+            {
                 WriteMasterBars(writer, score.Tracks[0].Bars);
 
-            foreach (var track in score.Tracks)
-                WriteTrack(writer, track);
+                foreach (var track in score.Tracks)
+                    WriteTrack(writer, track);
 
-            // padding
-            writer.Write((Byte)0);
-            writer.Write((Byte)0);
+                // padding
+                writer.Write((Byte)0);
+                writer.Write((Byte)0);
+
+                // now for the actual contents of the measures
+                int currentBPM = (int)score.Tracks[0].AverageBeatsPerMinute;
+                foreach (var track in score.Tracks)
+                {
+                    foreach (var bar in track.Bars)
+                    {
+                        WriteBar(writer, bar, bar.BeatsPerMinute != currentBPM);
+                    }                    
+                }
+            }
         }
 
 
@@ -189,12 +202,6 @@ namespace RocksmithToTabLib
             int timeDenom = 0;
             foreach (var bar in bars)
             {
-                if (bar != bars.First())
-                {
-                    // 1 byte padding in-between bars
-                    writer.Write((Byte)0);
-                }
-
                 Byte flags = 0;
                 if (bar == bars.First())
                     flags |= KEY_CHANGE;
@@ -230,6 +237,7 @@ namespace RocksmithToTabLib
                 }
 
                 writer.Write((Byte)0);  // triplet feel == NONE
+                writer.Write((Byte)0);  // padding
             }
         }
 
@@ -247,7 +255,7 @@ namespace RocksmithToTabLib
             // tuning information
             int numStrings = (track.Instrument == Track.InstrumentType.Bass) ? 4 : 6;
             writer.Write(numStrings);
-            for (int i = 0; i < numStrings; ++i)
+            for (int i = numStrings - 1; i >= 0; --i)
                 writer.Write(track.Tuning[i]);
             for (int i = numStrings; i < 7; ++i)
                 writer.Write((UInt32)0xffffffff);  // padding to fill up to 7 strings
@@ -255,15 +263,15 @@ namespace RocksmithToTabLib
             // MIDI channel information
             if (track.Instrument == Track.InstrumentType.Bass)
             {
-                writer.Write((Int32)0);  // port
-                writer.Write((Int32)2);  // primary channel
-                writer.Write((Int32)3);  // secondary channel
+                writer.Write((Int32)1);  // port
+                writer.Write((Int32)3);  // primary channel
+                writer.Write((Int32)4);  // secondary channel
             }
             else
             {
-                writer.Write((Int32)0);  // port
-                writer.Write((Int32)0);  // primary channel
-                writer.Write((Int32)1);  // secondary channel
+                writer.Write((Int32)1);  // port
+                writer.Write((Int32)1);  // primary channel
+                writer.Write((Int32)2);  // secondary channel
             }
 
             // number of frets, just set to 24 to be safe
@@ -282,6 +290,167 @@ namespace RocksmithToTabLib
         }
 
 
+        private static void WriteBar(BinaryWriter writer, Bar bar, bool changeTempo)
+        {
+            writer.Write((Int32)bar.Chords.Count);
+            foreach (var chord in bar.Chords)
+            {
+                WriteBeat(writer, chord, changeTempo && chord == bar.Chords.First());
+            }
+
+            // we also need to provide the second voice, even though in our case it's going 
+            // to be empty
+            writer.Write((Int32)0);
+            //foreach (var chord in bar.Chords)
+            {
+                //var silentChord = new Chord()
+                //{
+                //    Duration = chord.Duration,
+                //};
+                //WriteBeat(writer, silentChord, changeTempo && chord == bar.Chords.First(), true);
+                //writer.Write((Byte)(1 << 6));
+                //writer.Write((Byte)0);
+                //writer.Write((SByte) (-2));
+                //writer.Write((short)0);
+            }
+        }
+
+
+        private static void WriteBeat(BinaryWriter writer, Chord chord, bool changeTempo, bool silent = false)
+        {
+            const Byte DOTTED_NOTE = 1;
+            const Byte CHORD_DIAGRAM = (1 << 1);
+            const Byte BEAT_EFFECTS = (1 << 3);
+            const Byte MIX_TABLE = (1 << 4);
+            const Byte TUPLET = (1 << 5);
+            const Byte REST = (1 << 6);
+            const Byte VIBRATO = 1;
+            const Byte NATURAL_HARMONIC = (1 << 2);
+            const Byte ARTIFICIAL_HARMONIC = (1 << 3);
+            const Byte STRING_EFFECTS = (1 << 5);
+
+            // figure out beat duration
+            bool dotted = false;
+            bool triplet = false;
+            SByte duration = 0;
+
+            switch (chord.Duration)
+            {
+                case 192:
+                    duration = -2;
+                    break;
+                case 144:
+                    duration = -1;
+                    dotted = true;
+                    break;
+                case 96:
+                    duration = -1;
+                    break;
+                case 72:
+                    duration = 0;
+                    dotted = true;
+                    break;
+                case 48:
+                    duration = 0;
+                    break;
+                case 36:
+                    duration = 1;
+                    dotted = true;
+                    break;
+                case 32:
+                    duration = 0;
+                    triplet = true;
+                    break;
+                case 24:
+                    duration = 1;
+                    break;
+                case 18:
+                    duration = 2;
+                    dotted = true;
+                    break;
+                case 16:
+                    duration = 1;
+                    triplet = true;
+                    break;
+                case 12:
+                    duration = 2;
+                    break;
+                case 9:
+                    duration = 3;
+                    dotted = true;
+                    break;
+                case 8:
+                    duration = 2;
+                    triplet = true;
+                    break;
+                case 6:
+                    duration = 3;
+                    break;
+                case 4:
+                    duration = 3;
+                    triplet = true;
+                    break;
+                case 3:
+                    duration = 4;
+                    break;
+                case 2:
+                    duration = 4;
+                    triplet = true;
+                    break;
+                default:
+                    Console.WriteLine("  Warning: Rhythm Duration {0} not handled, defaulting to quarter note.", chord.Duration);
+                    duration = 0;
+                    break;
+            }
+
+            Byte flags = 0;
+            if (chord.Notes.Count == 0)
+                flags |= REST;
+            if (dotted)
+                flags |= DOTTED_NOTE;
+            if (triplet)
+                flags |= TUPLET;
+            //if (changeTempo)
+            //    flags |= MIX_TABLE;
+
+            writer.Write(flags);
+            if (chord.Notes.Count == 0)
+                writer.Write((Byte) (silent ? 0 : 2));  // 2 is an actual rest, 0 is silent
+            writer.Write(duration);
+            if (triplet)
+                writer.Write((Int32)3);  // declare a triplet beat
+
+            // now write the actual notes. a flag indicates which strings are being played
+            Byte stringFlags = 0;
+            foreach (var kvp in chord.Notes)
+                stringFlags |= (Byte)(1 << (kvp.Key+1));
+            writer.Write(stringFlags);
+            var notes = chord.Notes.Values.OrderBy(x => x.String);
+            foreach (var note in notes)
+            {
+                WriteNote(writer, note);
+            }
+
+            writer.Write((short)0);  // padding
+        }
+
+
+        private static void WriteNote(BinaryWriter writer, Note note)
+        {
+            const Byte NOTE_TYPE = (1 << 4);
+            const Byte NOTE_DYNAMICS = (1 << 5);
+            Byte flags = NOTE_TYPE | NOTE_DYNAMICS;
+
+            writer.Write(flags);
+            writer.Write((Byte)1);  // normal note (TODO)
+            writer.Write((Byte)5);  // mezzo-forte
+
+            writer.Write((Byte)note.Fret);
+
+            writer.Write((Byte)0);  // padding
+        }
+
+
 
 
         private static void WriteIntPrefixedString(BinaryWriter writer, string text)
@@ -292,8 +461,16 @@ namespace RocksmithToTabLib
         private static void WriteDoublePrefixedString(BinaryWriter writer, string text)
         {
             // GP5 has a weird habit of doubly prefixing strings.
-            writer.Write((Int32)text.Length + 1);
-            writer.Write(text);
+            if (text != null)
+            {
+                writer.Write((Int32)text.Length + 1);
+                writer.Write(text);
+            }
+            else
+            {
+                writer.Write((Int32)1);
+                writer.Write("");
+            }
         }
     }
 }
