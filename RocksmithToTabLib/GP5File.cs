@@ -27,6 +27,7 @@ namespace RocksmithToTabLib
         private BinaryWriter writer = null;
         private Score score = null;
         private List<bool[]> tieNotes = null;
+        private List<int> prevChordId = null;
 
         
         public void ExportScore(Score score, string fileName)
@@ -209,8 +210,12 @@ namespace RocksmithToTabLib
                 // now for the actual contents of the measures
                 var currentBPM = (int)score.Tracks[0].AverageBeatsPerMinute;
                 tieNotes = new List<bool[]>();
+                prevChordId = new List<int>();
                 foreach (var track in score.Tracks)
+                {
                     tieNotes.Add(new bool[] { false, false, false, false, false, false });
+                    prevChordId.Add(-1);
+                }
 
 
                 for (int b = 0; b < score.Tracks[0].Bars.Count; ++b)
@@ -460,9 +465,13 @@ namespace RocksmithToTabLib
                 flags |= BEAT_EFFECTS;
 
             var chordTemplates = score.Tracks[trackNumber].ChordTemplates;
-            if (chord.ChordId != -1 && chordTemplates.ContainsKey(chord.ChordId) &&
+            if (chord.ChordId != -1 && chord.ChordId != prevChordId[trackNumber] &&
+                chordTemplates.ContainsKey(chord.ChordId) &&
                 chordTemplates[chord.ChordId].Name != string.Empty)
+            {
                 flags |= CHORD_DIAGRAM;
+            }
+            prevChordId[trackNumber] = chord.ChordId;
 
             writer.Write(flags);
             if (chord.Notes.Count == 0)
@@ -684,18 +693,13 @@ namespace RocksmithToTabLib
 
         private void WriteBend(List<Note.BendValue> bendValues, bool vibrato)
         {
-            writer.Write((Byte)1);  // bend type; irrelevant, as it will be overwritten by the actual bend points
+            writer.Write((Byte)2);  // bend type; irrelevant, as it will be overwritten by the actual bend points
             writer.Write((Int32)0);  // max bend height; again, irrelevant
 
-            // it appears we need a bend value at the start and end of the bend, so create a separate 
-            // list and add appropriate first and last values
+            // it appears we need a bend value at the start of the bend, so create a separate 
+            // list and add an appropriate first value, if necessary
             bendValues = new List<Note.BendValue>(bendValues);
-            bendValues.Add(new Note.BendValue()
-                {
-                    RelativePosition = 1,
-                    Step = bendValues.Last().Step
-                });
-            if (bendValues.First().RelativePosition > 0)
+            if (bendValues.First().RelativePosition > 0.05f)
             {
                 bendValues.Insert(0, new Note.BendValue()
                     {
@@ -703,6 +707,8 @@ namespace RocksmithToTabLib
                         Step = 0
                     });
             }
+            else
+                bendValues.First().RelativePosition = 0.00f;
             // TODO: Guitar Pro might only support up to 30 bend points, do we need to check this?
             writer.Write((Int32)bendValues.Count);
             foreach (var bendValue in bendValues)

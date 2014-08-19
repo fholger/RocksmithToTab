@@ -135,7 +135,7 @@ namespace RocksmithToTabLib
                     // sub-beat. Increase current measure's time nominator
                     if (currentMeasure == null)
                     {
-                        Console.WriteLine("WARNING: Encountered ebeat without id with no active measure?!");
+                        Console.WriteLine("  WARNING: Encountered ebeat without id with no active measure?!");
                         // ignore for now
                     }
                     else
@@ -343,11 +343,6 @@ namespace RocksmithToTabLib
             if (note.Fret > 0)
                 note.Fret -= capo;
 
-            if (note.Start == 33.873f)
-            {
-                Console.WriteLine("Problematic note found, linkNext = {0}", note.LinkNext);
-            }
-
             return note;
         }
 
@@ -361,9 +356,6 @@ namespace RocksmithToTabLib
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
-
-                if (lastChord != null && lastChord.Start == 5.756)
-                    Console.WriteLine("Relevant chord is now last chord");
 
                 Chord nextChord = (bar.Chords.Last().Notes.Count != 0) ? bar.Chords.Last() : null;
 
@@ -411,8 +403,6 @@ namespace RocksmithToTabLib
 
         static Note SplitNote(Note note, float startTime)
         {
-            if (note.Start == 5.756f)
-                Console.WriteLine("Splitting relevant note...");
             Note newNote = new Note()
             {
                 Start = startTime,
@@ -443,7 +433,7 @@ namespace RocksmithToTabLib
 
             // Split bend values
             newNote.BendValues = note.BendValues.Where(x => x.Start >= startTime).ToList();
-            note.BendValues = note.BendValues.Where(x => x.Start <= startTime).ToList();
+            note.BendValues = note.BendValues.Where(x => x.Start < startTime).ToList();
             var before = note.BendValues.LastOrDefault();
             var after = newNote.BendValues.FirstOrDefault();
             if (after != null)
@@ -478,8 +468,6 @@ namespace RocksmithToTabLib
 
         static Chord SplitChord(Chord chord, float startTime)
         {
-            if (chord.Start == 5.756f)
-                Console.WriteLine("Splitting relevant chord...");
             var newChord = new Chord()
             {
                 ChordId = chord.ChordId,
@@ -570,7 +558,7 @@ namespace RocksmithToTabLib
                         // instead of using a chord.
                         if (curChord < bar.Chords.Count - 1)
                         {
-                            Console.WriteLine("Note value too short, merging with next note in bar {0}", b);
+                            //Console.WriteLine("  Note value too short, merging with next note in bar {0}", b);
                             var next = bar.Chords[curChord + 1];
                             next.Start = chord.Start;
                             foreach (var kvp in chord.Notes)
@@ -587,7 +575,7 @@ namespace RocksmithToTabLib
                             // very unlikely (?) should merge with next bar
                             if (b != bars.Count - 1)
                             {
-                                Console.WriteLine("Note value too short, merging with first note of next bar in bar {0}", b);
+                                //Console.WriteLine("  Note value too short, merging with first note of next bar in bar {0}", b);
                                 var next = bars[b + 1].Chords.First();
                                 foreach (var kvp in chord.Notes)
                                 {
