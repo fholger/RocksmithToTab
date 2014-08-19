@@ -461,7 +461,8 @@ namespace RocksmithToTabLib
                 WriteNote(note, trackNumber);
             }
 
-            writer.Write((short)0);  // padding
+            short noteTranspose = (short)(bass ? (1 << 4) : 0);  // for bass, we need 8va
+            writer.Write(noteTranspose);
         }
 
 
