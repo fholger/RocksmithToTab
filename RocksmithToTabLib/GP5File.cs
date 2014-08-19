@@ -484,11 +484,15 @@ namespace RocksmithToTabLib
             const short SLIDE = (1 << 11);
             const short HARMONIC = (1 << 12);
             const short VIBRATO = (1 << 14);
+            const Byte NATURAL_HARMONIC = 1;
+            const Byte PINCH_HARMONIC = 4;
             Byte flags = NOTE_TYPE | NOTE_DYNAMICS;
 
             if (note.LeftFingering >= 0 || note.RightFingering >= 0)
                 flags |= FINGER_HINTS;
             if (note.Tremolo || note.Hopo || note.Slide != Note.SlideType.None)
+                flags |= NOTE_EFFECTS;
+            if (note.Harmonic)
                 flags |= NOTE_EFFECTS;
 
             writer.Write(flags);
@@ -523,6 +527,8 @@ namespace RocksmithToTabLib
                     effectFlags |= SLIDE;
                 if (note.Hopo)
                     effectFlags |= HOPO;
+                if (note.Harmonic || note.PinchHarmonic)
+                    effectFlags |= HARMONIC;
 
                 writer.Write(effectFlags);
                 if (note.Tremolo)
@@ -533,6 +539,10 @@ namespace RocksmithToTabLib
                     writer.Write((Byte)4);  // slide out downwards
                 else if (note.Slide == Note.SlideType.UnpitchUp)
                     writer.Write((Byte)8);  // slide out upwards
+                if (note.Harmonic)
+                    writer.Write(NATURAL_HARMONIC);
+                else if (note.PinchHarmonic)
+                    writer.Write(PINCH_HARMONIC);
             }
 
         }
