@@ -172,6 +172,10 @@ namespace RocksmithToTabLib
             if (score.Tracks.Count > 0)
                 WriteMasterBars(writer, score.Tracks[0].Bars);
 
+            foreach (var track in score.Tracks)
+                WriteTrack(writer, track);
+
+            // padding
             writer.Write((Byte)0);
             writer.Write((Byte)0);
         }
@@ -227,6 +231,54 @@ namespace RocksmithToTabLib
 
                 writer.Write((Byte)0);  // triplet feel == NONE
             }
+        }
+
+
+        private static void WriteTrack(BinaryWriter writer, Track track)
+        {
+            Byte flags = 0;
+            writer.Write(flags);
+            writer.Write((Byte)(8 | flags));
+            // track name padded to 40 bytes
+            writer.Write(track.Name.Substring(0, Math.Min(40, track.Name.Length)));
+            for (int i = track.Name.Length; i < 40; ++i)
+                writer.Write((Byte)0);
+
+            // tuning information
+            int numStrings = (track.Instrument == Track.InstrumentType.Bass) ? 4 : 6;
+            writer.Write(numStrings);
+            for (int i = 0; i < numStrings; ++i)
+                writer.Write(track.Tuning[i]);
+            for (int i = numStrings; i < 7; ++i)
+                writer.Write((UInt32)0xffffffff);  // padding to fill up to 7 strings
+
+            // MIDI channel information
+            if (track.Instrument == Track.InstrumentType.Bass)
+            {
+                writer.Write((Int32)0);  // port
+                writer.Write((Int32)2);  // primary channel
+                writer.Write((Int32)3);  // secondary channel
+            }
+            else
+            {
+                writer.Write((Int32)0);  // port
+                writer.Write((Int32)0);  // primary channel
+                writer.Write((Int32)1);  // secondary channel
+            }
+
+            // number of frets, just set to 24 to be safe
+            writer.Write((Int32)24);
+            // capo position
+            writer.Write((Int32)track.Capo);
+            // track color in RGB0
+            writer.Write((Byte)255);
+            writer.Write((Byte)0);
+            writer.Write((Byte)0);
+            writer.Write((Byte)0);
+
+            // unknown byte sequence, taken from TuxGuitar
+            Byte[] fillData = new Byte[]{ 67, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 255, 3, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
+            writer.Write(fillData);
         }
 
 
