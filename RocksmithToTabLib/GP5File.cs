@@ -635,7 +635,7 @@ namespace RocksmithToTabLib
                 writer.Write(TYPE_TIED);
             else
                 writer.Write((Byte)TYPE_NORMAL);
-            tieNotes[trackNumber][note.String] = note.LinkNext;
+            tieNotes[trackNumber][note.String] = note.LinkNext && note.Slide == Note.SlideType.None;
 
             // dynamics
             int accent = (note.Accent) ? 1 : 0;

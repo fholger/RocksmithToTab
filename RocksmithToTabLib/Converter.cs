@@ -386,7 +386,7 @@ namespace RocksmithToTabLib
                         }
                         else
                         {
-                            Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
+                            //Console.WriteLine("  Warning: A sustained note was cut off prematurely in bar {0}", b);
                         }
                     }
                     sustainedNotes.Clear();
