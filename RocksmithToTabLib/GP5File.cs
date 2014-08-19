@@ -495,6 +495,17 @@ namespace RocksmithToTabLib
             if (note.Accent)
                 flags |= ACCENTUATED;
 
+            bool bend = false;
+            foreach (var bendValue in note.BendValues)
+            {
+                // some notes are assigned non-sensical bend values of 0, we need to filter those out,
+                // they look ugly in Guitar Pro otherwise.
+                if (bendValue.Step > 0)
+                    bend = true;
+            }
+            if (bend)
+                flags |= NOTE_EFFECTS;
+
             writer.Write(flags);
             // first: note type
             if (note.Muted)
@@ -534,8 +545,14 @@ namespace RocksmithToTabLib
                     effectFlags |= VIBRATO;
                 if (note.PalmMuted)
                     effectFlags |= PALM_MUTE;
+                if (bend)
+                    effectFlags |= BEND;
 
                 writer.Write(effectFlags);
+
+                if (bend)
+                    WriteBend(note.BendValues, note.Vibrato);
+
                 if (note.Tremolo)
                     writer.Write((Byte)2);  // picking speed for tremolo, can be 3, 2 or 1.
                 if (note.Slide == Note.SlideType.ToNext)
@@ -550,6 +567,22 @@ namespace RocksmithToTabLib
                     writer.Write(PINCH_HARMONIC);
             }
 
+        }
+
+
+        private void WriteBend(List<Note.BendValue> bendValues, bool vibrato)
+        {
+            writer.Write((Byte)1);  // bend type; irrelevant, as it will be overwritten by the actual bend points
+            writer.Write((Int32)0);  // max bend height; again, irrelevant
+
+            // TODO: Guitar Pro might only support up to 30 bend points, do we need to check this?
+            writer.Write((Int32)bendValues.Count);
+            foreach (var bendValue in bendValues)
+            {
+                writer.Write((Int32)(bendValue.RelativePosition * 60));
+                writer.Write((Int32)(bendValue.Step * 50));
+                writer.Write((Byte)(vibrato ? 2 : 0));
+            }
         }
 
 
