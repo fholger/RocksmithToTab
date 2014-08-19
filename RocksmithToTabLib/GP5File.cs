@@ -459,12 +459,24 @@ namespace RocksmithToTabLib
             if (chord.Popped || chord.Slapped || tapped)
                 flags |= BEAT_EFFECTS;
 
+            var chordTemplates = score.Tracks[trackNumber].ChordTemplates;
+            if (chord.ChordId != -1 && chordTemplates.ContainsKey(chord.ChordId) &&
+                chordTemplates[chord.ChordId].Name != string.Empty)
+                flags |= CHORD_DIAGRAM;
+
             writer.Write(flags);
             if (chord.Notes.Count == 0)
                 writer.Write((Byte)2);  // 2 is an actual rest, 0 is silent
             writer.Write(duration);
             if (triplet)
                 writer.Write((Int32)3);  // declare a triplet beat
+
+            // chord diagram
+            if ((flags & CHORD_DIAGRAM) != 0)
+            {
+                var chordTemplate = chordTemplates[chord.ChordId];
+                WriteChordTemplate(chordTemplate);
+            }
 
             // beat effects
             if ((flags & BEAT_EFFECTS) != 0)
@@ -507,6 +519,62 @@ namespace RocksmithToTabLib
 
             short noteTranspose = (short)(bass ? (1 << 4) : 0);  // for bass, we need 8va
             writer.Write(noteTranspose);
+        }
+
+
+        private void WriteChordTemplate(ChordTemplate template)
+        {
+            Console.WriteLine("Writing chord template for chord {0}", template.Name);
+            // basic default options (don't need to mess with this)
+            writer.Write(new Byte[] { 1, 1, 0, 0, 0, 12, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0 });
+            // chord name padded to 20 bytes
+            var chordName = template.Name.Substring(0, Math.Min(20, template.Name.Length));
+            writer.Write(chordName);
+            for (int i = chordName.Length; i < 20; ++i)
+                writer.Write((Byte)0);
+            writer.Write((short)0);  // padding
+            writer.Write((short)0);  // tonality of ninth/fifth
+            writer.Write((Byte)0);  // tonality of eleventh
+            
+            // we need to determine at what base fret to start the chord diagram
+            int minFret = 100;
+            int maxFret = 0;
+            for (int i = 0; i < 6; ++i)
+            {
+                if (template.Frets[i] > 0)
+                {
+                    minFret = Math.Min(template.Frets[i], minFret);
+                    maxFret = Math.Max(template.Frets[i], maxFret);
+                }
+            }
+            if (maxFret <= 5)
+                minFret = 1; 
+            writer.Write((Int32)minFret);
+            // write the frets for each string
+            for (int i = 5; i >= 0; --i)
+                writer.Write((Int32)template.Frets[i]);
+            writer.Write((Int32)(-1));  // 7-th string, not used
+            
+            //for (int i = 0; i < 32; ++i)
+            //    writer.Write((Byte)0);
+            // barre definitions
+            writer.Write((Byte)0);
+            for (int i = 0; i < 5; ++i)
+            {
+                writer.Write((Byte)0);
+                writer.Write((Byte)0);
+                writer.Write((Byte)0);
+            }
+            
+            // whether the chord contains certain intervals, irrelevant
+            writer.Write((Int32)0);
+            writer.Write((Int32)0);
+            
+            // finger positions
+            for (int i = 5; i >= 0; --i)
+                writer.Write((Byte)template.Fingers[i]);
+            writer.Write((Byte)255);  // 7-th string, not used
+            writer.Write((Byte)1);  // display fingerings
         }
 
 

@@ -30,13 +30,13 @@ namespace RocksmithToTab
                 TimeDenominator = 4
             };
             track.Bars.Add(bar);
-            track.Bars.Add(bar);
 
             for (int i = 0; i < 4; ++i)
             {
                 var chord = new Chord()
                 {
-                    Duration = 48
+                    Duration = 48,
+                    ChordId = 0
                 };
                 chord.Notes.Add(i, new Note()
                 {
@@ -45,40 +45,16 @@ namespace RocksmithToTab
                 });
                 bar.Chords.Add(chord);
             }
-            
-            
-            track = new Track()
-            {
-                AverageBeatsPerMinute = 120,
-                Capo = 0,
-                Name = "Track 2",
-                Instrument = Track.InstrumentType.Guitar,
-                Tuning = new int[] { 40, 45, 50, 55, 59, 64 }
-            };
-            score.Tracks.Add(track);
-            score.Tracks.Add(track);
-            bar = new Bar()
-            {
-                BeatsPerMinute = 120,
-                TimeNominator = 4,
-                TimeDenominator = 4
-            };
-            track.Bars.Add(bar);
-            track.Bars.Add(bar);
 
-            for (int i = 0; i < 2; ++i)
+            var template = new ChordTemplate()
             {
-                var chord = new Chord()
-                {
-                    Duration = 96
-                };
-                chord.Notes.Add(i, new Note()
-                {
-                    String = i,
-                    Fret = i,
-                });
-                bar.Chords.Add(chord);
-            }
+                ChordId = 0,
+                Frets = new int[] { -1, 0, 2, 2, 1, 0 },
+                Fingers = new int[] { -1, -1, 2, 3, 1, -1 },
+                Name = "Am",
+            };
+            track.ChordTemplates.Add(0, template);
+            
 
             new GP5File().ExportScore(score, "gp5test.gp5");
         }

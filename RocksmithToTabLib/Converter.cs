@@ -100,32 +100,7 @@ namespace RocksmithToTabLib
 
                 templates.Add(template.ChordId, template);
 
-                //if (rsTemplate.ChordId.HasValue)
-                //{
-                //    template.ChordId = rsTemplate.ChordId.Value;
-                //
-                //    if (!templates.ContainsKey(template.ChordId))
-                //        templates.Add(template.ChordId, template);
-                //    else
-                //    {
-                //        Console.WriteLine("  Warning: ChordId {0} already present in templates list.", template.ChordId);
-                //        PrintChordTemplate(templates[template.ChordId]);
-                //        PrintChordTemplate(template);
-                //    }
-                //}
-                //else
-                //    missingChordIds.Add(template);
             }
-
-            // now assign the chords with missing chordIds the next free chord id
-            //int chordId = 0;
-            //foreach (var template in missingChordIds)
-            //{
-            //    while (templates.ContainsKey(chordId))
-            //        ++chordId;
-            //    template.ChordId = chordId;
-            //    templates.Add(chordId, template);
-            //}
 
             return templates;
         }
