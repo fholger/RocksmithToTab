@@ -356,9 +356,6 @@ namespace RocksmithToTabLib
             const Byte MIX_TABLE = (1 << 4);
             const Byte TUPLET = (1 << 5);
             const Byte REST = (1 << 6);
-            const Byte VIBRATO = 1;
-            const Byte NATURAL_HARMONIC = (1 << 2);
-            const Byte ARTIFICIAL_HARMONIC = (1 << 3);
             const Byte STRING_EFFECTS = (1 << 5);
 
             // figure out beat duration
@@ -474,6 +471,7 @@ namespace RocksmithToTabLib
             const Byte NOTE_DYNAMICS = (1 << 5);
             const Byte NOTE_EFFECTS = (1 << 3);
             const Byte FINGER_HINTS = (1 << 7);
+            const Byte ACCENTUATED = (1 << 6);
             const Byte TYPE_NORMAL = 1;
             const Byte TYPE_TIED = 2;
             const Byte TYPE_DEAD = 3;
@@ -492,8 +490,10 @@ namespace RocksmithToTabLib
                 flags |= FINGER_HINTS;
             if (note.Tremolo || note.Hopo || note.Slide != Note.SlideType.None)
                 flags |= NOTE_EFFECTS;
-            if (note.Harmonic)
+            if (note.Harmonic || note.Vibrato || note.PalmMuted)
                 flags |= NOTE_EFFECTS;
+            if (note.Accent)
+                flags |= ACCENTUATED;
 
             writer.Write(flags);
             // first: note type
@@ -506,7 +506,8 @@ namespace RocksmithToTabLib
             tieNotes[trackNumber][note.String] = note.LinkNext;
 
             // dynamics
-            writer.Write((Byte)5);  // mezzo-forte
+            int accent = (note.Accent) ? 1 : 0;
+            writer.Write((Byte)(5 + accent));  // mezzo-forte
 
             writer.Write((Byte)note.Fret);
 
@@ -519,7 +520,7 @@ namespace RocksmithToTabLib
             writer.Write((Byte)0);  // padding
 
             if ((flags & NOTE_EFFECTS) != 0)
-            {
+            { 
                 short effectFlags = 0;
                 if (note.Tremolo)
                     effectFlags |= TREMOLO;
@@ -529,6 +530,10 @@ namespace RocksmithToTabLib
                     effectFlags |= HOPO;
                 if (note.Harmonic || note.PinchHarmonic)
                     effectFlags |= HARMONIC;
+                if (note.Vibrato)
+                    effectFlags |= VIBRATO;
+                if (note.PalmMuted)
+                    effectFlags |= PALM_MUTE;
 
                 writer.Write(effectFlags);
                 if (note.Tremolo)
