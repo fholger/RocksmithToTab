@@ -207,13 +207,16 @@ namespace RocksmithToTabLib
                 writer.Write((short)0);
 
                 // now for the actual contents of the measures
-                int currentBPM = (int)score.Tracks[0].AverageBeatsPerMinute;
+                var currentBPM = (int)score.Tracks[0].AverageBeatsPerMinute;
                 tieNotes = new List<bool[]>();
                 foreach (var track in score.Tracks)
                     tieNotes.Add(new bool[] { false, false, false, false, false, false });
 
+
                 for (int b = 0; b < score.Tracks[0].Bars.Count; ++b)
                 {
+                    bool changeTempo = (currentBPM != score.Tracks[0].Bars[b].BeatsPerMinute);
+                    currentBPM = score.Tracks[0].Bars[b].BeatsPerMinute;
                     for (int i = 0; i < score.Tracks.Count; ++i)
                     {
                         var track = score.Tracks[i];
@@ -222,8 +225,10 @@ namespace RocksmithToTabLib
                         // bar of the first track instead, hoping that it will be silence.
                         // Might need a better approach if this doesn't hold.
                         var bar = (b < track.Bars.Count) ? track.Bars[b] : score.Tracks[0].Bars[b];
-                        WriteBar(bar, i, track.Instrument == Track.InstrumentType.Bass, bar.BeatsPerMinute != currentBPM);
+                        WriteBar(bar, i, track.Instrument == Track.InstrumentType.Bass, changeTempo);
                         writer.Write((Byte)0);  // padding
+
+                        changeTempo = false;
                     }
                 }
             }
@@ -337,9 +342,10 @@ namespace RocksmithToTabLib
         private void WriteBar(Bar bar, int trackNumber, bool bass, bool changeTempo)
         {
             writer.Write((Int32)bar.Chords.Count);
-            foreach (var chord in bar.Chords)
+            for (int i = 0; i < bar.Chords.Count; ++i)
             {
-                WriteBeat(chord, trackNumber, bass, changeTempo && chord == bar.Chords.First());
+                var chord = bar.Chords[i];
+                WriteBeat(chord, trackNumber, bass, changeTempo && (i == 0), bar.BeatsPerMinute);
             }
 
             // we also need to provide the second voice, however in our case it's going 
@@ -348,7 +354,7 @@ namespace RocksmithToTabLib
         }
 
 
-        private void WriteBeat(Chord chord, int trackNumber, bool bass, bool changeTempo)
+        private void WriteBeat(Chord chord, int trackNumber, bool bass, bool changeTempo, int newTempo)
         {
             const Byte DOTTED_NOTE = 1;
             const Byte CHORD_DIAGRAM = (1 << 1);
@@ -442,8 +448,8 @@ namespace RocksmithToTabLib
                 flags |= DOTTED_NOTE;
             if (triplet)
                 flags |= TUPLET;
-            //if (changeTempo)
-            //    flags |= MIX_TABLE;
+            if (changeTempo)
+                flags |= MIX_TABLE;
             bool tapped = false;
             foreach (var kvp in chord.Notes)
             {
@@ -473,6 +479,18 @@ namespace RocksmithToTabLib
                     writer.Write(SLAPPING);
                 else if (chord.Popped)
                     writer.Write(POPPING);
+            }
+
+            // mix table (used for changing tempo)
+            if ((flags & MIX_TABLE) != 0)
+            {
+                for (int i = 0; i < 23; ++i)
+                    writer.Write((Byte)0xff);
+                WriteDoublePrefixedString("");  // tempo string
+                writer.Write((Int32)newTempo);
+                writer.Write((Byte)0);  // means new tempo takes effect immediately
+                writer.Write((Byte)1);
+                writer.Write((Byte)0xff);
             }
 
             // now write the actual notes. a flag indicates which strings are being played
