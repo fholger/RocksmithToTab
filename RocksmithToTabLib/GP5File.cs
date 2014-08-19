@@ -472,10 +472,24 @@ namespace RocksmithToTabLib
         {
             const Byte NOTE_TYPE = (1 << 4);
             const Byte NOTE_DYNAMICS = (1 << 5);
+            const Byte NOTE_EFFECTS = (1 << 3);
+            const Byte FINGER_HINTS = (1 << 7);
             const Byte TYPE_NORMAL = 1;
             const Byte TYPE_TIED = 2;
             const Byte TYPE_DEAD = 3;
+            const short BEND = 1;
+            const short HOPO = (1 << 1);
+            const short PALM_MUTE = (1 << 9);
+            const short TREMOLO = (1 << 10);
+            const short SLIDE = (1 << 11);
+            const short HARMONIC = (1 << 12);
+            const short VIBRATO = (1 << 14);
             Byte flags = NOTE_TYPE | NOTE_DYNAMICS;
+
+            if (note.LeftFingering >= 0 || note.RightFingering >= 0)
+                flags |= FINGER_HINTS;
+            if (note.Tremolo || note.Hopo || note.Slide != Note.SlideType.None)
+                flags |= NOTE_EFFECTS;
 
             writer.Write(flags);
             // first: note type
@@ -492,7 +506,35 @@ namespace RocksmithToTabLib
 
             writer.Write((Byte)note.Fret);
 
+            if ((flags & FINGER_HINTS) != 0)
+            {
+                writer.Write((Byte)note.LeftFingering);
+                writer.Write((Byte)note.RightFingering);
+            }
+
             writer.Write((Byte)0);  // padding
+
+            if ((flags & NOTE_EFFECTS) != 0)
+            {
+                short effectFlags = 0;
+                if (note.Tremolo)
+                    effectFlags |= TREMOLO;
+                if (note.Slide != Note.SlideType.None)
+                    effectFlags |= SLIDE;
+                if (note.Hopo)
+                    effectFlags |= HOPO;
+
+                writer.Write(effectFlags);
+                if (note.Tremolo)
+                    writer.Write((Byte)2);  // picking speed for tremolo, can be 3, 2 or 1.
+                if (note.Slide == Note.SlideType.ToNext)
+                    writer.Write((Byte)2);  // legato slide to next note
+                else if (note.Slide == Note.SlideType.UnpitchDown)
+                    writer.Write((Byte)4);  // slide out downwards
+                else if (note.Slide == Note.SlideType.UnpitchUp)
+                    writer.Write((Byte)8);  // slide out upwards
+            }
+
         }
 
 

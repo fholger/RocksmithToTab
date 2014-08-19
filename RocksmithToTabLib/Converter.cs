@@ -325,6 +325,7 @@ namespace RocksmithToTabLib
                 Slapped = rsNote.Slap == 1,
                 Popped = rsNote.Pluck == 1,
                 LeftFingering = rsNote.LeftHand,
+                RightFingering = rsNote.RightHand,
                 Sustain = rsNote.Sustain
             };
             if (rsNote.SlideTo != -1)

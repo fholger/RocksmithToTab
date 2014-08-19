@@ -235,6 +235,7 @@ namespace RocksmithToTabLib
         public bool Slapped { get; set; }
         public bool Popped { get; set; }
         public int LeftFingering { get; set; }
+        public int RightFingering { get; set; }
         public float Sustain { get; set; }
 
         public enum SlideType
