@@ -115,7 +115,7 @@ namespace RocksmithToTabLib
         private static void WriteTempo(BinaryWriter writer, Score score)
         {
             // first comes a string describing the tempo of the song
-            WriteDoublePrefixedString(writer, "Moderate");
+            WriteDoublePrefixedString(writer, "");
             // then actual BPM
             Int32 avgBPM = (score.Tracks.Count > 0) ? (Int32)score.Tracks[0].AverageBeatsPerMinute : 120;
             writer.Write(avgBPM);
@@ -135,22 +135,30 @@ namespace RocksmithToTabLib
         {
             // this sets used program and volume / effects on each channel, we just
             // use some default values
-            for (int i = 0; i < 64; ++i)
+            // the first two channels are used for guitar, the other two for bass
+            // the rest we don't really care about.
+            WriteChannel(writer, 0x1d);
+            WriteChannel(writer, 0x1d);
+            WriteChannel(writer, 0x21);
+            WriteChannel(writer, 0x21);
+            for (int i = 4; i < 64; ++i)
             {
-                int ti = i / 2;
-                if (score.Tracks.Count > ti && score.Tracks[ti].Instrument == Track.InstrumentType.Guitar)
-                    writer.Write((Int32)0x1d);  // program for guitar
-                else
-                    writer.Write((Int32)0x21);  // program for bass
-                writer.Write((Byte)15);  // volume (from 0 to 16)
-                writer.Write((Byte)8);  // pan (from 0 to 16)
-                writer.Write((Byte)0);  // chorus
-                writer.Write((Byte)0);  // reverb
-                writer.Write((Byte)0);  // phaser
-                writer.Write((Byte)0);  // tremolo
-                writer.Write((Byte)0);  // unused
-                writer.Write((Byte)0);  // unused
+                WriteChannel(writer, 0);
             }
+        }
+
+        
+        private static void WriteChannel(BinaryWriter writer, Int32 program)
+        {
+            writer.Write(program);  // program
+            writer.Write((Byte)15);  // volume (from 0 to 16)
+            writer.Write((Byte)8);  // pan (from 0 to 16)
+            writer.Write((Byte)0);  // chorus
+            writer.Write((Byte)0);  // reverb
+            writer.Write((Byte)0);  // phaser
+            writer.Write((Byte)0);  // tremolo
+            writer.Write((Byte)0);  // unused
+            writer.Write((Byte)0);  // unused
         }
 
 
@@ -192,7 +200,11 @@ namespace RocksmithToTabLib
                 {
                     foreach (var track in score.Tracks)
                     {
-                        var bar = track.Bars[b];
+                        // it can happen that an arrangement has fewer bars than the first one.
+                        // This shouldn't normally happen, and as a simple hack we simply reuse the 
+                        // bar of the first track instead, hoping that it will be silence.
+                        // Might need a better approach if this doesn't hold.
+                        var bar = (b < track.Bars.Count) ? track.Bars[b] : score.Tracks[0].Bars[b];
                         WriteBar(writer, bar, track.Instrument == Track.InstrumentType.Bass, bar.BeatsPerMinute != currentBPM);
                         writer.Write((Byte)0);  // padding
                     }
