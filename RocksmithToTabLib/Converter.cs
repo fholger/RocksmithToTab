@@ -238,7 +238,9 @@ namespace RocksmithToTabLib
                         var note = new Note()
                         {
                             Fret = template.Frets[i],
-                            String = i
+                            String = i,
+                            LeftFingering = template.Fingers[i],
+                            RightFingering = -1,
                         };
                         chord.Notes.Add(i, note);
                     }

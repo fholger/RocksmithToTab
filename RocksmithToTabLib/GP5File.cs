@@ -524,7 +524,6 @@ namespace RocksmithToTabLib
 
         private void WriteChordTemplate(ChordTemplate template)
         {
-            Console.WriteLine("Writing chord template for chord {0}", template.Name);
             // basic default options (don't need to mess with this)
             writer.Write(new Byte[] { 1, 1, 0, 0, 0, 12, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0 });
             // chord name padded to 20 bytes
