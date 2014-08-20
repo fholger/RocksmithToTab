@@ -343,6 +343,7 @@ namespace Gpif
         public string Dynamic = "MF";
         public string Tremolo = null;
         public CData Chord = null;
+        public CData FreeText = null;
 
         public class RhythmType
         {
@@ -378,6 +379,7 @@ namespace Gpif
                 && (Tremolo == other.Tremolo)
                 && (Rhythm.Ref == other.Rhythm.Ref) 
                 && GpifCompare.Equal(Chord, other.Chord)
+                && GpifCompare.Equal(FreeText, other.FreeText)
                 && Enumerable.SequenceEqual(Notes, other.Notes)
                 && GpifCompare.ListEqual(Properties, other.Properties);
         }
@@ -385,6 +387,7 @@ namespace Gpif
         public bool ShouldSerializeBank() { return Bank != null; }
         public bool ShouldSerializeTremolo() { return Tremolo != null; }
         public bool ShouldSerializeChord() { return Chord != null; }
+        public bool ShouldSerializeFreeText() { return FreeText != null; }
     }
 
     public class Note : IEquatable<Note>

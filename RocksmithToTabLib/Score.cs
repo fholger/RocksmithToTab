@@ -191,6 +191,7 @@ namespace RocksmithToTabLib
             Notes = new Dictionary<int, Note>();
             ChordId = -1;
             BrushDirection = BrushType.None;
+            Section = null;
         }
 
         public int ChordId { get; set; }
@@ -202,6 +203,7 @@ namespace RocksmithToTabLib
         public bool Tremolo { get; set; }
         public bool Slapped { get; set; }
         public bool Popped { get; set; }
+        public string Section { get; set; }
 
         public enum BrushType
         {

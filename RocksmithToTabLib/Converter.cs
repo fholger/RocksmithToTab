@@ -35,6 +35,9 @@ namespace RocksmithToTabLib
             // gather notes
             track.DifficultyLevel = CollectNotesForDifficulty(arrangement, track.Bars, track.ChordTemplates, difficultyLevel);
 
+            // add section headings to relevant notes
+            AddSectionNames(arrangement, track.Bars);
+
             // figure out note durations and clean up potentially overlapping notes
             CalculateNoteDurations(track.Bars);
             HandleSustainsAndSilence(track.Bars);
@@ -347,6 +350,34 @@ namespace RocksmithToTabLib
         }
 
 
+        static void AddSectionNames(Song2014 arrangement, List<Bar> bars)
+        {
+            var sections = arrangement.Sections.OrderBy(x => x.StartTime);
+            int c = 0;
+            int b = 0;
+            foreach (var section in sections)
+            {
+                Console.WriteLine("Section {0} at {1:F3}", section.Name, section.StartTime);
+                while (b < bars.Count && bars[b].Chords[c].Start < section.StartTime)
+                {
+                    ++c;
+                    if (c >= bars[b].Chords.Count)
+                    {
+                        c = 0;
+                        ++b;
+                    }
+                }
+
+                if (b < bars.Count)
+                {
+                    Console.WriteLine("  Placing at chord {0} in bar {1}", c, b);
+                    var chord = bars[b].Chords[c];
+                    chord.Section = section.Name.ToUpper();
+                }
+            }
+        }
+
+
         static void HandleSustainsAndSilence(List<Bar> bars)
         {
             // Wo go through all bars and extend sustained notes or chords at the end of 
@@ -366,6 +397,7 @@ namespace RocksmithToTabLib
                     // extend the chord from the previous bar into the silence
                     var newChord = SplitChord(lastChord, bar.Start);
                     newChord.Duration = bar.Chords[0].Duration;
+                    newChord.Section = bar.Chords[0].Section;
                     bar.Chords[0] = newChord;
                 }
                 lastChord = nextChord;
@@ -561,6 +593,8 @@ namespace RocksmithToTabLib
                             //Console.WriteLine("  Note value too short, merging with next note in bar {0}", b);
                             var next = bar.Chords[curChord + 1];
                             next.Start = chord.Start;
+                            if (next.Section == null)
+                                next.Section = chord.Section;
                             foreach (var kvp in chord.Notes)
                             {
                                 if (!next.Notes.ContainsKey(kvp.Key))
@@ -577,6 +611,8 @@ namespace RocksmithToTabLib
                             {
                                 //Console.WriteLine("  Note value too short, merging with first note of next bar in bar {0}", b);
                                 var next = bars[b + 1].Chords.First();
+                                if (next.Section == null)
+                                    next.Section = chord.Section;
                                 foreach (var kvp in chord.Notes)
                                 {
                                     if (!next.Notes.ContainsKey(kvp.Key))

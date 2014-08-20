@@ -391,6 +391,9 @@ namespace RocksmithToTabLib
             }
             prevChordId = chord.ChordId;
 
+            if (chord.Section != null)
+                beat.FreeText = chord.Section;
+
             // see if this beat already exists, otherwise add
             var searchBeat = gpif.Beats.Find(x => x.Equals(beat));
             if (searchBeat != null)
