@@ -147,16 +147,19 @@ namespace RocksmithToTabLib
         private void WriteChannels()
         {
             // this sets used program and volume / effects on each channel, we just
-            // use some default values
-            // the first two channels are used for guitar, the other two for bass
-            // the rest we don't really care about.
-            WriteChannel(0x1d);
-            WriteChannel(0x1d);
-            WriteChannel(0x21);
-            WriteChannel(0x21);
-            for (int i = 4; i < 64; ++i)
+            // use some default values for guitar and bass
+            for (int i = 0; i < 64; ++i)
             {
-                WriteChannel(0);
+                int channel = 0;
+                if (i / 2 < score.Tracks.Count)
+                {
+                    var track = score.Tracks[i / 2];
+                    if (track.Instrument == Track.InstrumentType.Guitar)
+                        channel = 0x1d;
+                    else
+                        channel = 0x21;
+                }
+                WriteChannel(channel);
             }
         }
 
@@ -199,9 +202,10 @@ namespace RocksmithToTabLib
             {
                 WriteMasterBars();
 
-                foreach (var track in score.Tracks)
+                for (int i = 0; i < score.Tracks.Count; ++i)
                 {
-                    WriteTrack(track);
+                    var track = score.Tracks[i];
+                    WriteTrack(track, i);
                 }
 
                 // padding
@@ -294,7 +298,7 @@ namespace RocksmithToTabLib
         }
 
 
-        private void WriteTrack(Track track)
+        private void WriteTrack(Track track, int trackNumber)
         {
             Byte flags = 0;
             writer.Write(flags);
@@ -315,18 +319,9 @@ namespace RocksmithToTabLib
                 writer.Write((UInt32)0xffffffff);  // padding to fill up to 7 strings
 
             // MIDI channel information
-            if (track.Instrument == Track.InstrumentType.Bass)
-            {
-                writer.Write((Int32)1);  // port
-                writer.Write((Int32)3);  // primary channel
-                writer.Write((Int32)4);  // secondary channel
-            }
-            else
-            {
-                writer.Write((Int32)1);  // port
-                writer.Write((Int32)1);  // primary channel
-                writer.Write((Int32)2);  // secondary channel
-            }
+            writer.Write((Int32)1);  // port
+            writer.Write((Int32)(trackNumber * 2 + 1));  // primary channel
+            writer.Write((Int32)(trackNumber * 2 + 2));  // secondary channel
 
             // number of frets, just set to 24 to be safe
             writer.Write((Int32)24);
