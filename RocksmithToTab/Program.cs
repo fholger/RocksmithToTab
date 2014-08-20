@@ -106,7 +106,7 @@ namespace RocksmithToTab
                                 }
                                 else
                                 {
-                                    exporter.ExportGPX(score, baseFileName + ".gpx");
+                                    exporter.ExportGPX(score, baseFileName + ".gpx", false);
                                 }
                                 // remember to remove the track from the score again
                                 score.Tracks.Clear();
@@ -126,7 +126,7 @@ namespace RocksmithToTab
                             }
                             else
                             {
-                                exporter.ExportGPX(score, baseFileName + ".gpx");
+                                exporter.ExportGPX(score, baseFileName + ".gpx", false);
                             }
                         }
                     }

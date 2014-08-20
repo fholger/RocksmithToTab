@@ -483,37 +483,40 @@ namespace RocksmithToTabLib
             // handle bends
             if (note.BendValues.Count != 0)
             {
-                float origin = 0;
-                float destination = 0;
-                float middle = 0;
+                float origin = note.BendValues.First().Step;
+                float destination = note.BendValues.Last().Step;
+                float middle = origin;
                 float middleOffset1 = 0;
                 float middleOffset2 = 0;
-                float destinationOffset = 0;
+                float destinationOffset = note.BendValues.Last().RelativePosition;
 
-                foreach (var bend in note.BendValues)
+                // GPX doesn't support arbitrarily complex bends, it can do at most a bend/release.
+                // So we'll look for the point inside the bend that differs the most from the start
+                // and use that as the intermediary bend value.
+                for (int i = 1; i < note.BendValues.Count - 1; ++i)
                 {
-                    if (bend.Start <= note.Start)
-                        origin = bend.Step;
-                    else
+                    var bend = note.BendValues[i];
+                    if (bend.Step - origin > middle - origin)
                     {
-                        if (bend.Step > middle)
-                        {
-                            middle = bend.Step;
-                            middleOffset1 = bend.RelativePosition;
-                            middleOffset2 = bend.RelativePosition;
-                        }
-                        else if (bend.Step == middle)
-                            middleOffset2 = bend.RelativePosition;
+                        middle = bend.Step;
+                        middleOffset1 = bend.RelativePosition;
+                        middleOffset2 = bend.RelativePosition;
                     }
+                    else if (bend.Step == middle)
+                        middleOffset2 = bend.RelativePosition;
+                    if (bend.Step == destination)
+                        destinationOffset = bend.RelativePosition;
+                    else
+                        destinationOffset = note.BendValues.Last().RelativePosition;
                 }
-                destination = note.BendValues.Last().Step;
-                destinationOffset = note.BendValues.Last().RelativePosition;
+
                 // add the properties
                 if (origin != 0 || middle != 0 || destination != 0)
                 {
                     // for some reason, some notes have nonsensical bend data attached, so ignore that
                     gpNote.Properties.Add(new Property() { Name = "Bended", Enable = new Property.EnableType() });
                     gpNote.Properties.Add(new Property() { Name = "BendOriginValue", Float = Math.Round(origin * 50) });
+                    // don't add the middle if it equals destination, GPX can't really handle that.
                     if (middle != destination)
                     {
                         gpNote.Properties.Add(new Property() { Name = "BendMiddleValue", Float = Math.Round(middle * 50) });

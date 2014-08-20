@@ -41,7 +41,7 @@ namespace RocksmithToTabLib
 
             // take care of some after-processing for certain techniques
             SplitImplicitSlides(track.Bars);
-            CalculateBendOffsets(track.Bars);
+            CalculateAndCleanBendOffsets(track.Bars);
             TransferHopo(track.Bars);
 
             return track;
@@ -646,12 +646,17 @@ namespace RocksmithToTabLib
             }
         }
 
-        static void CalculateBendOffsets(List<Bar> bars)
+        static void CalculateAndCleanBendOffsets(List<Bar> bars)
         {
-            // so far, we only have absolute time positions for bend steps.
-            // we'll convert them to a relative position referencing the
-            // current note's length. we can easily do this by just comparing
+            // So far, we only have absolute time positions for bend steps.
+            // We'll convert them to a relative position referencing the
+            // current note's length. We can easily do this by just comparing
             // the time offset with the note's sustain.
+            // Also, we will remove any pointless bend point that may have been
+            // inserted in the Rocksmith arrangement or during our conversion
+            // process, but serves no real purpose.
+            // Finally, where necessary we will insert bend points at the beginning
+            // and end of a note, because Guitar Pro 5 expects them to be there.
             foreach (var bar in bars)
             {
                 foreach (var chord in bar.Chords)
@@ -659,10 +664,71 @@ namespace RocksmithToTabLib
                     foreach (var kvp in chord.Notes)
                     {
                         var note = kvp.Value;
+                        bool activeBend = false;
                         foreach (var bend in note.BendValues)
                         {
                             float distance = bend.Start - chord.Start;
                             bend.RelativePosition = distance / note.Sustain;
+                            if (bend.Step > 0.05)
+                                activeBend = true;
+                        }
+                        if (activeBend)
+                        {
+                            // We need to ensure that there is a bend point at the beginning
+                            // and end of a note. If there isn't one, insert it with the right 
+                            // value.
+                            var firstBend = note.BendValues.First();
+                            if (firstBend.Start - chord.Start <= 0.01)
+                            {
+                                // close enough to the beginning of the note
+                                firstBend.RelativePosition = 0;
+                            }
+                            else
+                            {
+                                // insert a new bend point at the beginning with step 0.
+                                note.BendValues.Insert(0, new Note.BendValue()
+                                {
+                                    RelativePosition = 0,
+                                    Step = 0,
+                                    Start = chord.Start
+                                });
+                            }
+
+                            var lastBend = note.BendValues.Last();
+                            if (chord.Start + note.Sustain - lastBend.Start <= 0.01)
+                            {
+                                // close enough to the end of the note
+                                lastBend.RelativePosition = 1;
+                            }
+                            else
+                            {
+                                // insert a new bend point at the end, repeating the last step value.
+                                note.BendValues.Add(new Note.BendValue()
+                                {
+                                    RelativePosition = 1,
+                                    Step = lastBend.Step
+                                });
+                            }
+
+                            // find and clean up any unnecessary bend points
+                            for (int i = 1; i < note.BendValues.Count - 1; )
+                            {
+                                if (note.BendValues[i].Step == note.BendValues[i-1].Step &&
+                                    note.BendValues[i].Step == note.BendValues[i+1].Step)
+                                {
+                                    note.BendValues.RemoveAt(i);
+                                }
+                                else
+                                {
+                                    ++i;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // no bend step actually bends the note to any measurable amount,
+                            // so just delete all the points.
+                            note.BendValues.Clear();
                         }
                     }
                 }

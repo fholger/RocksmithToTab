@@ -160,6 +160,7 @@ namespace Gpif
                 && (Direction == other.Direction)
                 && (HType == other.HType)
                 && (HFret == other.HFret)
+                && (Float == other.Float)
                 && GpifCompare.ListEqual(Pitches, other.Pitches)
                 && GpifCompare.Equal(Enable, other.Enable);
         }
