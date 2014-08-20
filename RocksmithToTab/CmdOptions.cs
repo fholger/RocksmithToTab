@@ -26,7 +26,7 @@ namespace RocksmithToTab
         [Option('d', "diff", DefaultValue = 255, HelpText = "Difficulty level. (default: max)")]
         public int DifficultyLevel { get; set; }
 
-        [Option('o', "outdir", HelpText = "Path to the directory where tabs should be created. (default: name of the input file minus extension)")]
+        [Option('o', "outdir", DefaultValue = ".", HelpText = "Path to the directory where tabs should be created.")]
         public string OutputDirectory { get; set; }
 
         [Option('f', "format", DefaultValue = "gp5", HelpText = "File output format, currently either 'gp5', 'gpx' or 'gpif'.")]

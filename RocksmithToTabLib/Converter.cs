@@ -357,7 +357,6 @@ namespace RocksmithToTabLib
             int b = 0;
             foreach (var section in sections)
             {
-                Console.WriteLine("Section {0} at {1:F3}", section.Name, section.StartTime);
                 while (b < bars.Count && bars[b].Chords[c].Start < section.StartTime)
                 {
                     ++c;
@@ -370,7 +369,6 @@ namespace RocksmithToTabLib
 
                 if (b < bars.Count)
                 {
-                    Console.WriteLine("  Placing at chord {0} in bar {1}", c, b);
                     var chord = bars[b].Chords[c];
                     chord.Section = section.Name.ToUpper();
                 }

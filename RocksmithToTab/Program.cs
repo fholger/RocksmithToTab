@@ -23,12 +23,6 @@ namespace RocksmithToTab
                     return;
                 }
 
-                if (options.OutputDirectory == null)
-                {
-                    // default output directory is derived from the given archive filename
-                    options.OutputDirectory = Path.GetFileNameWithoutExtension(options.PsarcFile);
-                }
-
                 // create output dir, if necessary
                 Directory.CreateDirectory(options.OutputDirectory);
                     
@@ -94,19 +88,21 @@ namespace RocksmithToTab
                             score.Year = arrangement.AlbumYear;
                             if (options.SplitArrangements)
                             {
-                                string baseFileName = Path.Combine(options.OutputDirectory, song.Identifier + "_" + arr);
+                                string baseFileName = CleanFileName(
+                                    string.Format("{0} - {1} ({2})", score.Artist, score.Title, arr));
+                                string basePath = Path.Combine(options.OutputDirectory, baseFileName);
                                 // create a separate file for each arrangement
                                 if (options.OutputFormat == "gp5")
                                 {
-                                    gp5Exporter.ExportScore(score, baseFileName + ".gp5");
+                                    gp5Exporter.ExportScore(score, basePath + ".gp5");
                                 }
                                 else if (options.OutputFormat == "gpif")
                                 {
-                                    exporter.ExportGpif(score, baseFileName + ".gpif");
+                                    exporter.ExportGpif(score, basePath + ".gpif");
                                 }
                                 else
                                 {
-                                    exporter.ExportGPX(score, baseFileName + ".gpx");
+                                    exporter.ExportGPX(score, basePath + ".gpx");
                                 }
                                 // remember to remove the track from the score again
                                 score.Tracks.Clear();
@@ -115,18 +111,20 @@ namespace RocksmithToTab
 
                         if (!options.SplitArrangements)
                         {
-                            string baseFileName = Path.Combine(options.OutputDirectory, song.Identifier);
+                            string baseFileName = CleanFileName(
+                                string.Format("{0} - {1}", score.Artist, score.Title));
+                            string basePath = Path.Combine(options.OutputDirectory, baseFileName);
                             if (options.OutputFormat == "gp5")
                             {
-                                gp5Exporter.ExportScore(score, baseFileName + ".gp5");
+                                gp5Exporter.ExportScore(score, basePath + ".gp5");
                             }
                             else if (options.OutputFormat == "gpif")
                             {
-                                exporter.ExportGpif(score, baseFileName + ".gpif");
+                                exporter.ExportGpif(score, basePath + ".gpif");
                             }
                             else
                             {
-                                exporter.ExportGPX(score, baseFileName + ".gpx");
+                                exporter.ExportGPX(score, basePath + ".gpx");
                             }
                         }
                     }
@@ -149,6 +147,14 @@ namespace RocksmithToTab
                     song.Artist, song.Title, song.Album, song.Year,
                     string.Join(", ", song.Arrangements));
             }
+        }
+
+
+        static string CleanFileName(string fileName)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var cleaned = fileName.Where(x => !invalidChars.Contains(x)).ToArray();
+            return new string(cleaned);
         }
 
     }
