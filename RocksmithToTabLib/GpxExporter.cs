@@ -21,15 +21,13 @@ namespace RocksmithToTabLib
             gpif.Save(fileName);
         }
 
-        public void ExportGPX(Score score, string fileName, bool compress = true)
+        public void ExportGPX(Score score, string fileName)
         {
             Export(score);
             Stream stream = new MemoryStream();
             gpif.Save(stream);
             stream.Position = 0;
             stream = GpxContainer.CreateGPXContainer(stream);
-            if (compress)
-                stream = GpxContainer.CompressGPX(stream);
 
             using (var outFile = File.Open(fileName, FileMode.Create))
             {
