@@ -363,6 +363,7 @@ namespace RocksmithToTabLib
         {
             const Byte DOTTED_NOTE = 1;
             const Byte CHORD_DIAGRAM = (1 << 1);
+            const Byte TEXT = (1 << 2);
             const Byte BEAT_EFFECTS = (1 << 3);
             const Byte MIX_TABLE = (1 << 4);
             const Byte TUPLET = (1 << 5);
@@ -455,6 +456,8 @@ namespace RocksmithToTabLib
                 flags |= TUPLET;
             if (changeTempo)
                 flags |= MIX_TABLE;
+            if (chord.Section != null)
+                flags |= TEXT;
             bool tapped = false;
             foreach (var kvp in chord.Notes)
             {
@@ -486,6 +489,9 @@ namespace RocksmithToTabLib
                 var chordTemplate = chordTemplates[chord.ChordId];
                 WriteChordTemplate(chordTemplate);
             }
+            // section names
+            if ((flags & TEXT) != 0)
+                WriteDoublePrefixedString(chord.Section);
 
             // beat effects
             if ((flags & BEAT_EFFECTS) != 0)
