@@ -231,6 +231,7 @@ namespace Gpif
         public CData Name;
         public CData ShortName;
         public Instrument @Instrument;
+        public PartSounding @PartSounding = new PartSounding();
         public GeneralMidi @GeneralMidi = new GeneralMidi();
         public List<Property> Properties = new List<Property>();
     }
@@ -239,6 +240,12 @@ namespace Gpif
     {
         [XmlAttribute(AttributeName = "ref")]
         public string Ref;
+    }
+
+    public class PartSounding
+    {
+        public string NominalKey = "C";
+        public int TranspositionPitch = -12;
     }
 
     public class GeneralMidi

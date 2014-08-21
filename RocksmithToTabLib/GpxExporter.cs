@@ -68,6 +68,9 @@ namespace RocksmithToTabLib
             {
                 // remove last two entries, as they are not used in bass and confuse Guitar Pro
                 tuningProp.Pitches.RemoveRange(4, 2);
+                // also need to tune down one octave for some reason
+                for (int i = 0; i < tuningProp.Pitches.Count; ++i)
+                    tuningProp.Pitches[i] -= 12;
             }
             gpTrack.Properties.Add(tuningProp);
             // add capo?
