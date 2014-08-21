@@ -150,7 +150,7 @@ namespace RocksmithToTabLib
             // use some default values for guitar and bass
             for (int i = 0; i < 64; ++i)
             {
-                int channel = 0;
+                int channel = 0x19;
                 if (i / 2 < score.Tracks.Count)
                 {
                     var track = score.Tracks[i / 2];
@@ -313,15 +313,17 @@ namespace RocksmithToTabLib
             // tuning information
             int numStrings = (track.Instrument == Track.InstrumentType.Bass) ? 4 : 6;
             writer.Write(numStrings);
+            // apparently, we need to transpose bass tunings one octave down
+            int tuningOffset = (track.Instrument == Track.InstrumentType.Bass) ? 12 : 0;
             for (int i = numStrings - 1; i >= 0; --i)
-                writer.Write(track.Tuning[i]);
+                writer.Write(track.Tuning[i] - tuningOffset);
             for (int i = numStrings; i < 7; ++i)
                 writer.Write((UInt32)0xffffffff);  // padding to fill up to 7 strings
 
             // MIDI channel information
-            writer.Write((Int32)1);  // port
-            writer.Write((Int32)(trackNumber * 2 + 1));  // primary channel
-            writer.Write((Int32)(trackNumber * 2 + 2));  // secondary channel
+            writer.Write((Int32)(trackNumber / 8 + 1));  // port
+            writer.Write((Int32)((trackNumber % 8) * 2 + 1));  // primary channel
+            writer.Write((Int32)((trackNumber % 8) * 2 + 2));  // secondary channel
 
             // number of frets, just set to 24 to be safe
             writer.Write((Int32)24);
@@ -527,7 +529,7 @@ namespace RocksmithToTabLib
                 WriteNote(note, trackNumber);
             }
 
-            short noteTranspose = (short)(bass ? (1 << 4) : 0);  // for bass, we need 8va
+            short noteTranspose = 0; 
             writer.Write(noteTranspose);
         }
 
