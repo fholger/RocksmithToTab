@@ -17,7 +17,8 @@ namespace RocksmithToTabLib
     {
         public static List<RhythmValue> GetRhythm(List<float> noteDurations, int measureDuration, int beatDuration)
         {
-            float scaling = measureDuration / noteDurations.Sum();
+            float sum = noteDurations.Sum();
+            float scaling = measureDuration / sum;
             var noteEnds = new List<float>();
             float total = 0;
             for (int i = 0; i < noteDurations.Count; ++i)
@@ -57,7 +58,7 @@ namespace RocksmithToTabLib
             if (length <= 3)
             {
                 // we can't divide this part any further, so all notes here need to be merged
-                // j.e. all but the last note are set to a length of 0
+                // i.e. all but the last note are set to a length of 0
                 for (int i = start; i < end-1; ++i)
                 {
                     noteEnds[i] = offset;
@@ -114,6 +115,8 @@ namespace RocksmithToTabLib
                 float correctedRightLength = length - minMatchEnd + offset;
                 float leftScaling = correctedLeftLength / originalLeftLength;
                 float rightScaling = correctedRightLength / originalRightLength;
+                //if (originalLeftLength == 0 || originalRightLength == 0)
+                //    Console.WriteLine("  !!Warning: left or right length is 0.");
                 noteEnds[minMatchPos] = minMatchEnd;
                 //Console.WriteLine("Corrected note {0} to length {1}", minMatchPos, minMatchEnd);
                 for (int i = start; i < minMatchPos; ++i)
@@ -139,7 +142,7 @@ namespace RocksmithToTabLib
         }
 
 
-        static int[] PrintableDurations = new int[] {1, 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
+        static int[] PrintableDurations = new int[] {2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
 
 
         static void SplitDurations(List<RhythmValue> durations, int measureDuration, int beatLength)
@@ -159,6 +162,8 @@ namespace RocksmithToTabLib
                     curPos += durations[i].Duration;
                     continue;
                 }
+
+                //Console.WriteLine("  At pos {0}, trying to split duration {1}...", curPos, durations[i].Duration);
 
                 bool done = false;
 
@@ -208,18 +213,20 @@ namespace RocksmithToTabLib
 
                 if (!PrintableDurations.Contains(durations[i].Duration))
                 {
-                    Console.WriteLine("  Warning: Failed to split note duration {0} properly, cutting 1 off...");
+                    Console.WriteLine("  Warning: Failed to split note duration {0} properly, splitting in half...", durations[i].Duration);
                     var newNote = new RhythmValue()
                     {
-                        Duration = durations[i].Duration - 2,
+                        Duration = durations[i].Duration / 2,
                         NoteIndex = durations[i].NoteIndex
                     };
-                    durations[i].Duration = 1;
-                    if (newNote.Duration > 0)
-                        durations.Insert(i + 1, newNote);                    
+                    durations[i].Duration -= newNote.Duration;
+                    durations.Insert(i + 1, newNote);
+                    --i;
                 }
-
-                curPos += durations[i].Duration;
+                else
+                {
+                    curPos += durations[i].Duration;
+                }
             }
         }
 

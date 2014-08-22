@@ -126,6 +126,13 @@ namespace RocksmithToTabLib
                         currentMeasure.End = ebeat.Time;
                         currentMeasure.BeatTimes.Add(ebeat.Time);
                         // figure out time and tempo
+                        if (currentMeasure.End <= currentMeasure.Start)
+                        {
+                            // can happen in the last few silent bars that the bar is actually
+                            // empty or even of negative length. in that case, just give it
+                            // 2 seconds to ensure our note length calculations aren't thrown off.
+                            currentMeasure.End = currentMeasure.Start + 2;
+                        }
                         currentMeasure.GuessTimeAndBPM(arrangement.AverageTempo);
                     }
 
