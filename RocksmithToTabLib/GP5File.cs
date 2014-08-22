@@ -28,6 +28,10 @@ namespace RocksmithToTabLib
         private Score score = null;
         private List<bool[]> tieNotes = null;
         private List<int> prevChordId = null;
+        private List<int> ports = null;
+        private List<int> primaryChannels = null;
+        private List<int> secondaryChannels = null;
+        private Queue<int> channelTracks = null;
 
         
         public void ExportScore(Score score, string fileName)
@@ -148,17 +152,38 @@ namespace RocksmithToTabLib
         {
             // this sets used program and volume / effects on each channel, we just
             // use some default values for guitar and bass
+            int curChannel = 0;
+            int curPort = 0;
+            ports = new List<int>();
+            primaryChannels = new List<int>();
+            secondaryChannels = new List<int>();
+            channelTracks = new Queue<int>();
+            for (int i = 0; i < score.Tracks.Count; ++i)
+            {
+                ports.Add(curPort);
+                primaryChannels.Add(curChannel++);
+                if (curChannel == 9)  // reserved for drum tracks
+                    ++curChannel;
+                secondaryChannels.Add(curChannel++);
+                if (curChannel == 9)
+                    ++curChannel;
+
+                int program = (score.Tracks[i].Instrument == Track.InstrumentType.Bass) ? 0x21 : 0x1d;
+                channelTracks.Enqueue(program);
+                channelTracks.Enqueue(program);
+
+                if (curChannel >= 15)
+                {
+                    curChannel = 0;
+                    ++curPort;
+                }
+            }
+
             for (int i = 0; i < 64; ++i)
             {
                 int channel = 0x19;
-                if (i / 2 < score.Tracks.Count)
-                {
-                    var track = score.Tracks[i / 2];
-                    if (track.Instrument == Track.InstrumentType.Guitar)
-                        channel = 0x1d;
-                    else
-                        channel = 0x21;
-                }
+                if (i % 16 != 9 && channelTracks.Count != 0)
+                    channel = channelTracks.Dequeue();
                 WriteChannel(channel);
             }
         }
@@ -321,9 +346,9 @@ namespace RocksmithToTabLib
                 writer.Write((UInt32)0xffffffff);  // padding to fill up to 7 strings
 
             // MIDI channel information
-            writer.Write((Int32)(trackNumber / 8 + 1));  // port
-            writer.Write((Int32)((trackNumber % 8) * 2 + 1));  // primary channel
-            writer.Write((Int32)((trackNumber % 8) * 2 + 2));  // secondary channel
+            writer.Write((Int32)(ports[trackNumber] + 1));  // port
+            writer.Write((Int32)(primaryChannels[trackNumber] + 1));  // primary channel
+            writer.Write((Int32)(secondaryChannels[trackNumber] + 1));  // secondary channel
 
             // number of frets, just set to 24 to be safe
             writer.Write((Int32)24);
