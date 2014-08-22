@@ -260,6 +260,13 @@ namespace RocksmithToTabLib
                 int id = ExportOrFindNote(note.Value);
                 beat.Notes.Add(id);
             }
+            // there seem to be a few accidental ties set in the Rocksmith XMLs
+            // so unset the tie status on any strings that weren't in the current chord.
+            for (int i = 0; i < 6; ++i)
+            {
+                if (!chord.Notes.ContainsKey(i))
+                    link[i] = false;
+            }
 
             // should we display a strum hint?
             if (chord.BrushDirection != Chord.BrushType.None)

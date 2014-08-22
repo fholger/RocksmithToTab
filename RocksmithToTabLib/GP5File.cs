@@ -528,6 +528,13 @@ namespace RocksmithToTabLib
             {
                 WriteNote(note, trackNumber);
             }
+            // there seem to be a few accidental ties set in the Rocksmith XMLs
+            // so unset the tie status on any strings that weren't in the current chord.
+            for (int i = 0; i < 6; ++i)
+            {
+                if (!chord.Notes.ContainsKey(i))
+                    tieNotes[trackNumber][i] = false;
+            }
 
             short noteTranspose = 0; 
             writer.Write(noteTranspose);
