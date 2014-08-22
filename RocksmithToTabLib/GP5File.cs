@@ -703,9 +703,11 @@ namespace RocksmithToTabLib
             writer.Write((Int32)bendValues.Count);
             foreach (var bendValue in bendValues)
             {
-                writer.Write((Int32)(bendValue.RelativePosition * 60));
-                writer.Write((Int32)(bendValue.Step * 50));
-                writer.Write((Byte)(vibrato ? 2 : 0));
+                Int32 position = (Int32)(bendValue.RelativePosition * 60);
+                Int32 step = (Int32)(bendValue.Step * 50);
+                writer.Write(position);
+                writer.Write(step);
+                writer.Write((Byte)0); //(vibrato ? 2 : 0));
             }
         }
 

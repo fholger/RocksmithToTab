@@ -341,6 +341,7 @@ namespace RocksmithToTabLib
                         Step = val.Step
                     });
                 }
+                note.BendValues = note.BendValues.OrderBy(x => x.Start).ToList();
             }
             // adjust for capo
             if (note.Fret > 0)
@@ -475,13 +476,16 @@ namespace RocksmithToTabLib
                 float distance = after.Start - beforeStart;
                 float steps = after.Step - beforeStep;
                 float gradient = steps / distance;
-                var bend = new Note.BendValue()
+                newNote.BendValues.Insert(0, new Note.BendValue()
                 {
                     Start = startTime,
                     Step = beforeStep + gradient * (startTime - beforeStart)
-                };
-                newNote.BendValues.Insert(0, bend);
-                note.BendValues.Add(bend);
+                });
+                note.BendValues.Add(new Note.BendValue()
+                {
+                    Start = startTime,
+                    Step = beforeStep + gradient * (startTime - beforeStart)
+                });
             }
             else if (before != null && before.Step != 0)
             {
@@ -699,12 +703,26 @@ namespace RocksmithToTabLib
                     {
                         var note = kvp.Value;
                         bool activeBend = false;
-                        foreach (var bend in note.BendValues)
+                        for (int i = 0; i < note.BendValues.Count; )
                         {
+                            var bend = note.BendValues[i];
                             float distance = bend.Start - chord.Start;
                             bend.RelativePosition = distance / note.Sustain;
+                            // ensure that the position is between 0 and 1
+                            if (bend.RelativePosition < 0)
+                                bend.RelativePosition = 0;
+                            else if (bend.RelativePosition > 1 || note.Sustain == 0)
+                                bend.RelativePosition = 1;
+                            if (bend.Step < 0)
+                                bend.Step = 0;
                             if (bend.Step > 0.05)
                                 activeBend = true;
+
+                            // sort out duplicate time values
+                            if (i > 0 && Math.Abs(bend.RelativePosition - note.BendValues[i - 1].RelativePosition) < 0.005)
+                                note.BendValues.RemoveAt(i - 1);
+                            else
+                                ++i;
                         }
                         if (activeBend)
                         {
@@ -712,7 +730,7 @@ namespace RocksmithToTabLib
                             // and end of a note. If there isn't one, insert it with the right 
                             // value.
                             var firstBend = note.BendValues.First();
-                            if (firstBend.Start - chord.Start <= 0.01)
+                            if (firstBend.RelativePosition <= 0.005)
                             {
                                 // close enough to the beginning of the note
                                 firstBend.RelativePosition = 0;
@@ -724,12 +742,11 @@ namespace RocksmithToTabLib
                                 {
                                     RelativePosition = 0,
                                     Step = 0,
-                                    Start = chord.Start
                                 });
                             }
 
                             var lastBend = note.BendValues.Last();
-                            if (chord.Start + note.Sustain - lastBend.Start <= 0.01)
+                            if (lastBend.RelativePosition >= 0.995)
                             {
                                 // close enough to the end of the note
                                 lastBend.RelativePosition = 1;
@@ -757,6 +774,7 @@ namespace RocksmithToTabLib
                                     ++i;
                                 }
                             }
+
                         }
                         else
                         {
@@ -768,6 +786,7 @@ namespace RocksmithToTabLib
                 }
             }
         }
+
 
 
     }
