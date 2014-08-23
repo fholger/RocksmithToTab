@@ -51,6 +51,9 @@ namespace RocksmithToTabLib
         static void MatchRhythm(List<float> noteEnds, int start, int end, float offset, float length, int beatDuration)
         {
             //Console.WriteLine("MatchRhythm(start: {0}, end: {1}, offset: {2}, length: {3}, beatDuration: {4})", start, end, offset, length, beatDuration);
+            //foreach (var ends in noteEnds)
+            //    Console.Write("  {0:F2}", ends);
+            //Console.WriteLine();
             // recursion condition: end if only one note is left in the current interval
             if (end - start <= 1)
                 return;
@@ -96,7 +99,7 @@ namespace RocksmithToTabLib
                 // try the triplet variant
                 mult = (float)Math.Round(noteEnds[i] / tripletBeat);
                 diff = Math.Abs(mult * tripletBeat - noteEnds[i]);
-                if (diff < minMatchDiff && mult * beatDuration >= offset && mult * beatDuration <= offset + length)
+                if (diff < minMatchDiff && mult * tripletBeat >= offset && mult * tripletBeat <= offset + length)
                 {
                     minMatchPos = i;
                     minMatchEnd = mult * tripletBeat;
@@ -117,16 +120,16 @@ namespace RocksmithToTabLib
                 //if (originalLeftLength == 0 || originalRightLength == 0)
                 //    Console.WriteLine("  !!Warning: left or right length is 0.");
                 //Console.WriteLine("Corrected note {0} to length {1}", minMatchPos, minMatchEnd);
-                for (int i = start; i < minMatchPos; ++i)
-                {
-                    // rescale left side
-                    noteEnds[i] = offset + (noteEnds[i] - offset) * leftScaling;
-                }
-                for (int i = minMatchPos + 1; i < end-1; ++i)
-                {
-                    // rescale right side
-                    noteEnds[i] = minMatchEnd + (noteEnds[i] - noteEnds[minMatchPos]) * rightScaling;
-                }
+                //for (int i = start; i < minMatchPos; ++i)
+                //{
+                //    // rescale left side
+                //    noteEnds[i] = offset + (noteEnds[i] - offset) * leftScaling;
+                //}
+                //for (int i = minMatchPos + 1; i < end-1; ++i)
+                //{
+                //    // rescale right side
+                //    noteEnds[i] = minMatchEnd + (noteEnds[i] - noteEnds[minMatchPos]) * rightScaling;
+                //}
                 noteEnds[minMatchPos] = minMatchEnd;
                 // recurse left
                 MatchRhythm(noteEnds, start, minMatchPos + 1, offset, correctedLeftLength, beatDuration);
