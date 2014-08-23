@@ -142,7 +142,7 @@ namespace RocksmithToTabLib
         }
 
 
-        static int[] PrintableDurations = new int[] {2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
+        public static readonly int[] PrintableDurations = new int[] {2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72, 96, 144, 192 };
 
 
         static void SplitDurations(List<RhythmValue> durations, int measureDuration, int beatLength)

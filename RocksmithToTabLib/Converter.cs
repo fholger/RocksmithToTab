@@ -645,7 +645,7 @@ namespace RocksmithToTabLib
 
         static void SplitImplicitSlides(List<Bar> bars)
         {
-            // Unfortunately, for targeted slides, Rocksmith does not always follow the sliding note
+            // Unfortunately, for targeted slides, Rocksmith does not usually follow the sliding note
             // with a target note, so the target note may be implied only. Of course, this does not 
             // work for our export, so if we find such a case, we need to split the sliding note into
             // two and set the second one to the target.
@@ -653,6 +653,7 @@ namespace RocksmithToTabLib
             {
                 var bar = bars[b];
                 var nextBar = (b < bars.Count-1) ? bars[b+1] : null;
+                Chord lastChord = null;
                 for (int i = 0; i < bar.Chords.Count; ++i)
                 {
                     var chord = bar.Chords[i];
@@ -663,30 +664,63 @@ namespace RocksmithToTabLib
                         var note = kvp.Value;
                         if (note.Slide == Note.SlideType.ToNext)
                         {
-                            if (nextChord == null || !nextChord.Notes.ContainsKey(kvp.Key) ||
+                            if (!note.LinkNext || nextChord == null || !nextChord.Notes.ContainsKey(kvp.Key) ||
                                 nextChord.Notes[kvp.Key].Fret != note.SlideTarget)
                             {
-                                // split the chord in half
-                                int duration = chord.Duration / 2;
-                                var newChord = SplitChord(chord, bar.GetDurationLength(chord.Start, duration));
-                                foreach (var kvp2 in newChord.Notes)
+                                // found an instance where we need to set the slide up manually
+                                if (note._Extended && lastChord != null && lastChord.Notes.ContainsKey(kvp.Key))
                                 {
-                                    if (kvp2.Value.Slide == Note.SlideType.ToNext)
-                                    {
-                                        kvp2.Value.Fret = kvp2.Value.SlideTarget;
-                                        var prevNote = chord.Notes[kvp2.Key];
-                                        prevNote.Slide = Note.SlideType.ToNext;
-                                        prevNote.SlideTarget = kvp2.Value.Fret;
-                                        kvp2.Value.Slide = Note.SlideType.None;
-                                        kvp2.Value.SlideTarget = -1;
-                                    }
+                                    // this note was already split previously, so move the
+                                    // slide one step back and change this to the target
+                                    var prevNote = lastChord.Notes[kvp.Key];
+                                    prevNote.Slide = note.Slide;
+                                    prevNote.SlideTarget = note.SlideTarget;
+                                    note.Fret = note.SlideTarget;
+                                    note.Slide = Note.SlideType.None;
+                                    note.SlideTarget = -1;
                                 }
-                                newChord.Duration = chord.Duration - duration;
-                                chord.Duration = duration;
-                                bar.Chords.Insert(i + 1, newChord);
+                                else
+                                {
+                                    // split the chord, ideally in half, but take care to use durations
+                                    // that are valid
+                                    int duration = chord.Duration / 2 + 1;
+                                    int remaining = chord.Duration - duration;
+                                    while (duration >= 2)
+                                    {
+                                        if (RhythmDetector.PrintableDurations.Contains(duration) &&
+                                            RhythmDetector.PrintableDurations.Contains(remaining))
+                                            break;
+                                        --duration;
+                                        ++remaining;
+                                    }
+                                    if (!RhythmDetector.PrintableDurations.Contains(duration) ||
+                                        !RhythmDetector.PrintableDurations.Contains(remaining))
+                                    {
+                                        Console.WriteLine("  WARNING: Cannot split slide! Leaving incomplete as is...");
+                                        continue;
+                                    }
+                                    var newChord = SplitChord(chord, bar.GetDurationLength(chord.Start, duration));
+                                    foreach (var kvp2 in newChord.Notes)
+                                    {
+                                        if (kvp2.Value.Slide == Note.SlideType.ToNext)
+                                        {
+                                            kvp2.Value.Fret = kvp2.Value.SlideTarget;
+                                            var prevNote = chord.Notes[kvp2.Key];
+                                            prevNote.Slide = Note.SlideType.ToNext;
+                                            prevNote.SlideTarget = kvp2.Value.Fret;
+                                            kvp2.Value.Slide = Note.SlideType.None;
+                                            kvp2.Value.SlideTarget = -1;
+                                        }
+                                    }
+                                    newChord.Duration = remaining;
+                                    chord.Duration = duration;
+                                    bar.Chords.Insert(i + 1, newChord);
+                                    nextChord = newChord;
+                                }
                             }
                         }
                     }
+                    lastChord = chord;
                 }
             }
         }
