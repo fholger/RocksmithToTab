@@ -77,17 +77,16 @@ namespace RocksmithToTabLib
             // to recognize the passing of e.g. two beats. So once we find that, we can look
             // deeper to approximately construct a fitting rhythm to the given note durations.
             const float PRECISION = 1.0f;
-            int minMatchPos = 0;
-            float minMatchEnd = 0;
+            int minMatchPos = start;
+            float minMatchEnd = offset;
             float minMatchDiff = length+1;
 
             for (int i = start; i < end-1; ++i)
             {
-                var noteEnd = noteEnds[i] - offset;
                 // try even rhythm
                 float mult = (float)Math.Round(noteEnds[i] / beatDuration);
                 float diff = Math.Abs(mult * beatDuration - noteEnds[i]);
-                if (diff < minMatchDiff)
+                if (diff < minMatchDiff && mult * beatDuration >= offset && mult * beatDuration <= offset + length)
                 {
                     minMatchPos = i;
                     minMatchEnd = mult * beatDuration;
@@ -97,7 +96,7 @@ namespace RocksmithToTabLib
                 // try the triplet variant
                 mult = (float)Math.Round(noteEnds[i] / tripletBeat);
                 diff = Math.Abs(mult * tripletBeat - noteEnds[i]);
-                if (diff < minMatchDiff)
+                if (diff < minMatchDiff && mult * beatDuration >= offset && mult * beatDuration <= offset + length)
                 {
                     minMatchPos = i;
                     minMatchEnd = mult * tripletBeat;
@@ -117,7 +116,6 @@ namespace RocksmithToTabLib
                 float rightScaling = correctedRightLength / originalRightLength;
                 //if (originalLeftLength == 0 || originalRightLength == 0)
                 //    Console.WriteLine("  !!Warning: left or right length is 0.");
-                noteEnds[minMatchPos] = minMatchEnd;
                 //Console.WriteLine("Corrected note {0} to length {1}", minMatchPos, minMatchEnd);
                 for (int i = start; i < minMatchPos; ++i)
                 {
@@ -127,8 +125,9 @@ namespace RocksmithToTabLib
                 for (int i = minMatchPos + 1; i < end-1; ++i)
                 {
                     // rescale right side
-                    noteEnds[i] = offset + (noteEnds[i] - offset) * rightScaling;
+                    noteEnds[i] = minMatchEnd + (noteEnds[i] - noteEnds[minMatchPos]) * rightScaling;
                 }
+                noteEnds[minMatchPos] = minMatchEnd;
                 // recurse left
                 MatchRhythm(noteEnds, start, minMatchPos + 1, offset, correctedLeftLength, beatDuration);
                 // recurse right
