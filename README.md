@@ -13,6 +13,7 @@ RocksmithToTab is a command line program. Extract the zip file somewhere conveni
 which will convert all of Rocksmith 2014's on-disc songs. Alternatively, if you do not like to use the command line, just drag and drop any .psarc file onto the RocksmithToTab.exe in the Windows explorer.
 
 #### Command line options
+For details, refer to the [wiki][wiki].
 ```
 Usage: RocksmithToTab archive.psarc [-a bass,lead] [-s song1,song2]
 
@@ -55,3 +56,4 @@ Many thanks to the people at www.rscustom.net for creating the Rocksmith Custom 
 
 [tab1]: https://github.com/fholger/RocksmithToTab/blob/master/pics/sample1.jpg
 [tab2]: https://github.com/fholger/RocksmithToTab/blob/master/pics/sample2.jpg
+[wiki]: https://github.com/fholger/RocksmithToTab/wiki/Options
