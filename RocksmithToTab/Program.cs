@@ -24,20 +24,52 @@ namespace RocksmithToTab
                     return;
                 }
 
+                // collect a full file list from the inputs by doing a simple glob style
+                // file search.
+                List<string> inputFiles = new List<string>();
+                foreach (var input in options.InputFiles)
+                {
+                    inputFiles.AddRange(SimpleGlob(input));
+                }
+
                 // create output dir, if necessary
                 Directory.CreateDirectory(options.OutputDirectory);
 
                 if (!options.XmlMode)
                 {
-                    foreach (var inputFile in options.InputFiles)
+                    foreach (var inputFile in inputFiles)
                         ExportPsarc(inputFile, options);
                 }
                 else
                 {
-                    ExportXml(options);
+                    ExportXml(inputFiles, options);
                 }
             }
         }
+
+
+
+        /// <summary>
+        /// Performs a simple glob search for files matching the pattern in path.
+        /// Note this only works at the file level, not at the directory level.
+        /// </summary>
+        static string[] SimpleGlob(string path)
+        {
+            string directory = Path.GetDirectoryName(path); 
+            string filePattern = Path.GetFileName(path); 
+
+            // if path only contains pattern then use current directory
+            if (String.IsNullOrEmpty(directory))
+                directory = Directory.GetCurrentDirectory();
+
+            if (!Directory.Exists(directory))
+                return new string[0];
+
+            var files = Directory.GetFiles(directory, filePattern);
+            return files;
+        }
+
+
 
 
         static void ExportPsarc(string psarcFile, CmdOptions options)
@@ -125,10 +157,10 @@ namespace RocksmithToTab
         }
 
 
-        static void ExportXml(CmdOptions options)
+        static void ExportXml(List<string> inputFiles, CmdOptions options)
         {
             Score score = new Score();
-            foreach (var xmlFile in options.InputFiles)
+            foreach (var xmlFile in inputFiles)
             {
                 Console.WriteLine("Processing {0} ...", xmlFile);
                 Song2014 arrangement = null;
