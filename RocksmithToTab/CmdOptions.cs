@@ -32,6 +32,9 @@ namespace RocksmithToTab
         [Option('f', "format", DefaultValue = "gp5", HelpText = "File output format, currently either 'gp5', 'gpx' or 'gpif'.")]
         public string OutputFormat { get; set; }
 
+        [Option('x', "xml", HelpText = "Instead of a psarc archive, supply a number of XML files describing the arrangements.")]
+        public bool XmlMode { get; set; }
+
         [HelpOption(HelpText = "Display this help screen.")]
         public string GetUsage()
         {
