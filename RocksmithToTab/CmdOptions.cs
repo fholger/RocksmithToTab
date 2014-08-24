@@ -8,8 +8,8 @@ namespace RocksmithToTab
 {
     class CmdOptions
     {
-        [ValueOption(0)]
-        public string PsarcFile { get; set; }
+        [ValueList(typeof(List<string>))]
+        public IList<string> InputFiles { get; set; }
 
         [Option('l', "list", HelpText = "List songs contained in the archive. No conversions are performed.")]
         public bool ListSongs { get; set; }

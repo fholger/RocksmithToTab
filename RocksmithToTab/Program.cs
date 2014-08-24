@@ -17,7 +17,7 @@ namespace RocksmithToTab
             var options = new CmdOptions();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
-                if (options.PsarcFile == null)
+                if (options.InputFiles == null || options.InputFiles.Count == 0)
                 {
                     Console.Write(options.GetUsage());
                     return;
@@ -25,108 +25,94 @@ namespace RocksmithToTab
 
                 // create output dir, if necessary
                 Directory.CreateDirectory(options.OutputDirectory);
-                    
-                Console.WriteLine("Opening archive {0} ...", options.PsarcFile);
-                try
+
+                foreach (var inputFile in options.InputFiles)
+                    ExportPsarc(inputFile, options);                    
+            }
+        }
+
+
+        static void ExportPsarc(string psarcFile, CmdOptions options)
+        {
+            Console.WriteLine("Opening archive {0} ...", psarcFile);
+            try
+            {
+                var browser = new PsarcBrowser(psarcFile);
+
+                var songList = browser.GetSongList();
+                var toolkitInfo = browser.GetToolkitInfo();
+
+                if (options.ListSongs)
                 {
-                    var browser = new PsarcBrowser(options.PsarcFile);
-
-                    var songList = browser.GetSongList();
-                    var toolkitInfo = browser.GetToolkitInfo();
-            
-                    if (options.ListSongs)
+                    foreach (var song in songList)
                     {
-                        foreach (var song in songList)
-                        {
-                            Console.WriteLine("[{0}] {1} - {2}  ({3}, {4})   {{{5}}}", song.Identifier,
-                                song.Artist, song.Title, song.Album, song.Year,
-                                string.Join(", ", song.Arrangements));
-                        }
-                        return;
+                        Console.WriteLine("[{0}] {1} - {2}  ({3}, {4})   {{{5}}}", song.Identifier,
+                            song.Artist, song.Title, song.Album, song.Year,
+                            string.Join(", ", song.Arrangements));
                     }
+                    return;
+                }
 
-                    // collect all songs to convert
-                    var toConvert = new List<SongInfo>();
-                    if (options.Tracks == null || options.Tracks.Count == 0)
+                // collect all songs to convert
+                var toConvert = new List<SongInfo>();
+                if (options.Tracks == null || options.Tracks.Count == 0)
+                {
+                    // if nothing was specified, convert all songs
+                    toConvert = toConvert.Concat(songList).ToList();
+                }
+                else
+                {
+                    foreach (var songId in options.Tracks)
                     {
-                        // if nothing was specified, convert all songs
-                        toConvert = toConvert.Concat(songList).ToList();
+                        var songInfo = songList.FirstOrDefault(x => x.Identifier == songId);
+                        if (songInfo != null)
+                            toConvert.Add(songInfo);
                     }
-                    else
+                }
+
+                foreach (var song in toConvert)
+                {
+                    var score = new Score();
+                    var exporter = new GpxExporter();
+                    var gp5Exporter = new GP5File();
+                    // figure out which arrangements to convert
+                    var arrangements = song.Arrangements;
+                    if (options.Arrangements != null && options.Arrangements.Count > 0)
+                        arrangements = arrangements.Intersect(options.Arrangements).ToList();
+
+                    Console.WriteLine("Converting song " + song.Identifier + "...");
+                    foreach (var arr in arrangements)
                     {
-                        foreach (var songId in options.Tracks)
+                        var arrangement = browser.GetArrangement(song.Identifier, arr);
+                        if (arrangement == null)
                         {
-                            var songInfo = songList.FirstOrDefault(x => x.Identifier == songId);
-                            if (songInfo != null)
-                                toConvert.Add(songInfo);
+                            Console.WriteLine("  Failed to get arrangement {0}", arr);
+                            continue;
                         }
-                    }
-
-                    foreach(var song in toConvert)
-                    {
-                        var score = new Score();
-                        var exporter = new GpxExporter();
-                        var gp5Exporter = new GP5File();
-                        // figure out which arrangements to convert
-                        var arrangements = song.Arrangements;
-                        if (options.Arrangements != null && options.Arrangements.Count > 0)
-                            arrangements = arrangements.Intersect(options.Arrangements).ToList();
-
-                        Console.WriteLine("Converting song " + song.Identifier + "...");
-                        foreach (var arr in arrangements)
+                        var track = Converter.ConvertArrangement(arrangement, options.DifficultyLevel);
+                        score.Tracks.Add(track);
+                        score.Title = arrangement.Title;
+                        score.Artist = arrangement.ArtistName;
+                        score.Album = arrangement.AlbumName;
+                        score.Year = arrangement.AlbumYear;
+                        score.Comments = new List<string>();
+                        score.Comments.Add("Generated by RocksmithToTab v" + VersionInfo.VERSION);
+                        score.Comments.Add("=> https://github.com/fholger/RocksmithToTab");
+                        score.Comments.Add("Created from archive: " + Path.GetFileName(psarcFile));
+                        if (toolkitInfo != null && toolkitInfo.PackageAuthor != string.Empty)
                         {
-                            var arrangement = browser.GetArrangement(song.Identifier, arr);
-                            if (arrangement == null)
-                            {
-                                Console.WriteLine("  Failed to get arrangement {0}", arr);
-                                continue;
-                            }
-                            var track = Converter.ConvertArrangement(arrangement, options.DifficultyLevel);
-                            score.Tracks.Add(track);
-                            score.Title = arrangement.Title;
-                            score.Artist = arrangement.ArtistName;
-                            score.Album = arrangement.AlbumName;
-                            score.Year = arrangement.AlbumYear;
-                            score.Comments = new List<string>();
-                            score.Comments.Add("Generated by RocksmithToTab v" + VersionInfo.VERSION);
-                            score.Comments.Add("=> https://github.com/fholger/RocksmithToTab");
-                            score.Comments.Add("Created from archive: " + Path.GetFileName(options.PsarcFile));
-                            if (toolkitInfo != null && toolkitInfo.PackageAuthor != string.Empty)
-                            {
-                                score.Comments.Add("CDLC author:  " + toolkitInfo.PackageAuthor);
-                                score.Tabber = toolkitInfo.PackageAuthor;
-                            }
-                            if (toolkitInfo != null && toolkitInfo.PackageVersion != string.Empty)
-                                score.Comments.Add("CDLC version: " + toolkitInfo.PackageVersion);
-
-                            if (options.SplitArrangements)
-                            {
-                                string baseFileName = CleanFileName(
-                                    string.Format("{0} - {1} ({2})", score.Artist, score.Title, arr));
-                                string basePath = Path.Combine(options.OutputDirectory, baseFileName);
-                                // create a separate file for each arrangement
-                                if (options.OutputFormat == "gp5")
-                                {
-                                    gp5Exporter.ExportScore(score, basePath + ".gp5");
-                                }
-                                else if (options.OutputFormat == "gpif")
-                                {
-                                    exporter.ExportGpif(score, basePath + ".gpif");
-                                }
-                                else
-                                {
-                                    exporter.ExportGPX(score, basePath + ".gpx");
-                                }
-                                // remember to remove the track from the score again
-                                score.Tracks.Clear();
-                            }
+                            score.Comments.Add("CDLC author:  " + toolkitInfo.PackageAuthor);
+                            score.Tabber = toolkitInfo.PackageAuthor;
                         }
+                        if (toolkitInfo != null && toolkitInfo.PackageVersion != string.Empty)
+                            score.Comments.Add("CDLC version: " + toolkitInfo.PackageVersion);
 
-                        if (!options.SplitArrangements)
+                        if (options.SplitArrangements)
                         {
                             string baseFileName = CleanFileName(
-                                string.Format("{0} - {1}", score.Artist, score.Title));
+                                string.Format("{0} - {1} ({2})", score.Artist, score.Title, arr));
                             string basePath = Path.Combine(options.OutputDirectory, baseFileName);
+                            // create a separate file for each arrangement
                             if (options.OutputFormat == "gp5")
                             {
                                 gp5Exporter.ExportScore(score, basePath + ".gp5");
@@ -139,27 +125,38 @@ namespace RocksmithToTab
                             {
                                 exporter.ExportGPX(score, basePath + ".gpx");
                             }
+                            // remember to remove the track from the score again
+                            score.Tracks.Clear();
+                        }
+                    }
+
+                    if (!options.SplitArrangements)
+                    {
+                        string baseFileName = CleanFileName(
+                            string.Format("{0} - {1}", score.Artist, score.Title));
+                        string basePath = Path.Combine(options.OutputDirectory, baseFileName);
+                        if (options.OutputFormat == "gp5")
+                        {
+                            gp5Exporter.ExportScore(score, basePath + ".gp5");
+                        }
+                        else if (options.OutputFormat == "gpif")
+                        {
+                            exporter.ExportGpif(score, basePath + ".gpif");
+                        }
+                        else
+                        {
+                            exporter.ExportGPX(score, basePath + ".gpx");
                         }
                     }
                 }
-                catch (IOException e)
-                {
-                    Console.WriteLine("Error encountered:");
-                    Console.WriteLine(e.Message);
-                }
+                Console.WriteLine();
             }
-        }
-
-
-        static void ListSongs(PsarcBrowser browser)
-        {
-            var songList = browser.GetSongList();
-            foreach (var song in songList)
+            catch (IOException e)
             {
-                Console.WriteLine("[{0}] {1} - {2}  ({3}, {4})   {{{5}}}", song.Identifier,
-                    song.Artist, song.Title, song.Album, song.Year,
-                    string.Join(", ", song.Arrangements));
+                Console.WriteLine("Error encountered:");
+                Console.WriteLine(e.Message);
             }
+
         }
 
 
