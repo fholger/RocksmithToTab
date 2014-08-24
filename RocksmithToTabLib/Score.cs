@@ -26,6 +26,8 @@ namespace RocksmithToTabLib
         public string Artist { get; set; }
         public string Album { get; set; }
         public string Year { get; set; }
+        public string Tabber { get; set; }
+        public List<string> Comments { get; set; }
 
         public List<Track> Tracks { get; set; }
     }

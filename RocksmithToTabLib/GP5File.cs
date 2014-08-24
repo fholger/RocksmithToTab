@@ -88,13 +88,22 @@ namespace RocksmithToTabLib
             WriteDoublePrefixedString("");  // subtitle
             WriteDoublePrefixedString(score.Artist);
             WriteDoublePrefixedString(score.Album);
-            WriteDoublePrefixedString("");  // words by
-            WriteDoublePrefixedString("");  // music by
+            WriteDoublePrefixedString(score.Artist);  // words by
+            WriteDoublePrefixedString(score.Artist);  // music by
             WriteDoublePrefixedString("");  // copyright
-            WriteDoublePrefixedString("");  // tabber
+            WriteDoublePrefixedString(score.Tabber);  // tabber
             WriteDoublePrefixedString("");  // instructions
-            writer.Write((Int32)1);  // number of comments, followed by comments as strings
-            WriteDoublePrefixedString("");
+            if (score.Comments == null)
+            {
+                writer.Write((Int32)1);  // number of comments, followed by comments as strings
+                WriteDoublePrefixedString("");
+            }
+            else
+            {
+                writer.Write((Int32)score.Comments.Count);
+                foreach (var line in score.Comments)
+                    WriteDoublePrefixedString(line + "\n");
+            }
         }
 
 

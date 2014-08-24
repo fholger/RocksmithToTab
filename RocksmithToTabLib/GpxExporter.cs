@@ -43,6 +43,8 @@ namespace RocksmithToTabLib
             gpif.Score.Title = score.Title;
             gpif.Score.Artist = score.Artist;
             gpif.Score.Album = score.Album;
+            gpif.Score.Tabber = score.Tabber;
+            gpif.Score.Notices = string.Join("\n", score.Comments);
 
             foreach (var track in score.Tracks)
             {

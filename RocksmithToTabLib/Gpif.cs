@@ -47,6 +47,8 @@ namespace Gpif
         public CData Title = new CData();
         public CData Artist = new CData();
         public CData Album = new CData();
+        public CData Tabber = new CData();
+        public CData Notices = new CData();
     }
 
     [XmlType]

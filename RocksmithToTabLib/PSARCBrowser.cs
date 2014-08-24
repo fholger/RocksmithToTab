@@ -151,6 +151,62 @@ namespace RocksmithToTabLib
 
             return new Song2014(sng, attr);
         }
+
+
+        public ToolkitInfo GetToolkitInfo()
+        {
+            // see if there's a toolkit.version file inside the archive.
+            // this will only be the case for CDLCs
+            var infoFile = archive.Entries.FirstOrDefault(x => x.Name == "toolkit.version");
+            if (infoFile == null)
+                return null;
+
+            var info = new ToolkitInfo();
+            using (var reader = new StreamReader(infoFile.Data, new UTF8Encoding(), false, 1024, true))
+            {
+                string line = null;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    // we need to decipher what this line contains;
+                    // older toolkit versions just put a single line with the version number
+                    // newer versions put several lines in the format "key : value"
+                    var tokens = line.Split(new char[] { ':' });
+                    // trim all tokens of surrounding whitespaces
+                    for (int i = 0; i < tokens.Length; ++i)
+                        tokens[i] = tokens[i].Trim();
+
+                    if (tokens.Length == 1)
+                    {
+                        // this is probably just the version number
+                        info.ToolkitVersion = tokens[0];
+                    }
+                    else if (tokens.Length == 2)
+                    {
+                        // key/value attribute
+                        var key = tokens[0].ToLower();
+                        switch (key)
+                        {
+                            case "toolkit version":
+                                info.ToolkitVersion = tokens[1]; break;
+                            case "package author":
+                                info.PackageAuthor = tokens[1]; break;
+                            case "package version":
+                                info.PackageVersion = tokens[1]; break;
+                            default:
+                                Console.WriteLine("  Notice: Unknown key in toolkit.version: {0}", key);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        // ???
+                        Console.WriteLine("  Notice: Unrecognized line in toolkit.version: {0}", line);
+                    }
+                }
+            }
+
+            return info;
+        }
     }
 
 
@@ -165,5 +221,16 @@ namespace RocksmithToTabLib
         public string Year { get; set; }
         public string Identifier { get; set; }
         public IList<string> Arrangements { get; set; }
+    }
+
+    /// <summary>
+    /// For custom DLCs, provides information about the used Toolkit version,
+    /// the CDLC's author and the package version.
+    /// </summary>
+    public class ToolkitInfo
+    {
+        public string ToolkitVersion { get; set; }
+        public string PackageAuthor { get; set; }
+        public string PackageVersion { get; set; }
     }
 }
