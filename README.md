@@ -4,7 +4,7 @@
 Exports Rocksmith 2014 arrangements to Guitar Pro tabs (.gp5, .gpx). It parses Rocksmith's .psarc archives and converts any songs found within. All the Rocksmith techniques are supported and translated, and you get all of the chord diagrams and fingering hints that Rocksmith shows you. It's a great way to figure out specific parts of a song, and Guitar Pro's speed trainer is a very good alternative to the riff repeater. All arrangement types (bass, lead, rhythm) can be exported, either together in a single file or into separate tabs.
 
 #### Current version
-The current version is v0.9.5.1. You can download it at https://github.com/fholger/RocksmithToTab/releases.
+The current version is v0.9.6. You can download it at https://github.com/fholger/RocksmithToTab/releases.
 
 #### Basic use
 
@@ -27,15 +27,18 @@ Usage: RocksmithToTab archive.psarc [-a bass,lead] [-s song1,song2]
 
   -t, --split     Create a separate file for each arrangement.
 
-  -d, --diff      (Default: 255) Difficulty level.
+  -d, --diff      (Default: 255) Difficulty level. (default: max)
 
-  -o, --outdir    (Default: .) Path to the directory where tabs should be created.
+  -o, --outdir    (Default: .) Path to the directory where tabs should be 
+                  created.
 
   -f, --format    (Default: gp5) File output format, currently either 'gp5', 
                   'gpx' or 'gpif'.
 
-  --help          Display this help screen.
+  -x, --xml       Instead of a psarc archive, supply a number of XML files 
+                  describing the arrangements.
 
+  --help          Display this help screen.
 ```
 
 #### Results
