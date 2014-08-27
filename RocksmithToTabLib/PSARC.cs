@@ -66,7 +66,6 @@ namespace RocksmithToTabLib
 			Stream data = this.Entries[0].Data.OpenStream();
 			BinaryReader binaryReader = new BinaryReader(data);
 			StringBuilder stringBuilder = new StringBuilder(100);
-			string empty = string.Empty;
 			int index = 1;
 			while (data.Position < data.Length)
 			{

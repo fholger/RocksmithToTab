@@ -111,12 +111,12 @@ namespace RocksmithToTabLib
             {
                 // take the closest match and correct it to the determined value,
                 // then rescale the other note ends accordingly and recurse
-                float originalLeftLength = noteEnds[minMatchPos] - offset;
+                //float originalLeftLength = noteEnds[minMatchPos] - offset;
                 float correctedLeftLength = minMatchEnd - offset;
-                float originalRightLength = length - noteEnds[minMatchPos] + offset;
+                //float originalRightLength = length - noteEnds[minMatchPos] + offset;
                 float correctedRightLength = length - minMatchEnd + offset;
-                float leftScaling = correctedLeftLength / originalLeftLength;
-                float rightScaling = correctedRightLength / originalRightLength;
+                //float leftScaling = correctedLeftLength / originalLeftLength;
+                //float rightScaling = correctedRightLength / originalRightLength;
                 //if (originalLeftLength == 0 || originalRightLength == 0)
                 //    Console.WriteLine("  !!Warning: left or right length is 0.");
                 //Console.WriteLine("Corrected note {0} to length {1}", minMatchPos, minMatchEnd);

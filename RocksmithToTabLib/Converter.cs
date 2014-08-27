@@ -78,7 +78,6 @@ namespace RocksmithToTabLib
         static Dictionary<int, ChordTemplate> GetChordTemplates(Song2014 arrangement)
         {
             var templates = new Dictionary<int, ChordTemplate>();
-            var missingChordIds = new List<ChordTemplate>();
 
             for (int i = 0; i < arrangement.ChordTemplates.Length; ++i)
             {

@@ -72,10 +72,6 @@ namespace RocksmithToTabLib
                         {
                             JObject o = JObject.Parse(reader.ReadToEnd());
                             var attributes = o["Entries"].First.Last["Attributes"];
-                            var title = attributes["SongName"].ToString();
-                            var artist = attributes["ArtistName"].ToString();
-                            var album = attributes["AlbumName"].ToString();
-                            var year = attributes["SongYear"].ToString();
 
                             currentSong = new SongInfo()
                             {
