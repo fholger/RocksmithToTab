@@ -23,7 +23,6 @@ namespace RocksmithToTabLib
     public class PsarcBrowser
     {
         private PSARC archive;
-        private Platform platform;
 
         /// <summary>
         /// Create a new PsarcBrowser from a specified archive file.
@@ -32,7 +31,6 @@ namespace RocksmithToTabLib
         public PsarcBrowser(string fileName)
         {
             archive = new PSARC();
-            platform = fileName.GetPlatform();
             using (var stream = File.OpenRead(fileName))
             {
                 archive.Read(stream);
@@ -122,10 +120,18 @@ namespace RocksmithToTabLib
             // the binary .sng file and the attributes contained in the corresponding
             // .json manifest.
             Console.WriteLine("Opening arrangement {1} for song id {0}...", identifier, arrangement);
-            var sngFile = archive.Entries.FirstOrDefault(x => x.Name == "songs/bin/generic/" +
-                identifier + "_" + arrangement + ".sng");
+            Platform platform = new Platform(GamePlatform.Pc, GameVersion.RS2014);
             var jsonFile = archive.Entries.FirstOrDefault(x => x.Name.StartsWith("manifests/songs") &&
                 x.Name.EndsWith("/" + identifier + "_" + arrangement + ".json"));
+            var sngFile = archive.Entries.FirstOrDefault(x => x.Name == "songs/bin/generic/" +
+                identifier + "_" + arrangement + ".sng");
+            if (sngFile == null)
+            {
+                // this might be a Mac archive, try with Mac path
+                sngFile = archive.Entries.FirstOrDefault(x => x.Name == "songs/bin/macos/" +
+                    identifier + "_" + arrangement + ".sng");
+                platform.platform = GamePlatform.Mac;
+            }
             if (sngFile == null || jsonFile == null)
             {
                 if (sngFile == null)
