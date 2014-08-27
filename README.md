@@ -1,16 +1,18 @@
 # Rocksmith 2014 Tab Converter
 
 #### Summary
-Exports Rocksmith 2014 arrangements to Guitar Pro tabs (.gp5, .gpx). It parses Rocksmith's .psarc archives and converts any songs found within. All the Rocksmith techniques are supported and translated, and you get all of the chord diagrams and fingering hints that Rocksmith shows you. It's a great way to figure out specific parts of a song, and Guitar Pro's speed trainer is a very good alternative to the riff repeater. All arrangement types (bass, lead, rhythm) can be exported, either together in a single file or into separate tabs.
+Exports Rocksmith 2014 arrangements to Guitar Pro tabs (.gp5, .gpx). It parses Rocksmith's .psarc archives and converts any songs found within to tablature. All the Rocksmith techniques are supported and translated, and you get all of the chord diagrams and fingering hints that Rocksmith shows you. It's a great way to figure out specific parts of a song, and Guitar Pro's speed trainer is a very good alternative to the riff repeater. All arrangement types (bass, lead, rhythm) can be exported, either together in a single tab or into separate tabs.
 
 #### Current version
-The current version is v0.9.6. You can download it at https://github.com/fholger/RocksmithToTab/releases.
+The current version is v0.9.6.5. You can download it at https://github.com/fholger/RocksmithToTab/releases.
 
 #### Basic use
 
 RocksmithToTab is a command line program. Extract the zip file somewhere convenient, then open a command line, go to where you extracted the program and run
 `RocksmithToTab.exe \Path\To\Rocksmith2014\songs.psarc`
 which will convert all of Rocksmith 2014's on-disc songs. Alternatively, if you do not like to use the command line, just drag and drop any .psarc file onto the RocksmithToTab.exe in the Windows explorer.
+
+For Mac users, please refer to the wiki for details on how to use the converter on OSX: [Mac User Guide][MacUserGuide]
 
 #### Command line options
 For details, refer to the [wiki][wiki].
@@ -60,3 +62,4 @@ Many thanks to the people at www.rscustom.net for creating the Rocksmith Custom 
 [tab1]: https://github.com/fholger/RocksmithToTab/blob/master/pics/sample1.jpg
 [tab2]: https://github.com/fholger/RocksmithToTab/blob/master/pics/sample2.jpg
 [wiki]: https://github.com/fholger/RocksmithToTab/wiki/Options
+[MacUserGuide]: https://github.com/fholger/RocksmithToTab/wiki/MacUserGuide
