@@ -7,7 +7,6 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RocksmithToolkitLib;
-using RocksmithToolkitLib.PSARC;
 using RocksmithToolkitLib.Xml;
 using RocksmithToolkitLib.DLCPackage.Manifest;
 using RocksmithToolkitLib.DLCPackage;
@@ -31,10 +30,8 @@ namespace RocksmithToTabLib
         public PsarcBrowser(string fileName)
         {
             archive = new PSARC();
-            using (var stream = File.OpenRead(fileName))
-            {
-                archive.Read(stream);
-            }
+            var stream = File.OpenRead(fileName);
+            archive.Read(stream);
         }
 
 
@@ -69,7 +66,7 @@ namespace RocksmithToTabLib
                 if (currentSong == null || currentSong.Identifier != identifier)
                 {
                     // extract song info from the .json file
-                    using (var reader = new StreamReader(entry.Data, new UTF8Encoding(), false, 1024, true))
+                    using (var reader = new StreamReader(entry.Data.OpenStream()))
                     {
                         try
                         {
@@ -97,7 +94,6 @@ namespace RocksmithToTabLib
                             // information. Just ignore this.
                         }
                     }
-                    entry.Data.Position = 0;
                 }
 
                 currentSong.Arrangements.Add(arrangement);
@@ -143,7 +139,7 @@ namespace RocksmithToTabLib
 
             // read out attributes from .json manifest
             Attributes2014 attr;
-            using (var reader = new StreamReader(jsonFile.Data, new UTF8Encoding(), false, 1024, true))
+            using (var reader = new StreamReader(jsonFile.Data.OpenStream()))
             {
                 var manifest = JsonConvert.DeserializeObject<Manifest2014<Attributes2014>>(
                     reader.ReadToEnd());
@@ -153,7 +149,7 @@ namespace RocksmithToTabLib
             }
 
             // get contents of .sng file
-            Sng2014File sng = Sng2014File.ReadSng(sngFile.Data, platform);
+            Sng2014File sng = Sng2014File.ReadSng(sngFile.Data.OpenStream(), platform);
 
             return new Song2014(sng, attr);
         }
@@ -168,7 +164,7 @@ namespace RocksmithToTabLib
                 return null;
 
             var info = new ToolkitInfo();
-            using (var reader = new StreamReader(infoFile.Data, new UTF8Encoding(), false, 1024, true))
+            using (var reader = new StreamReader(infoFile.Data.OpenStream()))
             {
                 string line = null;
                 while ((line = reader.ReadLine()) != null)

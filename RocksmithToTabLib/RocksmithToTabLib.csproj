@@ -59,6 +59,7 @@
     <Compile Include="Gpif.cs" />
     <Compile Include="GpxContainer.cs" />
     <Compile Include="GpxExporter.cs" />
+    <Compile Include="PSARC.cs" />
     <Compile Include="PsarcBrowser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RhythmDetector.cs" />
