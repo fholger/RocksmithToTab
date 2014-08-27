@@ -34,10 +34,7 @@ namespace Gpif
         public void Save(Stream stream)
         {
             var serializer = new XmlSerializer(typeof(GPIF));
-            using (TextWriter writer = new StreamWriter(stream, new UTF8Encoding(), 1024, true))
-            {
-                serializer.Serialize(writer, this);
-            }
+            serializer.Serialize(stream, this);
         }
     }
 
