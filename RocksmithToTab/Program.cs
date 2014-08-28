@@ -141,6 +141,7 @@ namespace RocksmithToTab
 
                     if (!options.SplitArrangements)
                     {
+                        score.SortTracks();
                         string baseFileName = CleanFileName(
                             string.Format("{0} - {1}", score.Artist, score.Title));
                         SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);
@@ -188,6 +189,7 @@ namespace RocksmithToTab
 
             if (!options.SplitArrangements)
             {
+                score.SortTracks();
                 string baseFileName = CleanFileName(
                     string.Format("{0} - {1}", score.Artist, score.Title));
                 SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);

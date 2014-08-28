@@ -30,6 +30,12 @@ namespace RocksmithToTabLib
         public List<string> Comments { get; set; }
 
         public List<Track> Tracks { get; set; }
+
+
+        public void SortTracks()
+        {
+            Tracks.Sort();
+        }
     }
 
 
@@ -37,12 +43,20 @@ namespace RocksmithToTabLib
     /// A single track in the score. Represents a single arrangement at a particular
     /// difficulty level. It identifies the instrument and keeps a list of bars.
     /// </summary>
-    public class Track
+    public class Track : IComparable<Track>
     {
         public Track()
         {
             Bars = new List<Bar>();
             ChordTemplates = new Dictionary<int, ChordTemplate>();
+        }
+
+        public int CompareTo(Track other)
+        {
+            if (Path == other.Path)
+                return Bonus.CompareTo(other.Bonus);
+            else
+                return Path.CompareTo(other.Path);
         }
 
         public enum InstrumentType
@@ -52,9 +66,18 @@ namespace RocksmithToTabLib
             Vocals
         }
 
+        public enum PathType
+        {
+            Lead,
+            Rhythm,
+            Bass,
+        }
+
         public string Name { get; set; }
         public int DifficultyLevel { get; set; }
         public InstrumentType Instrument { get; set; }
+        public PathType Path { get; set; }
+        public bool Bonus { get; set; }
         // Tuning stored as midi notes for each open string
         public int[] Tuning { get; set; }
         public int Capo { get; set; }

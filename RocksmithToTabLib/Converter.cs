@@ -22,6 +22,14 @@ namespace RocksmithToTabLib
                 track.Instrument = Track.InstrumentType.Guitar;
             // todo: vocals
 
+            if (arrangement.ArrangementProperties.PathBass != 0)
+                track.Path = Track.PathType.Bass;
+            else if (arrangement.ArrangementProperties.PathLead != 0)
+                track.Path = Track.PathType.Lead;
+            else
+                track.Path = Track.PathType.Rhythm;
+            track.Bonus = arrangement.ArrangementProperties.BonusArr != 0;
+
             // get tuning
             track.Tuning = GetTuning(arrangement);
             track.Capo = arrangement.Capo;
