@@ -338,7 +338,7 @@ namespace RocksmithToTabLib
             writer.Write(flags);
             writer.Write((Byte)(8 | flags));
             // track name padded to 40 bytes
-            var trackName = track.Name + " Level " + track.DifficultyLevel;
+            var trackName = track.Name; // +" Level " + track.DifficultyLevel;
             trackName = trackName.Substring(0, Math.Min(40, trackName.Length));
             writer.Write(trackName);
             for (int i = trackName.Length; i < 40; ++i)

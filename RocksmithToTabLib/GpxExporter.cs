@@ -59,7 +59,7 @@ namespace RocksmithToTabLib
 
             var gpTrack = new Gpif.Track();
             gpTrack.Id = gpif.Tracks.Count;
-            gpTrack.Name = track.Name + " Level " + track.DifficultyLevel.ToString();
+            gpTrack.Name = track.Name;
             gpTrack.ShortName = track.Name;
 
             // export tuning

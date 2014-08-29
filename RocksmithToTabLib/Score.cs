@@ -32,9 +32,33 @@ namespace RocksmithToTabLib
         public List<Track> Tracks { get; set; }
 
 
-        public void SortTracks()
+        /// <summary>
+        /// Sorts the tracks in order lead, rhythm, bass. Also makes the track names
+        /// unique by appending numbers if necessary. E.g. if two tracks are named 
+        /// "Lead", they will become "Lead 1" and "Lead 2", respectively.
+        /// </summary>
+        public void SortTracksAndDistinguishNames()
         {
             Tracks.Sort();
+            for (int i = 1; i < Tracks.Count; ++i)
+            {
+                var track = Tracks[i];
+                string nameWithOne = track.Name + " 1";
+                var prevTrack = Tracks.FirstOrDefault(x => x.Name == track.Name || x.Name == nameWithOne);
+                if (prevTrack != null && prevTrack != track)
+                {
+                    // found a previous track with the same base name, so need to adopt them.
+                    prevTrack.Name = nameWithOne;
+                    int num = 2;
+                    string newName;
+                    do
+                    {
+                        newName = track.Name + " " + num;
+                        ++num;
+                    } while (Tracks.FirstOrDefault(x => x.Name == newName) != null);
+                    track.Name = newName;
+                }
+            }
         }
     }
 
