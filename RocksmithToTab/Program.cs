@@ -127,7 +127,7 @@ namespace RocksmithToTab
                             Console.WriteLine("  Failed to get arrangement {0}", arr);
                             continue;
                         }
-                        ExportArrangement(score, arrangement, options.DifficultyLevel, psarcFile, toolkitInfo);
+                        ExportArrangement(score, arrangement, arr, options.DifficultyLevel, psarcFile, toolkitInfo);
 
                         if (options.SplitArrangements)
                         {
@@ -141,7 +141,7 @@ namespace RocksmithToTab
 
                     if (!options.SplitArrangements)
                     {
-                        score.SortTracksAndDistinguishNames();
+                        score.SortTracks();
                         string baseFileName = CleanFileName(
                             string.Format("{0} - {1}", score.Artist, score.Title));
                         SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);
@@ -176,10 +176,18 @@ namespace RocksmithToTab
 
                 if (arrangement != null)
                 {
-                    ExportArrangement(score, arrangement, options.DifficultyLevel, xmlFile, null);
+                    // xml files should be named "songidentifier_arrangement.xml", 
+                    // extract the arrangement identifier, which we use to set
+                    // the track name and track color as well as output file name
+                    string baseFileName = Path.GetFileNameWithoutExtension(xmlFile);
+                    var identifiers = baseFileName.Split(new char[] { '_' });
+                    string arr = "";
+                    if (identifiers.Length >= 2)
+                        arr = identifiers.Last();
+
+                    ExportArrangement(score, arrangement, arr, options.DifficultyLevel, xmlFile, null);
                     if (options.SplitArrangements)
                     {
-                        string baseFileName = Path.GetFileNameWithoutExtension(xmlFile);
                         SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);
                         // remember to remove the track from the score again
                         score.Tracks.Clear();
@@ -189,7 +197,7 @@ namespace RocksmithToTab
 
             if (!options.SplitArrangements)
             {
-                score.SortTracksAndDistinguishNames();
+                score.SortTracks();
                 string baseFileName = CleanFileName(
                     string.Format("{0} - {1}", score.Artist, score.Title));
                 SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);
@@ -197,10 +205,10 @@ namespace RocksmithToTab
         }
 
 
-        static void ExportArrangement(Score score, Song2014 arrangement, int difficulty, 
+        static void ExportArrangement(Score score, Song2014 arrangement, string identifier, int difficulty, 
             string originalFile, ToolkitInfo toolkitInfo)
         {
-            var track = Converter.ConvertArrangement(arrangement, difficulty);
+            var track = Converter.ConvertArrangement(arrangement, identifier, difficulty);
             score.Tracks.Add(track);
             score.Title = arrangement.Title;
             score.Artist = arrangement.ArtistName;

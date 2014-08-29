@@ -33,32 +33,12 @@ namespace RocksmithToTabLib
 
 
         /// <summary>
-        /// Sorts the tracks in order lead, rhythm, bass. Also makes the track names
-        /// unique by appending numbers if necessary. E.g. if two tracks are named 
-        /// "Lead", they will become "Lead 1" and "Lead 2", respectively.
+        /// Sorts the tracks in order lead, rhythm, bass. If there is a tie,
+        /// we sort with the bonus arrangement property, then the track name.
         /// </summary>
-        public void SortTracksAndDistinguishNames()
+        public void SortTracks()
         {
             Tracks.Sort();
-            for (int i = 1; i < Tracks.Count; ++i)
-            {
-                var track = Tracks[i];
-                string nameWithOne = track.Name + " 1";
-                var prevTrack = Tracks.FirstOrDefault(x => x.Name == track.Name || x.Name == nameWithOne);
-                if (prevTrack != null && prevTrack != track)
-                {
-                    // found a previous track with the same base name, so need to adopt them.
-                    prevTrack.Name = nameWithOne;
-                    int num = 2;
-                    string newName;
-                    do
-                    {
-                        newName = track.Name + " " + num;
-                        ++num;
-                    } while (Tracks.FirstOrDefault(x => x.Name == newName) != null);
-                    track.Name = newName;
-                }
-            }
         }
     }
 
@@ -78,7 +58,12 @@ namespace RocksmithToTabLib
         public int CompareTo(Track other)
         {
             if (Path == other.Path)
-                return Bonus.CompareTo(other.Bonus);
+            {
+                if (Bonus == other.Bonus)
+                    return Name.CompareTo(other.Name);
+                else
+                    return Bonus.CompareTo(other.Bonus);
+            }
             else
                 return Path.CompareTo(other.Path);
         }
@@ -97,7 +82,9 @@ namespace RocksmithToTabLib
             Bass,
         }
 
+        public string Identifier { get; set; }
         public string Name { get; set; }
+        public int[] Color { get; set; }  // used in Guitar Pro to distinguish the tracks by color
         public int DifficultyLevel { get; set; }
         public InstrumentType Instrument { get; set; }
         public PathType Path { get; set; }

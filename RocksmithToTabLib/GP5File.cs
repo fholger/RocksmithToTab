@@ -364,9 +364,9 @@ namespace RocksmithToTabLib
             // capo position
             writer.Write((Int32)track.Capo);
             // track color in RGB0
-            writer.Write((Byte)255);
-            writer.Write((Byte)0);
-            writer.Write((Byte)0);
+            writer.Write((Byte)track.Color[0]);
+            writer.Write((Byte)track.Color[1]);
+            writer.Write((Byte)track.Color[2]);
             writer.Write((Byte)0);
 
             // unknown byte sequence, taken from TuxGuitar

@@ -233,6 +233,22 @@ namespace Gpif
         public PartSounding @PartSounding = new PartSounding();
         public GeneralMidi @GeneralMidi = new GeneralMidi();
         public List<Property> Properties = new List<Property>();
+        
+        [XmlIgnore]
+        public int[] Color = new int[] { 255, 0, 0 };
+
+        [XmlElement("Color")]
+        public string ColorString
+        {
+            get
+            {
+                return string.Join(" ", Color);
+            }
+            set
+            {
+                Color = value.Split(new Char[] { ' ' }).Select(n => int.Parse(n)).ToArray();
+            }
+        }
     }
 
     public class Instrument

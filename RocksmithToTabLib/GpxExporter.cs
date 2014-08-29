@@ -61,6 +61,7 @@ namespace RocksmithToTabLib
             gpTrack.Id = gpif.Tracks.Count;
             gpTrack.Name = track.Name;
             gpTrack.ShortName = track.Name;
+            gpTrack.Color = track.Color;
 
             // export tuning
             var tuningProp = new Gpif.Property();

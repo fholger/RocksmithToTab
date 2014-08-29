@@ -10,11 +10,67 @@ namespace RocksmithToTabLib
 {
     public class Converter
     {
-        public static Track ConvertArrangement(Song2014 arrangement, int difficultyLevel = int.MaxValue)
+        /// <summary>
+        /// Contains basic settings for tracks, namely the display name and
+        /// the track colour. These are assigned to the tracks based on their
+        /// identifier.
+        /// </summary>
+        private class TrackSettings
+        {
+            public string DisplayName;
+            public int[] Color;
+        }
+
+        /// <summary>
+        /// Default settings for the tracks based on their identifier. The "identifier3" are there
+        /// for safety, mostly, haven't seen them yet.
+        /// </summary>
+        private static Dictionary<string, TrackSettings> DefaultTrackSettings = new Dictionary<string, TrackSettings>()
+        {
+            { "lead", new TrackSettings() { DisplayName = "Lead", Color = new int[] { 255, 151, 48 } } },
+            { "lead1", new TrackSettings() { DisplayName = "Lead 1", Color = new int[] { 255, 151, 48 } } },
+            { "lead2", new TrackSettings() { DisplayName = "Lead 2", Color = new int[] { 255, 111, 71 } } },
+            { "lead3", new TrackSettings() { DisplayName = "Lead 3", Color = new int[] { 255, 62, 48 } } },
+            { "combo", new TrackSettings() { DisplayName = "Combo", Color = new int[] { 102, 137, 255 } } },
+            { "combo1", new TrackSettings() { DisplayName = "Combo 1", Color = new int[] { 102, 137, 255 } } },
+            { "combo2", new TrackSettings() { DisplayName = "Combo 2", Color = new int[] { 84, 109, 255 } } },
+            { "combo3", new TrackSettings() { DisplayName = "Combo 3", Color = new int[] { 59, 56, 255 } } },
+            { "rhythm", new TrackSettings() { DisplayName = "Rhythm", Color = new int[] { 0, 163, 25 } } },
+            { "rhythm1", new TrackSettings() { DisplayName = "Rhythm 1", Color = new int[] { 0, 163, 25 } } },
+            { "rhythm2", new TrackSettings() { DisplayName = "Rhythm 2", Color = new int[] { 0, 124, 25 } } },
+            { "rhythm3", new TrackSettings() { DisplayName = "Rhythm 3", Color = new int[] { 0, 93, 25 } } },
+            { "bass", new TrackSettings() { DisplayName = "Bass", Color = new int[] { 119, 81, 67 } } },
+            { "bass1", new TrackSettings() { DisplayName = "Bass 1", Color = new int[] { 119, 81, 67 } } },
+            { "bass2", new TrackSettings() { DisplayName = "Bass 2", Color = new int[] { 99, 65, 52 } } },
+            { "bass3", new TrackSettings() { DisplayName = "Bass 3", Color = new int[] { 61, 40, 32 } } },
+        };
+
+
+        /// <summary>
+        /// Converts a single Rocksmith arrangement to a track in our intermediate score representation.
+        /// The track is constructed from the given difficulty level, which defaults to the max available.
+        /// The identifier name is used to set some display settings for the track.
+        /// </summary>
+        public static Track ConvertArrangement(Song2014 arrangement, string identifier, int difficultyLevel = int.MaxValue)
         {
             var track = new Track();
 
-            track.Name = arrangement.Arrangement;
+            track.Identifier = identifier;
+            // we use the identifier to get a suitable display name and track color for this track.
+            // if we don't have defaults for a particular identifier (shouldn't happen), we'll default
+            // to the name given in the arrangement itself and the color red.
+            TrackSettings trackSettings;
+            if (DefaultTrackSettings.TryGetValue(identifier, out trackSettings))
+            {
+                track.Name = trackSettings.DisplayName;
+                track.Color = trackSettings.Color;
+            }
+            else
+            {
+                track.Name = arrangement.Arrangement;
+                track.Color = new int[] { 255, 0, 0 };
+            }
+
             track.AverageBeatsPerMinute = arrangement.AverageTempo;
             if (arrangement.Arrangement.ToLower() == "bass")
                 track.Instrument = Track.InstrumentType.Bass;
@@ -61,25 +117,14 @@ namespace RocksmithToTabLib
 
         static int[] GetTuning(Song2014 arrangement)
         {
+            // Guitar Pro expects the tuning as Midi note values
+            // In Rocksmith, the tuning is given as the difference in half steps
+            // from standard tuning for each string, so we need to convert that.
             bool isBass = arrangement.Title.ToLower() == "bass";
             int[] tuning = new int[isBass ? 4 : 6];
             for (byte s = 0; s < tuning.Length; ++s)
                 tuning[s] = Sng2014FileWriter.GetMidiNote(arrangement.Tuning.ToShortArray(), s, 0, isBass, 0);
             return tuning;
-        }
-
-
-        static void PrintChordTemplate(ChordTemplate template)
-        {
-            Console.WriteLine("  Chord name: {0}   Chord id: {1}", template.Name, template.ChordId);
-            Console.Write("   Frets: ");
-            foreach (var f in template.Frets)
-                Console.Write("{0} ", f);
-            Console.WriteLine();
-            Console.Write("   Fingers: ");
-            foreach (var f in template.Fingers)
-                Console.Write("{0} ", f);
-            Console.WriteLine();
         }
 
 
@@ -101,7 +146,9 @@ namespace RocksmithToTabLib
                         rsTemplate.Finger2, rsTemplate.Finger3, rsTemplate.Finger4,
                         rsTemplate.Finger5 }
                 };
-                // correct for capo position
+                // correct for capo position. this is necessary since Rocksmith is weird when using 
+                // a capo: the open string is indexed as 0, but any pressed fret is given as the
+                // absolute fret, not relative to the capo.
                 for (int j = 0; j < 6; ++j)
                 {
                     if (template.Frets[j] > 0)
