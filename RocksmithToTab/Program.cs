@@ -74,6 +74,7 @@ namespace RocksmithToTab
 
         static void ExportPsarc(string psarcFile, CmdOptions options)
         {
+            var archiveName = Path.GetFileNameWithoutExtension(psarcFile);
             Console.WriteLine("Opening archive {0} ...", psarcFile);
             try
             {
@@ -131,8 +132,9 @@ namespace RocksmithToTab
 
                         if (options.SplitArrangements)
                         {
-                            string baseFileName = CleanFileName(
-                                string.Format("{0} - {1} ({2})", score.Artist, score.Title, arr));
+                            string baseFileName = ConstructFileName(options.FileNameFormat, score, song.Identifier,
+                                archiveName, toolkitInfo);
+                            baseFileName = CleanFileName(string.Format("{0} ({1})", baseFileName, arr));
                             SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);
                             // remember to remove the track from the score again
                             score.Tracks.Clear();
@@ -143,7 +145,7 @@ namespace RocksmithToTab
                     {
                         score.SortTracks();
                         string baseFileName = CleanFileName(
-                            string.Format("{0} - {1}", score.Artist, score.Title));
+                            ConstructFileName(options.FileNameFormat, score, song.Identifier, archiveName, toolkitInfo));
                         SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);
                     }
                 }
@@ -161,6 +163,7 @@ namespace RocksmithToTab
         static void ExportXml(List<string> inputFiles, CmdOptions options)
         {
             Score score = new Score();
+            string identifier = "none";
             foreach (var xmlFile in inputFiles)
             {
                 Console.WriteLine("Processing {0} ...", xmlFile);
@@ -184,10 +187,14 @@ namespace RocksmithToTab
                     string arr = "";
                     if (identifiers.Length >= 2)
                         arr = identifiers.Last();
+                    identifier = identifiers.First();
 
                     ExportArrangement(score, arrangement, arr, options.DifficultyLevel, xmlFile, null);
                     if (options.SplitArrangements)
                     {
+                        baseFileName = CleanFileName(
+                            ConstructFileName(options.FileNameFormat, score, identifier, identifier, null));
+                        baseFileName += " (" + arr + ")";
                         SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);
                         // remember to remove the track from the score again
                         score.Tracks.Clear();
@@ -199,7 +206,7 @@ namespace RocksmithToTab
             {
                 score.SortTracks();
                 string baseFileName = CleanFileName(
-                    string.Format("{0} - {1}", score.Artist, score.Title));
+                    ConstructFileName(options.FileNameFormat, score, identifier, identifier, null));
                 SaveScore(score, baseFileName, options.OutputDirectory, options.OutputFormat);
             }
         }
@@ -234,7 +241,10 @@ namespace RocksmithToTab
         static void SaveScore(Score score, string baseFileName, string outputDirectory, string outputFormat)
         {
             string basePath = Path.Combine(outputDirectory, baseFileName);
-            // create a separate file for each arrangement
+            // make sure that the directory where the path points to exists
+            string dir = Path.GetDirectoryName(basePath);
+            Directory.CreateDirectory(dir);
+
             if (outputFormat == "gp5")
             {
                 gp5Exporter.ExportScore(score, basePath + ".gp5");
@@ -251,9 +261,44 @@ namespace RocksmithToTab
         }
 
 
+        /// <summary>
+        /// Replaces occurences of "{attributes}" within the supplied file name templates with
+        /// their gathered values. Note that this is just doing simple string replacement, so there
+        /// is no fancy character escaping like "{{attributes}}" or something similar.
+        /// </summary>
+        static string ConstructFileName(string template, Score score, string identifier, string archive, ToolkitInfo toolkitInfo)
+        {
+            var attributes = new Dictionary<string, string>();
+            attributes.Add("title", score.Title);
+            attributes.Add("artist", score.Artist);
+            attributes.Add("album", score.Album);
+            attributes.Add("year", score.Year);
+            attributes.Add("tabber", score.Tabber);
+            attributes.Add("identifier", identifier);
+            attributes.Add("archive", archive);
+            if (toolkitInfo != null && toolkitInfo.ToolkitVersion != string.Empty)
+                attributes.Add("toolkit", toolkitInfo.ToolkitVersion);
+            else
+                attributes.Add("toolkit", "none");
+            if (toolkitInfo != null && toolkitInfo.PackageVersion != string.Empty)
+                attributes.Add("version", toolkitInfo.PackageVersion);
+            else
+                attributes.Add("version", "1.0");
+
+            string output = template;
+
+            foreach (var kvp in attributes)
+                output = output.Replace("{"+kvp.Key+"}", kvp.Value);
+
+            return output;
+        }
+
+
         static string CleanFileName(string fileName)
         {
-            var invalidChars = Path.GetInvalidFileNameChars();
+            // allow path separators, since we want to allow to construct subdirectories. they shouldn't 
+            // occur in song names or similar, anyway
+            var invalidChars = Path.GetInvalidFileNameChars().Where(x => x != Path.DirectorySeparatorChar);
             var cleaned = fileName.Where(x => !invalidChars.Contains(x)).ToArray();
             return new string(cleaned);
         }
