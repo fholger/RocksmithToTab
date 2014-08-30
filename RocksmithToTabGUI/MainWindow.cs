@@ -62,7 +62,16 @@ namespace RocksmithToTabGUI
 
         private void CreateTabs_Click(object sender, EventArgs e)
         {
+            string[] fileFormats = new string[] { "gp5", "gpx", "gpif" };
+            using (var callProgram = new CallProgram())
+            {
+                callProgram.RocksmithPath = RocksmithFolder.Text;
+                callProgram.OutputPath = OutputFolder.Text;
+                callProgram.FileNameTemplate = FileNameTemplate.Text;
+                callProgram.FileFormat = fileFormats[OutputFormat.SelectedIndex];
 
+                callProgram.ShowDialog();
+            }
         }
     }
 }

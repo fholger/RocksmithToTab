@@ -37,8 +37,11 @@ namespace RocksmithToTab
 
                 if (!options.XmlMode)
                 {
-                    foreach (var inputFile in inputFiles)
-                        ExportPsarc(inputFile, options);
+                    for (int i = 0; i < inputFiles.Count; ++i)
+                    {
+                        Console.WriteLine("[{1}/{2}] Opening archive {0} ...", Path.GetFileName(inputFiles[i]), i+1, inputFiles.Count);
+                        ExportPsarc(inputFiles[i], options);
+                    }
                 }
                 else
                 {
@@ -75,7 +78,6 @@ namespace RocksmithToTab
         static void ExportPsarc(string psarcFile, CmdOptions options)
         {
             var archiveName = Path.GetFileNameWithoutExtension(psarcFile);
-            Console.WriteLine("Opening archive {0} ...", psarcFile);
             try
             {
                 var browser = new PsarcBrowser(psarcFile);
@@ -111,21 +113,22 @@ namespace RocksmithToTab
                     }
                 }
 
-                foreach (var song in toConvert)
+                for (int i = 0; i < toConvert.Count; ++i)
                 {
+                    var song = toConvert[i];
                     var score = new Score();
                     // figure out which arrangements to convert
                     var arrangements = song.Arrangements;
                     if (options.Arrangements != null && options.Arrangements.Count > 0)
                         arrangements = arrangements.Intersect(options.Arrangements).ToList();
 
-                    Console.WriteLine("Converting song " + song.Identifier + "...");
+                    Console.WriteLine("({1}/{2}) Converting song {0} ...", song.Identifier, i+1, toConvert.Count);
                     foreach (var arr in arrangements)
                     {
                         var arrangement = browser.GetArrangement(song.Identifier, arr);
                         if (arrangement == null)
                         {
-                            Console.WriteLine("  Failed to get arrangement {0}", arr);
+                            Console.WriteLine(" Failed to get arrangement {0}", arr);
                             continue;
                         }
                         ExportArrangement(score, arrangement, arr, options.DifficultyLevel, psarcFile, toolkitInfo);
