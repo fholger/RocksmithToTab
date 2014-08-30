@@ -80,6 +80,7 @@ namespace RocksmithToTabGUI
             process.OutputDataReceived += process_OutputDataReceived;
             process.ErrorDataReceived += process_OutputDataReceived;
             process.Exited += process_Exited;
+            process.EnableRaisingEvents = true;
 
             process.Start();
             process.BeginOutputReadLine();
@@ -89,8 +90,14 @@ namespace RocksmithToTabGUI
 
         void process_Exited(object sender, EventArgs e)
         {
-            DialogResult = System.Windows.Forms.DialogResult.OK;
-            Close();            
+            // Leave open to give chance of seeing output
+            // DialogResult = System.Windows.Forms.DialogResult.OK;
+            // Close();            
+            // But let's change the label on the button
+            //CancelProcess.Text = "Close";
+            this.Invoke((MethodInvoker) delegate { this.CancelProcess.Text = "Close"; });
+            // also, let's open the folder where the tabs where stored
+            Process.Start(OutputPath);
         }
 
 
