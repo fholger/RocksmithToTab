@@ -39,7 +39,7 @@
             this.OutputFormat = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.FileNameTemplate = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.CreateTabs = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -58,7 +58,7 @@
             this.tableLayoutPanel1.Controls.Add(this.OutputFormat, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.label4, 0, 6);
             this.tableLayoutPanel1.Controls.Add(this.FileNameTemplate, 0, 7);
-            this.tableLayoutPanel1.Controls.Add(this.button1, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.CreateTabs, 0, 8);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -103,6 +103,7 @@
             this.RocksmithFolderSelect.TabIndex = 2;
             this.RocksmithFolderSelect.Text = "...";
             this.RocksmithFolderSelect.UseVisualStyleBackColor = true;
+            this.RocksmithFolderSelect.Click += new System.EventHandler(this.RocksmithFolderSelect_Click);
             // 
             // label2
             // 
@@ -131,6 +132,7 @@
             this.OutputFolderSelect.TabIndex = 5;
             this.OutputFolderSelect.Text = "...";
             this.OutputFolderSelect.UseVisualStyleBackColor = true;
+            this.OutputFolderSelect.Click += new System.EventHandler(this.OutputFolderSelect_Click);
             // 
             // label3
             // 
@@ -176,15 +178,16 @@
             this.FileNameTemplate.TabIndex = 9;
             this.FileNameTemplate.Text = "{artist} - {title}";
             // 
-            // button1
+            // CreateTabs
             // 
-            this.button1.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.button1.Location = new System.Drawing.Point(214, 245);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 10;
-            this.button1.Text = "Create tabs!";
-            this.button1.UseVisualStyleBackColor = true;
+            this.CreateTabs.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.CreateTabs.Location = new System.Drawing.Point(214, 245);
+            this.CreateTabs.Name = "CreateTabs";
+            this.CreateTabs.Size = new System.Drawing.Size(75, 23);
+            this.CreateTabs.TabIndex = 10;
+            this.CreateTabs.Text = "Create tabs!";
+            this.CreateTabs.UseVisualStyleBackColor = true;
+            this.CreateTabs.Click += new System.EventHandler(this.CreateTabs_Click);
             // 
             // MainWindow
             // 
@@ -214,7 +217,7 @@
         private System.Windows.Forms.ComboBox OutputFormat;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox FileNameTemplate;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button CreateTabs;
     }
 }
 
