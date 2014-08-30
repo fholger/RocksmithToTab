@@ -3,4 +3,7 @@ RocksmithToTab/obj/*
 RocksmithToTabLib/bin/*
 RocksmithToTabLib/obj/*
 RocksmithToTab/publish/*
+RocksmithToTabGUI/bin/*
+RocksmithToTabGUI/obj/*
+RocksmithToTabGUI/publish/*
 RocksmithToTab*.suo
