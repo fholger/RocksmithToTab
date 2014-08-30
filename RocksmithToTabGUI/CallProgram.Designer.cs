@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CallProgram));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.TotalProgress = new System.Windows.Forms.ProgressBar();
             this.FileProgress = new System.Windows.Forms.ProgressBar();
@@ -116,6 +117,7 @@
             this.CancelButton = this.CancelProcess;
             this.ClientSize = new System.Drawing.Size(470, 324);
             this.Controls.Add(this.tableLayoutPanel1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "CallProgram";
             this.Text = "Converting tabs...";
             this.tableLayoutPanel1.ResumeLayout(false);
