@@ -1,10 +1,11 @@
 # Rocksmith 2014 Tab Converter
+Homepage: http://www.rocksmithtotab.de
 
 #### Summary
 Exports Rocksmith 2014 arrangements to Guitar Pro tabs (.gp5, .gpx). It parses Rocksmith's .psarc archives and converts any songs found within to tablature. All the Rocksmith techniques are supported and translated, and you get all of the chord diagrams and fingering hints that Rocksmith shows you. It's a great way to figure out specific parts of a song, and Guitar Pro's speed trainer is a very good alternative to the riff repeater. All arrangement types (bass, lead, rhythm) can be exported, either together in a single tab or into separate tabs.
 
 #### Current version
-The current version is v0.9.6.5. You can download it at https://github.com/fholger/RocksmithToTab/releases.
+The current version is v0.9.6.5. You can download it at https://sourceforge.net/projects/rocksmithtotab/files/Releases/.
 
 #### Basic use
 
