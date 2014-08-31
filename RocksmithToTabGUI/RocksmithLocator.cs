@@ -92,9 +92,10 @@ namespace RocksmithToTabGUI
                 return Rocksmith2014FolderFromUbisoftKey();
             }
 
-            else if (platform == PlatformID.MacOSX)
+            else if (platform == PlatformID.MacOSX || platform == PlatformID.Unix)
             {
                 // on Mac, Steam normally installs its games in ~/Library/Application Support/Steam
+                // note: check for Unix platform id, too, since apparently OSX is identified as Unix in Mono, too.
                 string homeDir = Environment.GetEnvironmentVariable("HOME");
                 string rocksmithPathGuess = Path.Combine(homeDir, "Library", "Application Support", "Steam", "SteamApps", "common", "Rocksmith2014");
                 if (Directory.Exists(rocksmithPathGuess))
@@ -105,6 +106,7 @@ namespace RocksmithToTabGUI
 
             else
             {
+                Console.WriteLine("Don't recognize this platform...");
                 // platform not supported
                 return null;
             }
