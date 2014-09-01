@@ -5,18 +5,22 @@ Homepage: http://www.rocksmithtotab.de
 Exports Rocksmith 2014 arrangements to Guitar Pro tabs (.gp5, .gpx). It parses Rocksmith's .psarc archives and converts any songs found within to tablature. All the Rocksmith techniques are supported and translated, and you get all of the chord diagrams and fingering hints that Rocksmith shows you. It's a great way to figure out specific parts of a song, and Guitar Pro's speed trainer is a very good alternative to the riff repeater. All arrangement types (bass, lead, rhythm) can be exported, either together in a single tab or into separate tabs.
 
 #### Current version
-The current version is v0.9.6.5. You can download it at https://sourceforge.net/projects/rocksmithtotab/files/Releases/.
+The current version is v0.9.8. You can download it at https://sourceforge.net/projects/rocksmithtotab/files/Releases/.
 
 #### Basic use
 
-RocksmithToTab is a command line program. Extract the zip file somewhere convenient, then open a command line, go to where you extracted the program and run
-`RocksmithToTab.exe \Path\To\Rocksmith2014\songs.psarc`
-which will convert all of Rocksmith 2014's on-disc songs. Alternatively, if you do not like to use the command line, just drag and drop any .psarc file onto the RocksmithToTab.exe in the Windows explorer.
+Download the appropriate version for your OS (Windows or Mac OSX) from the above link, then extract the archive to a location of your choice. If you are on Mac, you will also have to download and install the [Mono runtime environment (MRE)][mre]. On Windows, the program should work out of the box, but if you run into problems, you might need to install the [.NET Framework 4][dotnet].
 
-For Mac users, please refer to the wiki for details on how to use the converter on OSX: [Mac User Guide][MacUserGuide]
+If all you want to do is convert all the Rocksmith songs you own to tablature, then you can simply start the RocksmithToTabGUI.exe (or the RocksmithToTabGUI script on Mac), which will allow you to select your Rocksmith 2014 install directory and an output directory. If you then click on the "Convert tabs" button, it will convert all song arrangements that you own and save them in the select output folder.
+
+For more advanced usage scenarios, including conversion of single arrangements, you will have to use the command line utility RocksmithToTab.exe (or the RocksmithToTab script on Mac). Open a command line, go to where you extracted the program and run
+`RocksmithToTab \Path\To\Rocksmith2014\dlc\somefile.psarc`
+which will convert all arrangements inside the archive somefile.psarc. Alternatively, if you do not like to use the command line, just drag and drop any .psarc file onto the RocksmithToTab.exe in the Windows explorer.
+
+For more information, please refer to the [documentation][] and the [wiki][].
 
 #### Command line options
-For details, refer to the [wiki][wiki].
+For details, refer to the [wiki][].
 ```
 Usage: RocksmithToTab archive.psarc [-a bass,lead] [-s song1,song2]
 
@@ -37,6 +41,10 @@ Usage: RocksmithToTab archive.psarc [-a bass,lead] [-s song1,song2]
 
   -f, --format    (Default: gp5) File output format, currently either 'gp5', 
                   'gpx' or 'gpif'.
+				  
+  -n, --name	  (Default: {artist} - {title}) Format of the output file
+				  names. For a list of available field names, refer to the
+				  documentation.
 
   -x, --xml       Instead of a psarc archive, supply a number of XML files 
                   describing the arrangements.
@@ -64,3 +72,5 @@ Many thanks to the people at www.rscustom.net for creating the Rocksmith Custom 
 [tab2]: https://github.com/fholger/RocksmithToTab/blob/master/pics/sample2.jpg
 [wiki]: https://github.com/fholger/RocksmithToTab/wiki/Options
 [MacUserGuide]: https://github.com/fholger/RocksmithToTab/wiki/MacUserGuide
+[mre]: http://www.mono-project.com/download/
+[dotnet]: http://www.microsoft.com/en-us/download/details.aspx?id=17851

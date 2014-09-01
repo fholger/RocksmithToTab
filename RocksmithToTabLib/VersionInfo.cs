@@ -10,10 +10,10 @@ namespace RocksmithToTabLib
     {
         public const int MAJOR = 0;
         public const int MINOR = 9;
-        public const int BUILD = 7;
+        public const int BUILD = 8;
         public const int PATCH = 0;
 
-        public const string ASSEMBLY_VERSION = "0.9.7.0";
-        public const string VERSION = "0.9.7";
+        public const string ASSEMBLY_VERSION = "0.9.8.0";
+        public const string VERSION = "0.9.8";
     }
 }
