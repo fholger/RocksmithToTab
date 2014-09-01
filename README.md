@@ -71,6 +71,7 @@ Many thanks to the people at www.rscustom.net for creating the Rocksmith Custom 
 [tab1]: https://github.com/fholger/RocksmithToTab/blob/master/pics/sample1.jpg
 [tab2]: https://github.com/fholger/RocksmithToTab/blob/master/pics/sample2.jpg
 [wiki]: https://github.com/fholger/RocksmithToTab/wiki/Options
+[documentation]: http://www.rocksmithtotab.de/documentation/
 [MacUserGuide]: https://github.com/fholger/RocksmithToTab/wiki/MacUserGuide
 [mre]: http://www.mono-project.com/download/
 [dotnet]: http://www.microsoft.com/en-us/download/details.aspx?id=17851
