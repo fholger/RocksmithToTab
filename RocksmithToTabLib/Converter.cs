@@ -703,11 +703,11 @@ namespace RocksmithToTabLib
             // with a target note, so the target note may be implied only. Of course, this does not 
             // work for our export, so if we find such a case, we need to split the sliding note into
             // two and set the second one to the target.
+            Chord lastChord = null;
             for (int b = 0; b < bars.Count; ++b)
             {
                 var bar = bars[b];
                 var nextBar = (b < bars.Count-1) ? bars[b+1] : null;
-                Chord lastChord = null;
                 for (int i = 0; i < bar.Chords.Count; ++i)
                 {
                     var chord = bar.Chords[i];
