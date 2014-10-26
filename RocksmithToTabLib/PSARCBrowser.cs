@@ -60,7 +60,7 @@ namespace RocksmithToTabLib
                 var arrangement = fileName.Substring(splitPoint + 1);
                 
                 // temporary: exclude vocals from list until we can actually deal with them
-                if (arrangement.ToLower() == "vocals" || arrangement.ToLower() == "jvocals")
+                if (arrangement.ToLower().StartsWith("vocals") || arrangement.ToLower().StartsWith("jvocals"))
                     continue;
 
                 if (currentSong == null || currentSong.Identifier != identifier)
