@@ -77,6 +77,7 @@ namespace RocksmithToTabLib
                             {
                                 Title = attributes["SongName"].ToString(),
                                 Artist = attributes["ArtistName"].ToString(),
+                                ArtistSort = attributes["ArtistNameSort"].ToString(),
                                 Album = attributes["AlbumName"].ToString(),
                                 Year = attributes["SongYear"].ToString(),
                                 Identifier = identifier,
@@ -215,6 +216,7 @@ namespace RocksmithToTabLib
     {
         public string Title { get; set; }
         public string Artist { get; set; }
+        public string ArtistSort { get; set; }
         public string Album { get; set; }
         public string Year { get; set; }
         public string Identifier { get; set; }
