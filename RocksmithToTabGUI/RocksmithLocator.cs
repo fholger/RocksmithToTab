@@ -29,23 +29,30 @@ namespace RocksmithToTabGUI
         {
         	List<string> folders = new List<string>();
 
-            string steamFolder = SteamFolder();
-            folders.Add(steamFolder);
-
-            // the list of additional steam libraries can be found in the config.vdf file
-            string configFile = Path.Combine(steamFolder, "config", "config.vdf");
-            Regex regex = new Regex("BaseInstallFolder[^\"]*\"\\s*\"([^\"]*)\"");
-            using (StreamReader reader = new StreamReader(configFile))
+            try
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                string steamFolder = SteamFolder();
+                folders.Add(steamFolder);
+
+                // the list of additional steam libraries can be found in the config.vdf file
+                string configFile = Path.Combine(steamFolder, "config", "config.vdf");
+                Regex regex = new Regex("BaseInstallFolder[^\"]*\"\\s*\"([^\"]*)\"");
+                using (StreamReader reader = new StreamReader(configFile))
                 {
-                    Match match = regex.Match(line);
-                    if (match.Success)
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        folders.Add(Regex.Unescape(match.Groups[1].Value));
+                        Match match = regex.Match(line);
+                        if (match.Success)
+                        {
+                            folders.Add(Regex.Unescape(match.Groups[1].Value));
+                        }
                     }
                 }
+            }
+            catch (Exception)
+            {
+                // if there's any error in getting the Steam directory, ignore it for now.
             }
 
             return folders;
@@ -89,7 +96,15 @@ namespace RocksmithToTabGUI
                 }
 
                 // Couldn't find folder, attempt another method
-                return Rocksmith2014FolderFromUbisoftKey();
+                try
+                {
+                    return Rocksmith2014FolderFromUbisoftKey();
+                }
+                catch (Exception)
+                {
+                    // out of luck, did not find the install path
+                    return null;
+                }
             }
 
             else if (platform == PlatformID.MacOSX || platform == PlatformID.Unix)
