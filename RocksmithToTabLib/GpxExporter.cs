@@ -67,11 +67,14 @@ namespace RocksmithToTabLib
             var tuningProp = new Gpif.Property();
             tuningProp.Name = "Tuning";
             tuningProp.Pitches = track.Tuning.ToList();
+            if (track.Tuning.Count() < track.NumStrings)
+            {
+                // remove last few entries, as they are not used and confuse Guitar Pro
+                tuningProp.Pitches.RemoveRange(track.NumStrings, track.Tuning.Count() - track.NumStrings);
+            }
             if (track.Instrument == Track.InstrumentType.Bass)
             {
-                // remove last two entries, as they are not used in bass and confuse Guitar Pro
-                tuningProp.Pitches.RemoveRange(4, 2);
-                // also need to tune down one octave for some reason
+                // need to tune down one octave
                 for (int i = 0; i < tuningProp.Pitches.Count; ++i)
                     tuningProp.Pitches[i] -= 12;
             }

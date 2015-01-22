@@ -345,7 +345,8 @@ namespace RocksmithToTabLib
                 writer.Write((Byte)0);
 
             // tuning information
-            int numStrings = (track.Instrument == Track.InstrumentType.Bass) ? 4 : 6;
+            int numStrings = track.NumStrings;
+            Console.WriteLine("Number of strings: " + numStrings);
             writer.Write(numStrings);
             // apparently, we need to transpose bass tunings one octave down
             int tuningOffset = (track.Instrument == Track.InstrumentType.Bass) ? 12 : 0;

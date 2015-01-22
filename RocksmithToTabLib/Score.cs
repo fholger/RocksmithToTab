@@ -88,6 +88,7 @@ namespace RocksmithToTabLib
         public int[] Color { get; set; }  // used in Guitar Pro to distinguish the tracks by color
         public int DifficultyLevel { get; set; }
         public InstrumentType Instrument { get; set; }
+        public int NumStrings { get; set; }  // some CDLCs feature Bass tracks with more than 4 strings
         public PathType Path { get; set; }
         public bool Bonus { get; set; }
         // Tuning stored as midi notes for each open string

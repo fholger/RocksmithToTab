@@ -97,7 +97,14 @@ namespace RocksmithToTabLib
             track.Bars = GetBars(arrangement);
 
             // gather notes
-            track.DifficultyLevel = CollectNotesForDifficulty(arrangement, track.Bars, track.ChordTemplates, difficultyLevel);
+            int numStrings;
+            track.DifficultyLevel = CollectNotesForDifficulty(arrangement, track.Bars, track.ChordTemplates, difficultyLevel, out numStrings);
+            // ensure that the string minimum is sane
+            if (track.Instrument == Track.InstrumentType.Guitar)
+                numStrings = Math.Max(numStrings, 6);
+            else if (track.Instrument == Track.InstrumentType.Bass)
+                numStrings = Math.Max(numStrings, 4);
+            track.NumStrings = numStrings;
 
             // add section headings to relevant notes
             AddSectionNames(arrangement, track.Bars);
@@ -121,7 +128,7 @@ namespace RocksmithToTabLib
             // In Rocksmith, the tuning is given as the difference in half steps
             // from standard tuning for each string, so we need to convert that.
             bool isBass = arrangement.Title.ToLower() == "bass";
-            int[] tuning = new int[isBass ? 4 : 6];
+            int[] tuning = new int[6];
             for (byte s = 0; s < tuning.Length; ++s)
                 tuning[s] = Sng2014FileWriter.GetMidiNote(arrangement.Tuning.ToShortArray(), s, 0, isBass, 0);
             return tuning;
@@ -224,7 +231,7 @@ namespace RocksmithToTabLib
         }
 
 
-        static int CollectNotesForDifficulty(Song2014 arrangement, List<Bar> bars, Dictionary<int, ChordTemplate> chordTemplates, int difficultyLevel)
+        static int CollectNotesForDifficulty(Song2014 arrangement, List<Bar> bars, Dictionary<int, ChordTemplate> chordTemplates, int difficultyLevel, out int numStrings)
         {
             // Rocksmith keeps its notes separated by the difficulty levels. Higher difficulty
             // levels only contain notes for phrases where the notes differ from lower levels.
@@ -252,6 +259,17 @@ namespace RocksmithToTabLib
                              select CreateChord(c, chordTemplates, arrangement.Capo);
                 allNotes = allNotes.Concat(notes.Concat(chords));
             }
+
+            // figure out how many strings are used in the notes
+            numStrings = 0;
+            foreach (var chord in allNotes)
+            {
+                foreach (var note in chord.Notes)
+                {
+                    numStrings = Math.Max(numStrings, note.Value.String);
+                }
+            }
+            numStrings++;  // strings are 0-indexed, so the count is max index + 1
 
             // avoid recreating all the notes/chords at every bar, so cache the conversion
             var collectedNotesList = allNotes.ToList();
