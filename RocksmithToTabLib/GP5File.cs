@@ -268,7 +268,7 @@ namespace RocksmithToTabLib
                         // bar of the first track instead, hoping that it will be silence.
                         // Might need a better approach if this doesn't hold.
                         var bar = (b < track.Bars.Count) ? track.Bars[b] : score.Tracks[0].Bars[b];
-                        WriteBar(bar, i, track.Instrument == Track.InstrumentType.Bass, changeTempo);
+                        WriteBar(bar, i, track.NumStrings, changeTempo);
                         writer.Write((Byte)0);  // padding
 
                         changeTempo = false;
@@ -346,7 +346,6 @@ namespace RocksmithToTabLib
 
             // tuning information
             int numStrings = track.NumStrings;
-            Console.WriteLine("Number of strings: " + numStrings);
             writer.Write(numStrings);
             // apparently, we need to transpose bass tunings one octave down
             int tuningOffset = (track.Instrument == Track.InstrumentType.Bass) ? 12 : 0;
@@ -376,13 +375,13 @@ namespace RocksmithToTabLib
         }
 
 
-        private void WriteBar(Bar bar, int trackNumber, bool bass, bool changeTempo)
+        private void WriteBar(Bar bar, int trackNumber, int numStrings, bool changeTempo)
         {
             writer.Write((Int32)bar.Chords.Count);
             for (int i = 0; i < bar.Chords.Count; ++i)
             {
                 var chord = bar.Chords[i];
-                WriteBeat(chord, trackNumber, bass, changeTempo && (i == 0), bar.BeatsPerMinute);
+                WriteBeat(chord, trackNumber, numStrings, changeTempo && (i == 0), bar.BeatsPerMinute);
             }
 
             // we also need to provide the second voice, however in our case it's going 
@@ -391,7 +390,7 @@ namespace RocksmithToTabLib
         }
 
 
-        private void WriteBeat(Chord chord, int trackNumber, bool bass, bool changeTempo, int newTempo)
+        private void WriteBeat(Chord chord, int trackNumber, int numStrings, bool changeTempo, int newTempo)
         {
             const Byte DOTTED_NOTE = 1;
             const Byte CHORD_DIAGRAM = (1 << 1);
@@ -554,9 +553,9 @@ namespace RocksmithToTabLib
 
             // now write the actual notes. a flag indicates which strings are being played
             Byte stringFlags = 0;
-            int stringOffset = bass ? 2 : 0;
+            int stringOffset = 7 - numStrings;
             foreach (var kvp in chord.Notes)
-                stringFlags |= (Byte)(1 << (kvp.Key+1+stringOffset));
+                stringFlags |= (Byte)(1 << (kvp.Key+stringOffset));
             writer.Write(stringFlags);
             var notes = chord.Notes.Values.OrderByDescending(x => x.String);
             foreach (var note in notes)
