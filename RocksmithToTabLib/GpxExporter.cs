@@ -92,7 +92,7 @@ namespace RocksmithToTabLib
 
             if (track.Instrument == Track.InstrumentType.Guitar)
             {
-                gpTrack.Instrument = new Instrument() { Ref = "e-gtr6" };
+                gpTrack.Instrument = new Instrument() { Ref = "e-gtr" + track.NumStrings };
                 gpTrack.GeneralMidi.Program = 29;
                 gpTrack.GeneralMidi.Port = 0;
                 gpTrack.GeneralMidi.PrimaryChannel = 0;
@@ -101,7 +101,7 @@ namespace RocksmithToTabLib
             }
             else if (track.Instrument == Track.InstrumentType.Bass)
             {
-                gpTrack.Instrument = new Instrument() { Ref = "e-bass4" };
+                gpTrack.Instrument = new Instrument() { Ref = "e-bass" + track.NumStrings };
                 gpTrack.GeneralMidi.Program = 33;
                 gpTrack.GeneralMidi.Port = 0;
                 gpTrack.GeneralMidi.PrimaryChannel = 2;
