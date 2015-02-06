@@ -186,6 +186,9 @@ namespace RocksmithToTabLib
                     {
                         currentMeasure.End = ebeat.Time;
                         currentMeasure.BeatTimes.Add(ebeat.Time);
+                        // sanity check: ensure there are no duplicates, which would indicate an empty sub-beat
+                        currentMeasure.BeatTimes = currentMeasure.BeatTimes.Distinct().ToList();
+                        currentMeasure.TimeNominator = currentMeasure.BeatTimes.Count - 1;
                         // figure out time and tempo
                         if (currentMeasure.End <= currentMeasure.Start)
                         {
@@ -640,7 +643,7 @@ namespace RocksmithToTabLib
                     var chord = bar.Chords[i];
                     Single end = (i == bar.Chords.Count - 1) ? bar.End : bar.Chords[i + 1].Start;
                     float duration = bar.GetDuration(chord.Start, end - chord.Start);
-                    //Console.Write("{0:f2} ", duration);
+                    //Console.WriteLine("Bar {0}, note {1}, duration {2:f2}, start {3:f2}, end {4:f2}", b, i, duration, chord.Start, end);
                     noteDurations.Add(duration);
                     total += duration;
                 }
