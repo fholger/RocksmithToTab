@@ -156,7 +156,7 @@ namespace RocksmithToTabLib
             int curPos = 0;
             for (int i = 0; i < durations.Count; ++i)
             {
-                if (durations[i].Duration == 0 || durations[i].Duration == 1)
+                if (durations[i].Duration <= 1)
                     continue;
 
                 if (PrintableDurations.Contains(durations[i].Duration))
