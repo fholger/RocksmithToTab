@@ -58,7 +58,7 @@ namespace RocksmithToTabGUI
             string programPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "RocksmithToTab.exe");
             // DLC on Windows have _p suffix, on Mac it's _m
             string dlcFiles = "*_p.psarc";
-            if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+            if (Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix)
                 dlcFiles = "*_m.psarc";
             // construct the argument that will convert all installed songs
             string filesToProcess = string.Format("\"{0}\" \"{1}\"", Path.Combine(RocksmithPath, "songs.psarc"),
