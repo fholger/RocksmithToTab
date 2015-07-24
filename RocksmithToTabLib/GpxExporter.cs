@@ -67,7 +67,7 @@ namespace RocksmithToTabLib
             var tuningProp = new Gpif.Property();
             tuningProp.Name = "Tuning";
             tuningProp.Pitches = track.Tuning.ToList();
-            if (track.Tuning.Count() < track.NumStrings)
+            if (track.Tuning.Count() > track.NumStrings)
             {
                 // remove last few entries, as they are not used and confuse Guitar Pro
                 tuningProp.Pitches.RemoveRange(track.NumStrings, track.Tuning.Count() - track.NumStrings);
@@ -126,10 +126,12 @@ namespace RocksmithToTabLib
         void ExportChordDiagrams(Gpif.Track gpTrack, Track track)
         {
             var diagrams = new Property() { Name = "DiagramCollection", Items = new List<Item>() };
+            var usedChords = track.Bars.SelectMany(b => b.Chords.Where(c => c.ChordId != -1).Select(c => c.ChordId)).Distinct();
+
             foreach (var kvp in track.ChordTemplates)
             {
-                // only display those with an actual name
-                if (kvp.Value.Name == string.Empty)
+                // only display those with an actual name && used in the current track
+                if (kvp.Value.Name == string.Empty || !usedChords.Contains(kvp.Key))
                     continue;
 
                 // first, we need to determine at what base fret to start the chord diagram,
@@ -167,7 +169,7 @@ namespace RocksmithToTabLib
                     var position = new Diagram.Position()
                     {
                         String = i,
-                        Fret = (kvp.Value.Frets[i] == 0) ? 0 : kvp.Value.Frets[i] - minFret
+                        Fret = (kvp.Value.Frets[i] == 0) ? 0 : (kvp.Value.Frets[i] == -1) ? -1 : kvp.Value.Frets[i] - minFret
                     };
                     switch (kvp.Value.Fingers[i])
                     {
@@ -230,11 +232,11 @@ namespace RocksmithToTabLib
                 }
 
                 // see if this voice is already available, otherwise add
-                var searchVoice = gpif.Voices.Find(x => x.Equals(voice));
-                if (searchVoice != null)
-                    voice = searchVoice;
-                else
-                    gpif.Voices.Add(voice);
+                //var searchVoice = gpif.Voices.Find(x => x.Equals(voice));
+                //if (searchVoice != null)
+                //    voice = searchVoice;
+                //else
+                gpif.Voices.Add(voice);
 
                 // construct the bar
                 var gpBar = new Gpif.Bar();
@@ -245,11 +247,11 @@ namespace RocksmithToTabLib
                     gpBar.Clef = "G2";
                 gpBar.Voices[0] = voice.Id;
                 // see if this bar is already available, otherwise add
-                var searchBar = gpif.Bars.Find(x => x.Equals(gpBar));
-                if (searchBar != null)
-                    gpBar = searchBar;
-                else
-                    gpif.Bars.Add(gpBar);
+                //var searchBar = gpif.Bars.Find(x => x.Equals(gpBar));
+                //if (searchBar != null)
+                //    gpBar = searchBar;
+                //else
+                gpif.Bars.Add(gpBar);
 
                 // add to master bar
                 gpif.MasterBars[i].Bars.Add(gpBar.Id);
@@ -291,7 +293,7 @@ namespace RocksmithToTabLib
             if (chord.Tremolo)
             {
                 // 32nd notes tremolo picking (should be appropriate)
-                beat.Tremolo = "1/8"; 
+                beat.Tremolo = "1/8";
             }
 
             // slap/pop notes
