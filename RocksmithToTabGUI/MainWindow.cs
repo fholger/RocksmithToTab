@@ -100,6 +100,7 @@ namespace RocksmithToTabGUI
                 callProgram.OutputPath = OutputFolder.Text;
                 callProgram.FileNameTemplate = FileNameTemplate.Text;
                 callProgram.FileFormat = fileFormats[OutputFormat.SelectedIndex];
+                callProgram.OnlyNewFiles = (IncrementalGeneration.SelectedIndex == 1);
 
                 callProgram.ShowDialog();
             }

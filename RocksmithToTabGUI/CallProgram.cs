@@ -17,6 +17,7 @@ namespace RocksmithToTabGUI
         public string OutputPath { get; set; }
         public string FileNameTemplate { get; set; }
         public string FileFormat { get; set; }
+        public bool OnlyNewFiles { get; set; }
 
         private Process process = null;
         private delegate void AddOutputDelegate(string output);
@@ -51,10 +52,10 @@ namespace RocksmithToTabGUI
         }
 
 
-        private List<string> CollectConvertibleFiles(string rocksmithPath)
+        private List<string> CollectConvertibleFiles()
         {
             // find all psarc files in the dlc subdirectory and the base songs.psarc
-            string dlcPath = Path.Combine(rocksmithPath, "dlc");
+            string dlcPath = Path.Combine(RocksmithPath, "dlc");
             var inputFiles = Directory.EnumerateFiles(dlcPath, "*.psarc", SearchOption.AllDirectories).ToList();
 
             // next, we need to filter for duplicates. Rocksmith dlcs usually feature two file versions,
@@ -62,7 +63,7 @@ namespace RocksmithToTabGUI
             // since the arrangements contained inside are identical.
             var baseNames = new HashSet<string>();
             var files = new List<string>();
-            files.Add(Path.Combine(rocksmithPath, "songs.psarc"));
+            files.Add(Path.Combine(RocksmithPath, "songs.psarc"));
             foreach (var file in inputFiles)
             {
                 var baseName = Path.GetFileNameWithoutExtension(file);
@@ -83,13 +84,41 @@ namespace RocksmithToTabGUI
         }
 
 
+        private List<string> FilterOldFiles(List<string> inputFiles)
+        {
+            // remove any file from the list whose last modification time is older than
+            // the timestamp in the given output directory.
+
+            string timestampPath = Path.Combine(OutputPath, ".rs2tab.timestamp");
+            var tsInfo = new FileInfo(timestampPath);
+            if (!tsInfo.Exists)
+                return inputFiles;
+            var timestamp = tsInfo.LastWriteTimeUtc;
+
+            var files = new List<string>();
+            foreach (var file in inputFiles)
+            {
+                var modified = new FileInfo(file).LastWriteTimeUtc;
+                if (modified.CompareTo(timestamp) > 0)
+                    files.Add(file);                    
+            }
+
+            return files;
+        }
+
+
         private void StartProcess()
         {
             // When the dialog is shown, start the RocksmithToTab process and
             // collect its output.
-            string programPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "RocksmithToTab.exe");
-            var filesToConvert = CollectConvertibleFiles(RocksmithPath);
+
+            // Collect all files we need to convert.
+            var filesToConvert = CollectConvertibleFiles();
+            if (OnlyNewFiles)
+                filesToConvert = FilterOldFiles(filesToConvert);
+
             // construct the argument that will convert all installed songs
+            string programPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "RocksmithToTab.exe");
             string filesToProcess = string.Format("\"{0}\"", string.Join("\" \"", filesToConvert));
             process = new Process()
             {
@@ -128,6 +157,11 @@ namespace RocksmithToTabGUI
             });
             // also, let's open the folder where the tabs were stored
             Process.Start(OutputPath);
+
+            // finally, create a timestamp file in the output directory for future reference
+            var stream = File.CreateText(Path.Combine(OutputPath, ".rs2tab.timestamp"));
+            stream.Write(System.DateTime.UtcNow);
+            stream.Close();
         }
 
 
