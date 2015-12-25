@@ -232,11 +232,11 @@ namespace RocksmithToTabLib
                 }
 
                 // see if this voice is already available, otherwise add
-                //var searchVoice = gpif.Voices.Find(x => x.Equals(voice));
-                //if (searchVoice != null)
-                //    voice = searchVoice;
-                //else
-                gpif.Voices.Add(voice);
+                var searchVoice = gpif.Voices.Find(x => x.Equals(voice));
+                if (searchVoice != null)
+                    voice = searchVoice;
+                else
+                    gpif.Voices.Add(voice);
 
                 // construct the bar
                 var gpBar = new Gpif.Bar();
@@ -247,11 +247,11 @@ namespace RocksmithToTabLib
                     gpBar.Clef = "G2";
                 gpBar.Voices[0] = voice.Id;
                 // see if this bar is already available, otherwise add
-                //var searchBar = gpif.Bars.Find(x => x.Equals(gpBar));
-                //if (searchBar != null)
-                //    gpBar = searchBar;
-                //else
-                gpif.Bars.Add(gpBar);
+                var searchBar = gpif.Bars.Find(x => x.Equals(gpBar));
+                if (searchBar != null)
+                    gpBar = searchBar;
+                else
+                    gpif.Bars.Add(gpBar);
 
                 // add to master bar
                 gpif.MasterBars[i].Bars.Add(gpBar.Id);
