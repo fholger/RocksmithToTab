@@ -19,18 +19,40 @@ namespace RocksmithToTabGUI
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            // Ensure that the output format selection list starts with the default value
-            OutputFormat.SelectedIndex = 0;
+            // Restore values from stored app settings
+            var settings = RocksmithToTabGUI.Properties.Settings.Default;
+            OutputFormat.SelectedIndex = settings.OutputFormat;
+            IncrementalGeneration.SelectedIndex = settings.IncrementalGeneration;
+            // Note: the text fields are automatically bound to the app settings
 
-            // Try to determine the Rocksmith installation directory
-            string rocksmithPath = RocksmithLocator.Rocksmith2014Folder();
-            if (rocksmithPath != null)
-                RocksmithFolder.Text = rocksmithPath;
+            if (String.IsNullOrEmpty(RocksmithFolder.Text))
+            {
+                // Try to determine the Rocksmith installation directory automatically
+                string rocksmithPath = RocksmithLocator.Rocksmith2014Folder();
+                if (rocksmithPath != null)
+                    RocksmithFolder.Text = rocksmithPath;
+                else
+                    MessageBox.Show("I could not determine your Rocksmith 2014 installation directory. Please enter the location manually.", "Rocksmith 2014 not found");
+            }
 
-            // Set a default output location in the user's my documents folder
-            string myDocuments = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string outputPath = System.IO.Path.Combine(myDocuments, "RocksmithTabs");
-            OutputFolder.Text = outputPath;
+            if (String.IsNullOrEmpty(OutputFolder.Text))
+            {
+                // Set a default output location in the user's my documents folder
+                string myDocuments = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string outputPath = System.IO.Path.Combine(myDocuments, "RocksmithTabs");
+                OutputFolder.Text = outputPath;
+            }
+        }
+
+        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            // Save current settings in user config file for next start
+            var settings = RocksmithToTabGUI.Properties.Settings.Default;
+            settings.OutputFormat = OutputFormat.SelectedIndex;
+            settings.IncrementalGeneration = IncrementalGeneration.SelectedIndex;
+            // Note: the text fields are automatically bound to the app settings
+
+            settings.Save();
         }
 
         private void RocksmithFolderSelect_Click(object sender, EventArgs e)
