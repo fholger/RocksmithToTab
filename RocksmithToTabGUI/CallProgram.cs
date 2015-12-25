@@ -91,12 +91,14 @@ namespace RocksmithToTabGUI
         void process_Exited(object sender, EventArgs e)
         {
             // Leave open to give chance of seeing output
-            // DialogResult = System.Windows.Forms.DialogResult.OK;
-            // Close();            
-            // But let's change the label on the button
-            //CancelProcess.Text = "Close";
-            this.Invoke((MethodInvoker) delegate { this.CancelProcess.Text = "Close"; });
-            // also, let's open the folder where the tabs where stored
+            // But inform user that we are done converting
+            this.Invoke((MethodInvoker) delegate 
+            {
+                this.CancelProcess.Text = "Close";
+                this.CurrentFileLabel.Text = "All done :)";
+                this.Text = "Converting tabs... Done.";
+            });
+            // also, let's open the folder where the tabs were stored
             Process.Start(OutputPath);
         }
 

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 
 namespace RocksmithToTabGUI
 {
@@ -84,6 +85,14 @@ namespace RocksmithToTabGUI
 
         private void CreateTabs_Click(object sender, EventArgs e)
         {
+            // sanity check: test if given Rocksmith folder is legit
+            string songsPsarc = Path.Combine(RocksmithFolder.Text, "songs.psarc");
+            if (!File.Exists(songsPsarc))
+            {
+                MessageBox.Show("Could not find songs.psarc file in the Rocksmith folder. Are you sure you provided the correct path to your Rocksmith 2014 installation directory?", "Rocksmith 2014 path invalid");
+                return;
+            }
+
             string[] fileFormats = new string[] { "gp5", "gpx", "gpif" };
             using (var callProgram = new CallProgram())
             {
