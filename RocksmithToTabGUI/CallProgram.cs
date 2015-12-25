@@ -51,18 +51,46 @@ namespace RocksmithToTabGUI
         }
 
 
+        private List<string> CollectConvertibleFiles(string rocksmithPath)
+        {
+            // find all psarc files in the dlc subdirectory and the base songs.psarc
+            string dlcPath = Path.Combine(rocksmithPath, "dlc");
+            var inputFiles = Directory.EnumerateFiles(dlcPath, "*.psarc", SearchOption.AllDirectories).ToList();
+
+            // next, we need to filter for duplicates. Rocksmith dlcs usually feature two file versions,
+            // one for Mac with _m ending and one for PC with _p ending. We only need to convert either one,
+            // since the arrangements contained inside are identical.
+            var baseNames = new HashSet<string>();
+            var files = new List<string>();
+            files.Add(Path.Combine(rocksmithPath, "songs.psarc"));
+            foreach (var file in inputFiles)
+            {
+                var baseName = Path.GetFileNameWithoutExtension(file);
+                if (baseName.Length > 2)
+                {
+                    var lastTwo = baseName.Substring(baseName.Length - 2);
+                    if (lastTwo == "_m" || lastTwo == "_p")
+                        baseName = baseName.Substring(0, baseName.Length - 2);
+                }
+                if (!baseNames.Contains(baseName))
+                {
+                    baseNames.Add(baseName);
+                    files.Add(file);
+                }
+            }
+
+            return files;
+        }
+
+
         private void StartProcess()
         {
             // When the dialog is shown, start the RocksmithToTab process and
             // collect its output.
             string programPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "RocksmithToTab.exe");
-            // DLC on Windows have _p suffix, on Mac it's _m
-            string dlcFiles = "*_p.psarc";
-            if (Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix)
-                dlcFiles = "*_m.psarc";
+            var filesToConvert = CollectConvertibleFiles(RocksmithPath);
             // construct the argument that will convert all installed songs
-            string filesToProcess = string.Format("\"{0}\" \"{1}\"", Path.Combine(RocksmithPath, "songs.psarc"),
-                Path.Combine(RocksmithPath, "dlc", dlcFiles));
+            string filesToProcess = string.Format("\"{0}\"", string.Join("\" \"", filesToConvert));
             process = new Process()
             {
                 StartInfo = new ProcessStartInfo()
