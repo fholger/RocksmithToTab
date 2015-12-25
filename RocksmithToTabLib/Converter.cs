@@ -130,7 +130,7 @@ namespace RocksmithToTabLib
             bool isBass = arrangement.Title.ToLower() == "bass";
             int[] tuning = new int[6];
             for (byte s = 0; s < tuning.Length; ++s)
-                tuning[s] = Sng2014FileWriter.GetMidiNote(arrangement.Tuning.ToShortArray(), s, 0, isBass, 0);
+                tuning[s] = Sng2014FileWriter.GetMidiNote(arrangement.Tuning.ToArray(), s, 0, isBass, 0);
             return tuning;
         }
 

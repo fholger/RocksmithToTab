@@ -11,7 +11,7 @@ using RocksmithToolkitLib.Xml;
 using RocksmithToolkitLib.DLCPackage.Manifest;
 using RocksmithToolkitLib.DLCPackage;
 using RocksmithToolkitLib.Sng2014HSL;
-
+using RocksmithToolkitLib.DLCPackage.Manifest2014;
 
 namespace RocksmithToTabLib
 {
