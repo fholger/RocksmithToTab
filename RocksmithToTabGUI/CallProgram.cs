@@ -117,6 +117,14 @@ namespace RocksmithToTabGUI
             if (OnlyNewFiles)
                 filesToConvert = FilterOldFiles(filesToConvert);
 
+            // check if we actually have anything to do
+            if (filesToConvert.Count == 0)
+            {
+                this.Close();
+                MessageBox.Show("All songs are up to date, nothing to do :)", "RocksmithToTab");
+                return;
+            }
+
             // construct the argument that will convert all installed songs
             string programPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "RocksmithToTab.exe");
             string filesToProcess = string.Format("\"{0}\"", string.Join("\" \"", filesToConvert));
