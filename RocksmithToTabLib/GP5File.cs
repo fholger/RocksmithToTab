@@ -264,10 +264,9 @@ namespace RocksmithToTabLib
                     {
                         var track = score.Tracks[i];
                         // it can happen that an arrangement has fewer bars than the first one.
-                        // This shouldn't normally happen, and as a simple hack we simply reuse the 
-                        // bar of the first track instead, hoping that it will be silence.
-                        // Might need a better approach if this doesn't hold.
-                        var bar = (b < track.Bars.Count) ? track.Bars[b] : score.Tracks[0].Bars[b];
+                        // This usually only happens in malformed CDLCs. If it does happen, we add
+                        // empty bars as necessary.
+                        var bar = (b < track.Bars.Count) ? track.Bars[b] : CreateEmptyBar(score.Tracks[0].Bars[b]);
                         WriteBar(bar, i, track.NumStrings, changeTempo);
                         writer.Write((Byte)0);  // padding
 
@@ -275,6 +274,12 @@ namespace RocksmithToTabLib
                     }
                 }
             }
+        }
+
+
+        private Bar CreateEmptyBar(Bar template)
+        {
+            return new Bar();
         }
 
 
