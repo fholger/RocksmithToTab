@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("RocksmithToTabLib")]
-[assembly: AssemblyCopyright("Copyright © Holger Frydrych 2014")]
+[assembly: AssemblyCopyright("Copyright © Holger Frydrych 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

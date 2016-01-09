@@ -11,7 +11,7 @@ using RocksmithToTabLib;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("RocksmithToTab")]
-[assembly: AssemblyCopyright("Copyright © Holger Frydrych 2014")]
+[assembly: AssemblyCopyright("Copyright © Holger Frydrych 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
