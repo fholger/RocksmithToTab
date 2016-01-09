@@ -12,3 +12,4 @@ highlighter:  rouge
 paginate:     5
 gems:
   - jekyll-sitemap
+  - jekyll-redirect-from

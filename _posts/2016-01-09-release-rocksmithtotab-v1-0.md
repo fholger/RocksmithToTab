@@ -1,6 +1,8 @@
 ---
 layout: post
 title: RocksmithToTab v1.0 released - with incremental tab generation
+redirect_from:
+  - /2015/01/09/release-rocksmithtotab-v1-0/
 ---
 
 Finally! RocksmithToTab v1.0 is done and ready for download :)
