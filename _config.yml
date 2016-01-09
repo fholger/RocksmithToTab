@@ -2,7 +2,7 @@ title:        RocksmithToTab
 tagline:      'Rocksmith to GuitarPro tabs exporter'
 description:  'Exports Rocksmith 2014 songs to tablature in GuitarPro 5/6 format (either .gp5 or .gpx).'
 url:          http://www.rocksmithtotab.de
-version:      0.9.9
+version:      1.0
 author:
   name:       'Holger Frydrych'
   email:      'mail@rocksmithtotab.de'
