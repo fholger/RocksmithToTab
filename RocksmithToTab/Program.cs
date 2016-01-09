@@ -131,6 +131,17 @@ namespace RocksmithToTab
                             Console.WriteLine(" Failed to get arrangement {0}", arr);
                             continue;
                         }
+                        if (arrangement.ArrangementProperties.Metronome == 1)
+                        {
+                            // CDLC feature: optional arrangements can be generated which feature only
+                            // metronome ticks, no music. However, the tab is identical to the normal
+                            // track, so we don't need this unless it was explicitly requested.
+                            if (options.Arrangements == null || options.Arrangements.Count == 0)
+                            {
+                                Console.WriteLine(" Arrangement {0} is a metronome track, ignore.", arr);
+                                continue;
+                            }
+                        }
                         ExportArrangement(score, arrangement, arr, options.DifficultyLevel, psarcFile, toolkitInfo);
 
                         if (options.SplitArrangements)
