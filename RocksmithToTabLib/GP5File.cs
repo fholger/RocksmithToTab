@@ -745,9 +745,10 @@ namespace RocksmithToTabLib
             foreach (var bendValue in bendValues)
             {
                 Int32 position = (Int32)(bendValue.RelativePosition * 60);
-                // GP5 seems to have trouble if step is not a multiple of 2, or at least
-                // this seemed to help prevent a few crashes with bends
-                Int32 step = (Int32)(Math.Round(bendValue.Step * 25) * 2);
+                // GP5 seems to have trouble if step is not a multiple of 25 (quarter bend), or at least
+                // this helped prevent a few crashes with bends.
+                // although I wonder why they even use a range from 0 to 100 if that is the case?
+                Int32 step = (Int32)(Math.Round(bendValue.Step * 2) * 25);
                 writer.Write(position);
                 writer.Write(step);
                 writer.Write((Byte)0); //(vibrato ? 2 : 0));
