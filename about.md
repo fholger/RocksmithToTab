@@ -19,7 +19,7 @@ In these situations, I prefer to look at the tablature of a song to get an impre
 It takes Rocksmith song arrangements, generally stored in archive files with the file ending .psarc, and converts them to tabs in the Guitar Pro formats .gp5 or .gpx, as you prefer. All of Rocksmith's techniques are supported, including legato techniques, string bends, chord diagrams, fingering hints and slap/pop techniques for Bass arrangements. All arrangements of a song (lead, rhythm, bass) are by default exported into the same tablature file as separate tracks, which you can switch between in Guitar Pro. Optionally, you can export all arrangements to separate tabs, if you prefer. The program works for all on-disc songs, purchased DLC and imported Rocksmith 1 songs, as well as for custom DLCs.
 
 ### Legal notice
-When you purchase Rocksmith or any DLC songs, you are granted the right to use the song arrangements for your personal enjoyment. So if you use RocksmithToTab to generate tablature from these arrangements, please do not share them with others, as that is not covered by the rights granted to do. I won't take responsibility if you do it, anyway!
+When you purchase Rocksmith or any DLC songs, you are granted the right to use the song arrangements for your personal enjoyment. So if you use RocksmithToTab to generate tablature from these arrangements, please do not share them with others, as that is not covered by the rights granted to you. I won't take responsibility if you do it, anyway!
 
 
 
