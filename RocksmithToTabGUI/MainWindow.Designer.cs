@@ -31,23 +31,24 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
+            this.RocksmithFolder = new System.Windows.Forms.TextBox();
             this.RocksmithFolderSelect = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
+            this.OutputFolder = new System.Windows.Forms.TextBox();
             this.OutputFolderSelect = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.OutputFormat = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.FileNameTemplate = new System.Windows.Forms.TextBox();
             this.CreateTabs = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.IncrementalGeneration = new System.Windows.Forms.ComboBox();
-            this.RocksmithFolder = new System.Windows.Forms.TextBox();
-            this.OutputFolder = new System.Windows.Forms.TextBox();
-            this.FileNameTemplate = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
+            this.tableLayoutPanel1.AutoSize = true;
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
@@ -93,6 +94,16 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Rocksmith 2014 directory:";
             // 
+            // RocksmithFolder
+            // 
+            this.RocksmithFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.RocksmithFolder.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::RocksmithToTabGUI.Properties.Settings.Default, "RocksmithFolder", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.RocksmithFolder.Location = new System.Drawing.Point(5, 37);
+            this.RocksmithFolder.Name = "RocksmithFolder";
+            this.RocksmithFolder.Size = new System.Drawing.Size(493, 20);
+            this.RocksmithFolder.TabIndex = 1;
+            this.RocksmithFolder.Text = global::RocksmithToTabGUI.Properties.Settings.Default.RocksmithFolder;
+            // 
             // RocksmithFolderSelect
             // 
             this.RocksmithFolderSelect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
@@ -113,6 +124,16 @@
             this.label2.Size = new System.Drawing.Size(224, 13);
             this.label2.TabIndex = 3;
             this.label2.Text = "Where do you want to save the created tabs?";
+            // 
+            // OutputFolder
+            // 
+            this.OutputFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputFolder.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::RocksmithToTabGUI.Properties.Settings.Default, "OutputFolder", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.OutputFolder.Location = new System.Drawing.Point(5, 97);
+            this.OutputFolder.Name = "OutputFolder";
+            this.OutputFolder.Size = new System.Drawing.Size(493, 20);
+            this.OutputFolder.TabIndex = 4;
+            this.OutputFolder.Text = global::RocksmithToTabGUI.Properties.Settings.Default.OutputFolder;
             // 
             // OutputFolderSelect
             // 
@@ -160,6 +181,16 @@
             this.label4.Text = "Filename template for generated tabs. If you don\'t know what this does, leave it " +
     "at its default value!";
             // 
+            // FileNameTemplate
+            // 
+            this.FileNameTemplate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.FileNameTemplate.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::RocksmithToTabGUI.Properties.Settings.Default, "FileNameTemplate", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.FileNameTemplate.Location = new System.Drawing.Point(5, 217);
+            this.FileNameTemplate.Name = "FileNameTemplate";
+            this.FileNameTemplate.Size = new System.Drawing.Size(493, 20);
+            this.FileNameTemplate.TabIndex = 9;
+            this.FileNameTemplate.Text = global::RocksmithToTabGUI.Properties.Settings.Default.FileNameTemplate;
+            // 
             // CreateTabs
             // 
             this.CreateTabs.Anchor = System.Windows.Forms.AnchorStyles.Top;
@@ -194,40 +225,11 @@
             this.IncrementalGeneration.Size = new System.Drawing.Size(493, 21);
             this.IncrementalGeneration.TabIndex = 12;
             // 
-            // RocksmithFolder
-            // 
-            this.RocksmithFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.RocksmithFolder.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::RocksmithToTabGUI.Properties.Settings.Default, "RocksmithFolder", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.RocksmithFolder.Location = new System.Drawing.Point(5, 37);
-            this.RocksmithFolder.Name = "RocksmithFolder";
-            this.RocksmithFolder.Size = new System.Drawing.Size(493, 20);
-            this.RocksmithFolder.TabIndex = 1;
-            this.RocksmithFolder.Text = global::RocksmithToTabGUI.Properties.Settings.Default.RocksmithFolder;
-            // 
-            // OutputFolder
-            // 
-            this.OutputFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.OutputFolder.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::RocksmithToTabGUI.Properties.Settings.Default, "OutputFolder", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.OutputFolder.Location = new System.Drawing.Point(5, 97);
-            this.OutputFolder.Name = "OutputFolder";
-            this.OutputFolder.Size = new System.Drawing.Size(493, 20);
-            this.OutputFolder.TabIndex = 4;
-            this.OutputFolder.Text = global::RocksmithToTabGUI.Properties.Settings.Default.OutputFolder;
-            // 
-            // FileNameTemplate
-            // 
-            this.FileNameTemplate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.FileNameTemplate.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::RocksmithToTabGUI.Properties.Settings.Default, "FileNameTemplate", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.FileNameTemplate.Location = new System.Drawing.Point(5, 217);
-            this.FileNameTemplate.Name = "FileNameTemplate";
-            this.FileNameTemplate.Size = new System.Drawing.Size(493, 20);
-            this.FileNameTemplate.TabIndex = 9;
-            this.FileNameTemplate.Text = global::RocksmithToTabGUI.Properties.Settings.Default.FileNameTemplate;
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(533, 335);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -238,6 +240,7 @@
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 

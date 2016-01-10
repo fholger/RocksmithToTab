@@ -52,82 +52,20 @@ namespace RocksmithToTabGUI
         }
 
 
-        private List<string> CollectConvertibleFiles()
-        {
-            // find all psarc files in the dlc subdirectory and the base songs.psarc
-            string dlcPath = Path.Combine(RocksmithPath, "dlc");
-            var inputFiles = Directory.EnumerateFiles(dlcPath, "*.psarc", SearchOption.AllDirectories).ToList();
-
-            // next, we need to filter for duplicates. Rocksmith dlcs usually feature two file versions,
-            // one for Mac with _m ending and one for PC with _p ending. We only need to convert either one,
-            // since the arrangements contained inside are identical.
-            var baseNames = new HashSet<string>();
-            var files = new List<string>();
-            files.Add(Path.Combine(RocksmithPath, "songs.psarc"));
-            foreach (var file in inputFiles)
-            {
-                var baseName = Path.GetFileNameWithoutExtension(file);
-                if (baseName.Length > 2)
-                {
-                    var lastTwo = baseName.Substring(baseName.Length - 2);
-                    if (lastTwo == "_m" || lastTwo == "_p")
-                        baseName = baseName.Substring(0, baseName.Length - 2);
-                }
-                if (!baseNames.Contains(baseName))
-                {
-                    baseNames.Add(baseName);
-                    files.Add(file);
-                }
-            }
-
-            return files;
-        }
-
-
-        private List<string> FilterOldFiles(List<string> inputFiles)
-        {
-            // remove any file from the list whose last modification time is older than
-            // the timestamp in the given output directory.
-
-            string timestampPath = Path.Combine(OutputPath, ".rs2tab.timestamp");
-            var tsInfo = new FileInfo(timestampPath);
-            if (!tsInfo.Exists)
-                return inputFiles;
-            var timestamp = tsInfo.LastWriteTimeUtc;
-
-            var files = new List<string>();
-            foreach (var file in inputFiles)
-            {
-                var modified = new FileInfo(file).LastWriteTimeUtc;
-                if (modified.CompareTo(timestamp) > 0)
-                    files.Add(file);                    
-            }
-
-            return files;
-        }
-
-
         private void StartProcess()
         {
             // When the dialog is shown, start the RocksmithToTab process and
             // collect its output.
 
-            // Collect all files we need to convert.
-            var filesToConvert = CollectConvertibleFiles();
-            if (OnlyNewFiles)
-                filesToConvert = FilterOldFiles(filesToConvert);
-
-            // check if we actually have anything to do
-            if (filesToConvert.Count == 0)
-            {
-                this.Close();
-                MessageBox.Show("All songs are up to date, nothing to do :)", "RocksmithToTab");
-                return;
-            }
+            // Figure out path to the songs.psarc and the dlc subdirectory
+            var officialSongs = Path.Combine(RocksmithPath, "songs.psarc");
+            var dlcPath = Path.Combine(RocksmithPath, "dlc");
 
             // construct the argument that will convert all installed songs
             string programPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "RocksmithToTab.exe");
-            string filesToProcess = string.Format("\"{0}\"", string.Join("\" \"", filesToConvert));
+            string filesToProcess = string.Format("\"{0}\" \"{1}\"", officialSongs, dlcPath);
+            string incremental = (OnlyNewFiles ? "-i" : "");
+
             process = new Process()
             {
                 StartInfo = new ProcessStartInfo()
@@ -137,7 +75,7 @@ namespace RocksmithToTabGUI
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,
                     FileName = programPath,
-                    Arguments = string.Format("-f {0} -o \"{1}\" -n \"{2}\" {3}", FileFormat, OutputPath, FileNameTemplate, filesToProcess)
+                    Arguments = string.Format("-f {0} -o \"{1}\" -n \"{2}\" -r {3} {4}", FileFormat, OutputPath, FileNameTemplate, incremental, filesToProcess)
                 }
             };
 
@@ -165,11 +103,6 @@ namespace RocksmithToTabGUI
             });
             // also, let's open the folder where the tabs were stored
             Process.Start(OutputPath);
-
-            // finally, create a timestamp file in the output directory for future reference
-            var stream = File.CreateText(Path.Combine(OutputPath, ".rs2tab.timestamp"));
-            stream.Write(System.DateTime.UtcNow);
-            stream.Close();
         }
 
 

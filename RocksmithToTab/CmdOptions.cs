@@ -38,6 +38,12 @@ namespace RocksmithToTab
         [Option('x', "xml", HelpText = "Instead of a psarc archive, supply a number of XML files describing the arrangements.")]
         public bool XmlMode { get; set; }
 
+        [Option('r', "recursive", HelpText = "Also scan all subdirectories of specified directories.")]
+        public bool Recursive { get; set; }
+
+        [Option('i', "incremental", HelpText = "Only convert songs which were added since the last run.")]
+        public bool Incremental { get; set; }
+
         [HelpOption(HelpText = "Display this help screen.")]
         public string GetUsage()
         {
@@ -50,6 +56,8 @@ namespace RocksmithToTab
             };
             help.AddPreOptionsLine("\nConvert Rocksmith tracks to Guitar Pro tabs.\n");
             help.AddPreOptionsLine("Usage: RocksmithToTab archive.psarc [-a bass,lead] [-s song1,song2]");
+            help.AddPreOptionsLine("\nYou can also batch process a folder via");
+            help.AddPreOptionsLine("  RocksmithToTab path/to/folder [-r] [-i]");
             help.AddOptions(this);
             return help;
         }

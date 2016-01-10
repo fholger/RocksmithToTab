@@ -25,11 +25,14 @@ namespace RocksmithToTab
                 }
 
                 // collect a full file list from the inputs by doing a simple glob style
-                // file search.
+                // file matching or by scanning a given directory for eligible files
                 List<string> inputFiles = new List<string>();
                 foreach (var input in options.InputFiles)
                 {
-                    inputFiles.AddRange(SimpleGlob(input));
+                    if (Directory.Exists(input))
+                        inputFiles.AddRange(ScanDirectory(input, options.Recursive));
+                    else
+                        inputFiles.AddRange(SimpleGlob(input));
                 }
 
                 // create output dir, if necessary
@@ -37,16 +40,37 @@ namespace RocksmithToTab
 
                 if (!options.XmlMode)
                 {
+                    if (options.Incremental)
+                    {
+                        // only process files which were modified since the last run, we do this
+                        // by comparing their last modified date against a timestamp file we store
+                        // in the output directory
+                        inputFiles = FilterOldFiles(inputFiles, options.OutputDirectory);
+                    }
+
                     for (int i = 0; i < inputFiles.Count; ++i)
                     {
                         Console.WriteLine("[{1}/{2}] Opening archive {0} ...", Path.GetFileName(inputFiles[i]), i+1, inputFiles.Count);
                         ExportPsarc(inputFiles[i], options);
+                    }
+
+                    if (inputFiles.Count == 0)
+                    {
+                        Console.WriteLine("All files up to date. Nothing to do :)");
+                    }
+                    else
+                    {
+                        // finally, create a timestamp file in the output directory for future reference
+                        var stream = File.CreateText(Path.Combine(options.OutputDirectory, ".rs2tab.timestamp"));
+                        stream.Write(System.DateTime.UtcNow);
+                        stream.Close();
                     }
                 }
                 else
                 {
                     ExportXml(inputFiles, options);
                 }
+
             }
         }
 
@@ -73,6 +97,62 @@ namespace RocksmithToTab
         }
 
 
+        static List<string> ScanDirectory(string path, bool recursive)
+        {
+            SearchOption so = (recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            var inputFiles = Directory.EnumerateFiles(path, "*.psarc", SearchOption.AllDirectories).ToList();
+
+            // next, we need to filter for duplicates. Rocksmith dlcs usually feature two file versions,
+            // one for Mac with _m ending and one for PC with _p ending. We only need to convert either one,
+            // since the arrangements contained inside are identical.
+            var baseNames = new HashSet<string>();
+            var files = new List<string>();
+            foreach (var file in inputFiles)
+            {
+                var baseName = Path.Combine(Path.GetDirectoryName(file), Path.GetFileNameWithoutExtension(file));
+                if (baseName.Length > 2)
+                {
+                    var lastTwo = baseName.Substring(baseName.Length - 2);
+                    if (lastTwo == "_m" || lastTwo == "_p")
+                        baseName = baseName.Substring(0, baseName.Length - 2);
+                }
+                if (!baseNames.Contains(baseName))
+                {
+                    baseNames.Add(baseName);
+                    files.Add(file);
+                }
+            }
+
+            return files;
+        }
+
+
+        static List<string> FilterOldFiles(List<string> inputFiles, string outputPath)
+        {
+            // remove any file from the list whose last modification time is older than
+            // the timestamp in the given output directory.
+
+            string timestampPath = Path.Combine(outputPath, ".rs2tab.timestamp");
+            var tsInfo = new FileInfo(timestampPath);
+            if (!tsInfo.Exists)
+                return inputFiles;
+            var timestamp = tsInfo.LastWriteTimeUtc;
+
+            var files = new List<string>();
+            foreach (var file in inputFiles)
+            {
+                // take either creation or last write time, whichever happened more recently
+                var info = new FileInfo(file);
+                var modified = info.LastWriteTimeUtc;
+                if (info.CreationTimeUtc.CompareTo(modified) > 0)
+                    modified = info.CreationTimeUtc;
+
+                if (modified.CompareTo(timestamp) > 0)
+                    files.Add(file);
+            }
+
+            return files;
+        }
 
 
         static void ExportPsarc(string psarcFile, CmdOptions options)
