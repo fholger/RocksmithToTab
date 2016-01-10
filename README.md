@@ -6,7 +6,7 @@ Exports Rocksmith 2014 arrangements to Guitar Pro tabs (.gp5, .gpx). It parses R
 ![gui][gui]
 
 #### Current version
-The current version is v1.0. Find it at http://www.rocksmithtotab.de .
+The current version is v1.1. Find it at http://www.rocksmithtotab.de .
 
 #### Basic use
 
