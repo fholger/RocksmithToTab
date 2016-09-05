@@ -19,7 +19,7 @@ namespace RocksmithToTabLib
 
             foreach (var track in score.Tracks)
             {
-                var trackFileName = string.Format(@"{0}\{1} ({2}){3}", 
+                var trackFileName = string.Format(@"{0}\{1} ({2}){3}",
                     dirPath, baseName, track.Name, extName);
                 File.WriteAllLines(trackFileName, this.GetLines(score, track));
             }
@@ -66,13 +66,15 @@ namespace RocksmithToTabLib
             if (usedChords.Count() == 0)
                 yield break;
 
-            var names = "   "; // width of chord string prompt
-            var strings = (from n in GetStringNotePrefix(track)
-                           select string.Format("{0}: ", n)).ToArray();
-            var chordWidth = track.ChordTemplates.Max(kvp => kvp.Value.Name.Length);
-            if (chordWidth == 0)
-                yield break;
+            var maxNameWidth = track.ChordTemplates.Max(kvp => kvp.Value.Name.Length);
+            if (maxNameWidth == 0)
+                yield break; // don't print chords if none of them have names
 
+            var maxFret = track.ChordTemplates.SelectMany(ct => ct.Value.Frets).Max().ToString().Length;
+            var maxWidth = Math.Max(maxFret, maxNameWidth);
+            
+
+            var generator = new TabGenerator(this.GetStringNotePrefix(track), ": ", " ", string.Empty);
             foreach (var kvp in track.ChordTemplates)
             {
                 var chordId = kvp.Key;
@@ -84,22 +86,24 @@ namespace RocksmithToTabLib
                 if (!usedChords.Contains(chordId))
                     continue;
 
-                var nameSpacer = new string(' ', chordWidth - chord.Name.Length);
-                names += string.Format("{0}{1}", nameSpacer, chord.Name);
+                var nameSpacer = new string(' ', maxWidth - chord.Name.Length);
+                var name = string.Format("{0}{1}", nameSpacer, chord.Name);
 
                 var frets = chord.Frets.Reverse().ToArray();
+                var strings = new string[track.NumStrings];
                 for (var stringIndex = 0; stringIndex < strings.Length; stringIndex++)
                 {
                     var f = frets[stringIndex];
                     var s = f == -1 ? "-" : f.ToString();
-                    var spacer = chordWidth - s.Length;
-                    if (spacer < 0) spacer = 0;
-                    strings[stringIndex] += string.Format("{0}{1}", new string(' ', spacer), s);
+                    var spacer = maxWidth - s.Length;
+                    if (spacer < 0)
+                        spacer = 0;
+                    strings[stringIndex] = string.Format("{0}{1}", new string(' ', spacer), s);
                 }
+                generator.AddBar(name, strings);
             }
 
-            yield return names;
-            foreach (var line in strings)
+            foreach (var line in generator.GetRows(MaxLine))
                 yield return line;
 
             yield return string.Empty;
@@ -149,11 +153,26 @@ namespace RocksmithToTabLib
 
             var f = thisNote.Fret.ToString();
 
+            float? last = thisNote.Fret;
             foreach (var b in thisNote.BendValues)
-                f += string.Format("b{0}", thisNote.Fret + b.Step);
+            {
+                var pos = thisNote.Fret + b.Step;
+                if (last.HasValue && last.Value == pos)
+                    continue;
+
+                string s = last.HasValue && pos < last ? "r" : "b";
+                f += string.Format("{0}{1}", s, pos);
+                last = pos;
+            }
 
             if (thisNote.PalmMuted)
                 f = string.Format("({0})", f);
+
+            if (thisNote.Tapped)
+                f += "t";
+
+            if (thisNote.Harmonic || thisNote.PinchHarmonic)
+                f = string.Format("<{0}>", f);
 
             switch (thisNote.Slide)
             {
@@ -163,7 +182,7 @@ namespace RocksmithToTabLib
                     break;
 
                 case Note.SlideType.UnpitchUp:
-                    f = "/" + f;
+                    f += "/";
                     break;
 
                 case Note.SlideType.UnpitchDown:
@@ -197,9 +216,7 @@ namespace RocksmithToTabLib
 
         private IEnumerable<string> GetTrackTabLines(Track track)
         {
-            Func<string[]> newLines = () => GetStringNotePrefix(track).Select(n => n + "|-").ToArray();
-
-            var finalLines = newLines();
+            var generator = new TabGenerator(GetStringNotePrefix(track), "|-", "-|-", "-|");
 
             Chord lastChord = null;
 
@@ -207,9 +224,11 @@ namespace RocksmithToTabLib
 
             for (var barIndex = 0; barIndex < track.Bars.Count; barIndex++)
             {
-                var lines = Enumerable.Range(0, track.NumStrings).Select(x => "|-").ToArray();
+                var lines = Enumerable.Range(0, track.NumStrings).Select(x => string.Empty).ToArray();
 
                 var bar = track.Bars[barIndex];
+                var header = string.Empty;
+                var lastHeader = string.Empty;
 
                 // print out each note
                 for (int chordIndex = 0; chordIndex < bar.Chords.Count; chordIndex++)
@@ -225,9 +244,22 @@ namespace RocksmithToTabLib
                                  let thisNote = TryGet(thisChord.Notes, stringIndex)
                                  let nextNote = nextChord == null ? null : TryGet(nextChord.Notes, stringIndex)
                                  select ToText(lastNote, thisNote, nextNote)).ToArray();
+                    var chordHeader = thisChord.ChordId == -1 ? string.Empty : track.ChordTemplates[thisChord.ChordId].Name;
                     var width = notes.Max(t => t.Text.Length);
                     if (!linkNext)
                         width += 1;
+
+                    if (chordHeader != lastHeader)
+                    {
+                        var lineLength = lines[0].Length;
+                        if (lineLength < header.Length)
+                            lines = lines.Select(l => l += new string('-', header.Length - lineLength)).ToArray();
+                        else if (lineLength > header.Length)
+                            header += new string(' ', lineLength - header.Length);
+                            
+                        header += chordHeader + " ";
+                        lastHeader = chordHeader;
+                    }
 
                     for (int x = 0; x < lines.Length; x++)
                     {
@@ -239,20 +271,106 @@ namespace RocksmithToTabLib
                     lastChord = thisChord;
                 }
 
-                if (finalLines[0].Length + lines[0].Length > MaxLine)
-                {
-                    foreach (var line in finalLines)
-                        yield return line + "-|";
-                    yield return string.Empty;
-                    finalLines = newLines();
-                }
-
-                for (int x = 0; x < lines.Length; x++)
-                    finalLines[x] += lines[x];
+                if (header.Length < lines[0].Length)
+                    header += new string(' ', lines[0].Length - header.Length);
+                else if (header.Length > lines[0].Length)
+                    lines = lines.Select(l => l += new string('-', header.Length - lines[0].Length)).ToArray();
+                generator.AddBar(header, lines);
             }
 
-            foreach (var line in finalLines)
-                yield return line + "-|";
+            foreach (var line in generator.GetRows(MaxLine))
+                yield return line;
+        }
+    }
+
+    class TabGenerator
+    {
+        public string[] Strings { get; private set; }
+        public List<string[]> Bars { get; private set; }
+        public List<string> Headers { get; private set; }
+
+        public string Prefix { get; set; }
+        public string Connector { get; set; }
+        public string Suffix { get; set; }
+
+        public TabGenerator(string[] strings, string prefix, string connector, string suffix)
+        {
+            this.Prefix = prefix;
+            this.Connector = connector;
+            this.Suffix = suffix;
+
+            this.Strings = strings;
+            this.Bars = new List<string[]>();
+            this.Headers = new List<string>();
+        }
+
+        public void AddBar(string header, string[] strings)
+        {
+            if (header.Length != strings[0].Length)
+                throw new ArgumentOutOfRangeException(
+                    "header", header.Length, "Header length does not match line length");
+
+            if (strings.Length != this.Strings.Length)
+                throw new ArgumentOutOfRangeException(
+                    "strings", strings.Length, 
+                    "Notes should have a length of " + this.Strings.Length);
+
+            var firstLength = strings[0].Length;
+            var allSameLength = strings.Skip(1).All(n => n.Length == firstLength);
+            if (!allSameLength)
+                throw new ArgumentOutOfRangeException(
+                    "strings", string.Join("  || ", strings),
+                    "All strings were not the same length");
+
+            this.Headers.Add(header);
+            this.Bars.Add(strings);
+        }
+
+        public IEnumerable<string> GetRows(int maxLength)
+        {
+            var prefixLength = this.Strings[0].Length + this.Prefix.Length; // add one for the first "|"
+            var suffixLength = this.Suffix.Length;
+            var bars = new List<string[]>();
+            var headers = new List<string>();
+
+            for (var index = 0; index < this.Bars.Count; index++)
+            {
+                var bar = this.Bars[index];
+                var header = this.Headers[index];
+
+                bars.Add(bar);
+                headers.Add(header);
+
+                var noteLength = bars.Sum(b => b[0].Length);                
+                var connectorLength = (bars.Count - 1) * this.Connector.Length;
+                var totalLength = prefixLength + noteLength + suffixLength + connectorLength;
+                if (totalLength <= maxLength)
+                    continue;
+
+                headers.Remove(header);
+                bars.Remove(bar);
+                var headerSpacer = new string(' ', prefixLength);
+                var headerJoin = new string(' ', this.Connector.Length);
+                yield return string.Format("{0}{1}", headerSpacer, string.Join(headerJoin, headers));
+                foreach (var line in this.MakeRow(bars))
+                    yield return line;
+
+                bars.Clear();
+                headers.Clear();
+            }
+        }
+
+        private IEnumerable<string> MakeRow(IEnumerable<string[]> bars)
+        {
+            for (var stringIndex = 0; stringIndex < this.Strings.Length; stringIndex++)
+            {
+                var line = string.Join(this.Connector, bars.Select(bar => bar[stringIndex]));
+
+                yield return string.Format(
+                    "{0}{2}{1}{3}", 
+                    this.Strings[stringIndex], line, 
+                    this.Prefix, this.Suffix);
+            }
         }
     }
 }
