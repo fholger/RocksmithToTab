@@ -332,6 +332,7 @@ namespace RocksmithToTab
 
         static GpxExporter gpxExporter = new GpxExporter();
         static GP5File gp5Exporter = new GP5File();
+        static TxtExporter txtExporter = new TxtExporter();
 
         static void SaveScore(Score score, string baseFileName, string outputDirectory, string outputFormat)
         {
@@ -347,6 +348,10 @@ namespace RocksmithToTab
             else if (outputFormat == "gpif")
             {
                 gpxExporter.ExportGpif(score, basePath + ".gpif");
+            }
+            else if (outputFormat == "txt")
+            {
+                txtExporter.ExportTxt(score, basePath + ".txt");
             }
             else
             {
