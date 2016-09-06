@@ -93,7 +93,7 @@ namespace RocksmithToTabGUI
                 return;
             }
 
-            string[] fileFormats = new string[] { "gp5", "gpx", "gpif" };
+            string[] fileFormats = new string[] { "gp5", "gpx", "gpif", "txt" };
             using (var callProgram = new CallProgram())
             {
                 callProgram.RocksmithPath = RocksmithFolder.Text;

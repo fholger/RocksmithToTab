@@ -164,7 +164,8 @@
             this.OutputFormat.Items.AddRange(new object[] {
             ".gp5 (Guitar Pro 5 / TuxGuitar)",
             ".gpx (Guitar Pro 6)",
-            ".gpif (Guitar Pro 6)"});
+            ".gpif (Guitar Pro 6)",
+            ".txt"});
             this.OutputFormat.Location = new System.Drawing.Point(5, 156);
             this.OutputFormat.Name = "OutputFormat";
             this.OutputFormat.Size = new System.Drawing.Size(493, 21);
