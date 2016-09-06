@@ -28,16 +28,16 @@ namespace RocksmithToTabLib
         private IEnumerable<string> GetLines(Score score, Track track)
         {
             foreach (var line in this.GetMetadataLines(score))
-                yield return line;
+                yield return line.TrimEnd();
 
             foreach (var line in this.GetTrackHeaderLines(track))
-                yield return line;
+                yield return line.TrimEnd();
 
             foreach (var line in this.GetTrackChordLines(track))
-                yield return line;
+                yield return line.TrimEnd();
 
             foreach (var line in this.GetTrackTabLines(track))
-                yield return line;
+                yield return line.TrimEnd();
         }
 
         private IEnumerable<string> GetMetadataLines(Score score)
