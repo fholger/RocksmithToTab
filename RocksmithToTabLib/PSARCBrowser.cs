@@ -139,7 +139,7 @@ namespace RocksmithToTabLib
             using (var reader = new StreamReader(jsonFile.Data.OpenStream()))
             {
                 var manifest = JsonConvert.DeserializeObject<Manifest2014<Attributes2014>>(
-                    reader.ReadToEnd());
+                    reader.ReadToEnd(), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                 if (manifest == null)
                     return null;
                 attr = manifest.Entries.ToArray()[0].Value.ToArray()[0].Value;
